@@ -1,0 +1,48 @@
+[package]
+name = "hub"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = [
+    "packages/*",
+]
+
+# EXAMPLE!:
+# cargo build --target wasm32-unknown-unkown
+# wasm-bindgen --target web --no-typescript --out-dir static target/wasm32-unknown-unknown/debug/
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+# Enable a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
+
+# Link Time Optimization
+[profile.release]
+opt-level = 's'
+lto = "fat"
+
+[dependencies.bevy]
+version = "0.9"
+# features = ["dynamic"] # NOTE: Remove when building release.
+
+[dependencies.bevy_egui]
+version = "0.17"
+
+[dependencies.bevy-inspector-egui]
+version = "0.14.0"
+
+[dependencies.bevy_framepace]
+version = "0.9.1"
+
+[dependencies.n_body]
+path = "packages/n_body"
+
+[dependencies.wasm-bindgen]
+version = "*"

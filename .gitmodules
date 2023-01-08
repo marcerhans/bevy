@@ -1,0 +1,3 @@
+[submodule "bevy-assets"]
+	path = assets
+	url = git@github.com:marcerhans/bevy-assets.git

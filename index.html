@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <!-- Title -->
+    <title>Project Hub</title>
+
+    <!-- Meta -->
+    <meta charset=utf-8 />
+    <meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no" />
+
+    <!-- OpenGraph -->
+    <!-- <meta property=og:title content="Your Title" />
+    <meta property=og:description content="Your description" />
+    <meta property=og:url content="https://google.com/" />
+    <meta property=og:image content="/assets/images/bevy/icon.png" /> -->
+
+    <!-- Mobile -->
+    <meta name=HandheldFriendly content="True" />
+    <meta name=mobile-web-app-capable content="yes" />
+    <meta name=apple-mobile-web-app-capable content="yes" />
+
+    <!-- Links -->
+    <!-- <link rel=canonical href="https://google.com/" /> -->
+    <link rel=icon type=image/png href="assets/images/bevy/icon.png">
+
+    <!-- Trunk Directives -->
+    <link data-trunk rel=copy-dir href="assets/" />
+    <!-- <link rel=rust data-trunk /> -->
+
+    <!-- CSS Style -->
+    <style>
+        img {
+            width: 400px;
+            height: 400px;
+        }
+
+        svg {
+            width: 200px;
+            height: 200px;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body {
+            /* Layout */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            /* Margins */
+            margin: 0px;
+            padding: 0px;
+            width: 100vw;
+            height: 100vh;
+
+            /* Misc */
+            overflow: hidden;
+            background: rgb(40, 40, 40);
+            color: rgb(204, 204, 204);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Canvas for where WASM (bevy) should paint graphics. -->
+    <canvas id="bevy"></canvas>
+
+    <!-- Following is just a placeholder whilst WASM binary is loading. -->
+    <!-- <div class="loading">
+        <img src="assets/images/bevy/icon.png" alt="bevy" />
+        <svg version=" 1.1" id="l3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+            x="0px" y="0px" viewbox="0 0 100 100" enable-background="new 0 0 0 0" xml:space="preserve">
+            <circle fill="none" stroke="rgb(204, 204, 204)" stroke-width="4" cx="50" cy="50" r="44"
+                style="opacity:0.5;" />
+            <circle fill="rgb(40, 40, 40)" stroke="rgb(204, 204, 204)" stroke-width="3" cx="8" cy="54" r="6">
+                <animatetransform attributename="transform" dur="2s" type="rotate" from="0 50 48" to="360 50 52"
+                    repeatcount="indefinite" />
+            </circle>
+        </svg>
+    </div> -->
+</body>
+
+</html>
