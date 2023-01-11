@@ -8,6 +8,7 @@ impl Plugin for NBodyPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(BACKGROUND_COLOR))
             .insert_resource(state::State::default())
+            .add_startup_system(init_assets)
             .add_system(read_state)
             .add_system(physics_dot.after(read_state));
     }
@@ -24,6 +25,9 @@ pub mod state {
         pub line_distance_limit: f32,
         pub line_color: Color,
         pub line_draw: bool,
+
+        pub asset_dot: Option<Handle<Image>>,
+        pub asset_pixel: Option<Handle<Image>>,
     }
 
     impl Default for State {
@@ -44,6 +48,8 @@ pub mod state {
                     alpha: 1.0,
                 },
                 line_draw: true,
+                asset_dot: None,
+                asset_pixel: None,
             }
         }
     }
@@ -190,12 +196,20 @@ impl Line {
     }
 }
 
+fn init_assets(mut state: ResMut<state::State>, asset_server: Res<AssetServer>) {
+    state.asset_dot = Some(
+        asset_server.load::<Image, &str>("wasm_modules/bevy/assets/images/misc/white_dot.png"),
+    );
+    state.asset_pixel = Some(
+        asset_server.load::<Image, &str>("wasm_modules/bevy/assets/images/misc/white_pixel.png"),
+    );
+}
+
 fn read_state(
     mut commands: Commands,
     state: Res<state::State>,
     windows: Res<Windows>,
     camera_offset: Res<CameraOffset>,
-    asset_server: Res<AssetServer>,
     dots: Query<Entity, With<Dot>>,
     lines: Query<Entity, With<Line>>,
 ) {
@@ -231,7 +245,7 @@ fn read_state(
                 ),
                 rng.gen_range(5.0..10.0),
                 &state.body_color,
-                asset_server.load("wasm_modules/bevy/assets/images/misc/white_dot.png"),
+                state.asset_dot.as_ref().unwrap().clone(),
             );
 
             commands.spawn((Dot, dot, velocity));
@@ -240,10 +254,7 @@ fn read_state(
                 for _ in 0..=upper {
                     commands.spawn((
                         Line,
-                        Line::new_sprite(
-                            asset_server
-                                .load("wasm_modules/bevy/assets/images/misc/white_pixel.png"),
-                        ),
+                        Line::new_sprite(state.asset_pixel.as_ref().unwrap().clone()),
                     ));
                 }
             }

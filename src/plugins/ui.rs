@@ -40,6 +40,7 @@ enum Project {
 struct UiState {
     current_project: Project,
     fps_slider_val: f64,
+    github_logo: Option<Handle<Image>>,
 }
 
 impl Default for UiState {
@@ -47,26 +48,32 @@ impl Default for UiState {
         Self {
             current_project: Project::NBodySim(Box::new(n_body::gen_ui)),
             fps_slider_val: 120.0,
+            github_logo: None,
         }
     }
 }
 
-fn initialize(mut egui_ctx: ResMut<EguiContext>) {
+fn initialize(
+    mut state: ResMut<UiState>,
+    mut egui_ctx: ResMut<EguiContext>,
+    asset_server: Res<AssetServer>,
+) {
     egui_ctx
         .ctx_mut()
         .set_visuals(egui::Visuals { ..default() });
+
+    state.github_logo =
+        Some(asset_server.load("wasm_modules/bevy/assets/images/github/github-mark-white.png"));
 }
 
 fn ui_system(
-    asset_server: ResMut<AssetServer>,
     mut egui_ctx: ResMut<EguiContext>,
     mut ui_state: ResMut<UiState>,
     counter: Res<misc::fps::Counter>,
     mut framepace_settings: ResMut<FramepaceSettings>,
     mut n_body_state: ResMut<n_body::State>,
 ) {
-    let github_image_id =
-        egui_ctx.add_image(asset_server.load("images/github/github-mark-white.png"));
+    let github_image_id = egui_ctx.add_image(ui_state.github_logo.as_ref().unwrap().clone());
 
     egui::SidePanel::left("side_panel_left")
         .default_width(WIDTH_MARGIN)
