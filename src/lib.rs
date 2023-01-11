@@ -20,6 +20,5 @@ pub fn main() {
                 y: HEIGHT_MARGIN,
             },
         })
-
         .run();
 }

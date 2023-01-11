@@ -231,7 +231,7 @@ fn read_state(
                 ),
                 rng.gen_range(5.0..10.0),
                 &state.body_color,
-                asset_server.load("images/misc/white_dot.png"),
+                asset_server.load("wasm_modules/bevy/assets/images/misc/white_dot.png"),
             );
 
             commands.spawn((Dot, dot, velocity));
@@ -240,7 +240,10 @@ fn read_state(
                 for _ in 0..=upper {
                     commands.spawn((
                         Line,
-                        Line::new_sprite(asset_server.load("images/misc/white_pixel.png")),
+                        Line::new_sprite(
+                            asset_server
+                                .load("wasm_modules/bevy/assets/images/misc/white_pixel.png"),
+                        ),
                     ));
                 }
             }
