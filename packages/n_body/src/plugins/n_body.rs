@@ -198,10 +198,10 @@ impl Line {
 
 fn init_assets(mut state: ResMut<state::State>, asset_server: Res<AssetServer>) {
     state.asset_dot = Some(
-        asset_server.load::<Image, &str>("wasm_modules/bevy/assets/images/misc/white_dot.png"),
+        asset_server.load::<Image, &str>("images/misc/white_dot.png"),
     );
     state.asset_pixel = Some(
-        asset_server.load::<Image, &str>("wasm_modules/bevy/assets/images/misc/white_pixel.png"),
+        asset_server.load::<Image, &str>("images/misc/white_pixel.png"),
     );
 }
 
