@@ -1,0 +1,21 @@
+[package]
+name = "mahjong"
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license-file.workspace = true
+publish.workspace = true
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+avian2d = { workspace = true }
+bevy-inspector-egui = { version = "0.31.0" }
+
+[features]
+debug = ["bevy/dynamic_linking"] # Use for debug/dev builds. Faster compile times.
