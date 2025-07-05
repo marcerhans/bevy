@@ -22,10 +22,6 @@ bevy = { version = "0.16.0", features = ["wayland"] }
 avian2d = { version = "0.3.1" }
 avian3d = { version = "0.3.1" }
 
-# If building for wasm target, change crate type
-[target.'cfg(target_family = "wasm")'.lib]
-crate-type = ["cdylib"]
-
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
 opt-level = 1
