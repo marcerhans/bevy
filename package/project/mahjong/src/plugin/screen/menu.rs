@@ -23,7 +23,6 @@ enum Menu {
 }
 
 mod root {
-    use avian2d::{math::*, prelude::*};
     use bevy::prelude::*;
 
     pub struct Plugin;
