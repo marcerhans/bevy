@@ -1,6 +1,6 @@
+use avian2d::PhysicsPlugins;
 use bevy::{
-    app::TaskPoolThreadAssignmentPolicy, asset::AssetMetaCheck, log::LogPlugin, prelude::*,
-    tasks::TaskPoolBuilder, window::PresentMode,
+    asset::AssetMetaCheck, log::LogPlugin, prelude::*, window::PresentMode,
 };
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 
@@ -13,33 +13,6 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_plugins((
             bevy::DefaultPlugins
-                .set(TaskPoolPlugin {
-                    task_pool_options: TaskPoolOptions {
-                        min_total_threads: 1,
-                        max_total_threads: 1,
-                        io: TaskPoolThreadAssignmentPolicy {
-                            min_threads: 1,
-                            max_threads: 1,
-                            percent: 1.0,
-                            on_thread_spawn: None,
-                            on_thread_destroy: None,
-                        },
-                        async_compute: TaskPoolThreadAssignmentPolicy {
-                            min_threads: 1,
-                            max_threads: 1,
-                            percent: 1.0,
-                            on_thread_spawn: None,
-                            on_thread_destroy: None,
-                        },
-                        compute: TaskPoolThreadAssignmentPolicy {
-                            min_threads: 1,
-                            max_threads: 1,
-                            percent: 1.0,
-                            on_thread_spawn: None,
-                            on_thread_destroy: None,
-                        },
-                    },
-                })
                 .set(LogPlugin {
                     filter: "error,mahjong=debug".into(),
                     level: bevy::log::Level::DEBUG,
@@ -68,6 +41,7 @@ impl bevy::prelude::Plugin for Plugin {
                 enable_multipass_for_primary_context: true,
             },
             WorldInspectorPlugin::new(),
+            PhysicsPlugins::default(),
         ));
         // .insert_resource(bevy::winit::WinitSettings::desktop_app());
     }
