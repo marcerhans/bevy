@@ -9,7 +9,7 @@ impl bevy::prelude::Plugin for Plugin {
         &self,
         app: &mut App,
     ) {
-        app.add_systems(OnEnter(Screen::Greeter), spawn_screen)
+        app.add_systems(OnEnter(Screen::Greeter), on_enter)
             .add_systems(Update, update.run_if(update_if));
     }
 }
@@ -17,7 +17,7 @@ impl bevy::prelude::Plugin for Plugin {
 #[derive(Component)]
 struct Greeter;
 
-fn spawn_screen(mut commands: Commands) {
+fn on_enter(mut commands: Commands) {
     commands
         .spawn((
             Greeter,

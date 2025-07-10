@@ -48,7 +48,11 @@ mod root {
                     align_items: AlignItems::Center,
                     ..default()
                 },
-            ))
-            .with_child(Text::new("Menu!"));
+            ));
+
+        
+            // .with_children(|parent| {
+            //     parent.spawn(Text::new("hej"));
+            // });
     }
 }
