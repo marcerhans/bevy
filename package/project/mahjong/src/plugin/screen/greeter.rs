@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::plugin::screen::Screen;
+use crate::plugin::{screen::Screen, shared::resource::asset};
 
 pub struct Plugin;
 
@@ -31,8 +31,24 @@ impl Default for Greeter {
     }
 }
 
-fn on_enter(mut commands: Commands) {
-    let text_color = TextColor(Color::srgba(0.0, 0.0, 0.7, 1.0));
+fn on_enter(
+    mut commands: Commands,
+    mut assets: ResMut<asset::Assets>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+) {
+    let text_color = TextColor(Color::srgba(1.0, 0.8, 0.0, 1.0));
+
+    let image = assets.load::<Image>("ui/button.png", "image::button");
+    let atlas = assets.add(
+        texture_atlases.add(TextureAtlasLayout::from_grid(
+            UVec2::splat(32),
+            3,
+            3,
+            None,
+            None,
+        )),
+        "atlas::button",
+    );
 
     commands.spawn((
         Marker,
@@ -46,9 +62,10 @@ fn on_enter(mut commands: Commands) {
             ..default()
         },
         children![
+            ImageNode::from_atlas_image(image, TextureAtlas::from(atlas)),
             (
                 Marker,
-                Text::new("Mah Dong Interactive Presents..."),
+                Text::new("Mah Dong Interactive Presents:"),
                 TextFont {
                     font_size: 32.0,
                     ..default()
