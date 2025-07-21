@@ -36,7 +36,7 @@ fn on_enter(
     mut assets: ResMut<asset::Assets>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let text_color = TextColor(Color::srgba(1.0, 0.8, 0.0, 1.0));
+    let text_color = TextColor(Color::srgba(0.9, 0.8, 0.0, 1.0));
 
     let image = assets.load::<Image>("ui/button.png", "image::button");
     let atlas = assets.add(
@@ -68,8 +68,11 @@ fn on_enter(
             ..default()
         },
         children![
-            ImageNode::from_atlas_image(image, TextureAtlas::from(atlas))
-                .with_mode(NodeImageMode::Sliced(slicer.clone())),
+            (
+                Marker,
+                ImageNode::from_atlas_image(image, TextureAtlas::from(atlas))
+                    .with_mode(NodeImageMode::Sliced(slicer.clone())),
+            ),
             (
                 Marker,
                 Text::new("Mah Dong Interactive Presents:"),
