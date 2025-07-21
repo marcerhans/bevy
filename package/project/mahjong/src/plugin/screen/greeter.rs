@@ -49,6 +49,12 @@ fn on_enter(
         )),
         "atlas::button",
     );
+    let slicer = TextureSlicer {
+        border: BorderRect::all(32.0),
+        center_scale_mode: SliceScaleMode::Stretch,
+        sides_scale_mode: SliceScaleMode::Stretch,
+        max_corner_scale: 1.0,
+    };
 
     commands.spawn((
         Marker,
@@ -62,7 +68,8 @@ fn on_enter(
             ..default()
         },
         children![
-            ImageNode::from_atlas_image(image, TextureAtlas::from(atlas)),
+            ImageNode::from_atlas_image(image, TextureAtlas::from(atlas))
+                .with_mode(NodeImageMode::Sliced(slicer.clone())),
             (
                 Marker,
                 Text::new("Mah Dong Interactive Presents:"),
