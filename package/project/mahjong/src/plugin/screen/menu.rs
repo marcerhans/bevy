@@ -25,6 +25,8 @@ enum Menu {
 mod root {
     use bevy::prelude::*;
 
+    use crate::plugin::shared::resource;
+
     pub struct Plugin;
 
     impl bevy::prelude::Plugin for Plugin {
@@ -36,23 +38,29 @@ mod root {
         }
     }
 
-    fn on_enter(mut commands: Commands) {
-        commands
-            .spawn((
-                super::Menu::Root,
-                StateScoped(super::Menu::Root),
-                Node {
-                    height: Val::Percent(100.0),
-                    width: Val::Percent(100.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-            ));
+    fn on_enter(
+        mut commands: Commands,
+        mut assets: ResMut<resource::asset::Assets>,
+    ) {
+        let image = assets.load::<Image>("riichi_mahjong_tiles/ExampleBlack.png", "what");
 
-        
-            // .with_children(|parent| {
-            //     parent.spawn(Text::new("hej"));
-            // });
+        let mut container = commands.spawn((
+            super::Menu::Root,
+            StateScoped(super::Menu::Root),
+            Node {
+                height: Val::Percent(100.0),
+                width: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            ImageNode {
+                image,
+                // image_mode: todo!(),
+                ..default()
+            },
+        ));
+
+        container.with_child((Text::new("hej"),));
     }
 }

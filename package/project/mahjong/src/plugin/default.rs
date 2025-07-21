@@ -1,7 +1,5 @@
 use avian2d::PhysicsPlugins;
-use bevy::{
-    asset::AssetMetaCheck, log::LogPlugin, prelude::*, window::PresentMode,
-};
+use bevy::{asset::AssetMetaCheck, log::LogPlugin, prelude::*, window::PresentMode};
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 
 pub struct Plugin;
@@ -43,6 +41,5 @@ impl bevy::prelude::Plugin for Plugin {
             WorldInspectorPlugin::new(),
             PhysicsPlugins::default(),
         ));
-        // .insert_resource(bevy::winit::WinitSettings::desktop_app());
     }
 }

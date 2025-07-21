@@ -20,8 +20,8 @@ impl bevy::prelude::Plugin for Plugin {
             shared::Plugin,
             camera::Plugin,
             screen::Plugin,
-            tile::Plugin,
-            game::Plugin,
+            // tile::Plugin,
+            // game::Plugin,
         ));
     }
 }

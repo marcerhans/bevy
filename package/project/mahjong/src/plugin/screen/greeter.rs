@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::plugin::{screen::Screen, shared::resource};
+use crate::plugin::screen::Screen;
 
 pub struct Plugin;
 
@@ -9,42 +9,73 @@ impl bevy::prelude::Plugin for Plugin {
         &self,
         app: &mut App,
     ) {
-        app.add_systems(OnEnter(Screen::Greeter), on_enter)
-            .add_systems(Update, update.run_if(update_if));
+        app.insert_resource(Greeter::default())
+            .add_systems(OnEnter(Screen::Greeter), on_enter)
+            .add_systems(Update, update);
     }
 }
 
 #[derive(Component)]
-struct Greeter;
+struct Marker;
 
-fn on_enter(mut commands: Commands) {
-    commands
-        .spawn((
-            Greeter,
-            StateScoped(Screen::Greeter),
-            Node {
-                height: Val::Percent(100.0),
-                width: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-        ))
-        .with_child(Text::new("Loading..."));
+#[derive(Resource)]
+struct Greeter {
+    timer: Timer,
 }
 
-fn update_if(er: EventReader<resource::asset::LoadEvent>) -> bool {
-    !er.is_empty()
+impl Default for Greeter {
+    fn default() -> Self {
+        Self {
+            timer: Timer::from_seconds(4.0, TimerMode::Once),
+        }
+    }
+}
+
+fn on_enter(mut commands: Commands) {
+    let text_color = TextColor(Color::srgba(1.0, 0.0, 0.0, 1.0));
+
+    commands.spawn((
+        Marker,
+        StateScoped(Screen::Greeter),
+        Node {
+            height: Val::Percent(100.0),
+            width: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            flex_direction: FlexDirection::Column,
+            ..default()
+        },
+        children![
+            (
+                Marker,
+                Text::new("Mah Dong Interactive Presents:"),
+                text_color,
+            ),
+            (
+                Marker,
+                Text::new("Mah Jong"),
+                text_color,
+            ),
+        ],
+    ));
 }
 
 fn update(
-    mut er: EventReader<resource::asset::LoadEvent>,
+    timer: Res<Time>,
     mut screen: ResMut<NextState<Screen>>,
+    mut greeter: ResMut<Greeter>,
+    mut colors: Query<&mut TextColor, With<Marker>>,
 ) {
-    for event in er.read() {
-        if matches!(event, resource::asset::LoadEvent::Everything) {
-            debug!("Woho!");
-            screen.set(Screen::Menu);
+    warn!("hej");
+    greeter.timer.tick(timer.delta());
+
+    if greeter.timer.finished() {
+        screen.set(Screen::Menu);
+    } else {
+        warn!("alpha");
+        for mut color in colors {
+            let alpha = color.0.alpha();
+            color.0.set_alpha(0.0);
         }
     }
 }
