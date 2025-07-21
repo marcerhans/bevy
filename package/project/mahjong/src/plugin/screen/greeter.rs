@@ -32,7 +32,7 @@ impl Default for Greeter {
 }
 
 fn on_enter(mut commands: Commands) {
-    let text_color = TextColor(Color::srgba(1.0, 0.0, 0.0, 1.0));
+    let text_color = TextColor(Color::srgba(0.0, 0.0, 0.7, 1.0));
 
     commands.spawn((
         Marker,
@@ -48,12 +48,20 @@ fn on_enter(mut commands: Commands) {
         children![
             (
                 Marker,
-                Text::new("Mah Dong Interactive Presents:"),
+                Text::new("Mah Dong Interactive Presents..."),
+                TextFont {
+                    font_size: 32.0,
+                    ..default()
+                },
                 text_color,
             ),
             (
                 Marker,
                 Text::new("Mah Jong"),
+                TextFont {
+                    font_size: 64.0,
+                    ..default()
+                },
                 text_color,
             ),
         ],
@@ -62,20 +70,25 @@ fn on_enter(mut commands: Commands) {
 
 fn update(
     timer: Res<Time>,
+    colors: Query<&mut TextColor, With<Marker>>,
     mut screen: ResMut<NextState<Screen>>,
     mut greeter: ResMut<Greeter>,
-    mut colors: Query<&mut TextColor, With<Marker>>,
 ) {
-    warn!("hej");
     greeter.timer.tick(timer.delta());
 
     if greeter.timer.finished() {
         screen.set(Screen::Menu);
     } else {
-        warn!("alpha");
+        let timer = &greeter.timer;
+        let div = 4.0;
+        let extra = timer.duration().as_secs_f32() / div;
+        let extra_time = 4.0;
+        let gradient = (timer.fraction_remaining() + extra
+            - (extra * (timer.elapsed_secs() / extra_time)).min(extra))
+        .min(1.0);
+
         for mut color in colors {
-            let alpha = color.0.alpha();
-            color.0.set_alpha(0.0);
+            color.0.set_alpha(gradient.powi(5));
         }
     }
 }
