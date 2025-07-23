@@ -39,12 +39,12 @@ fn on_enter(
     let text_color = TextColor(Color::srgba(0.9, 0.8, 0.0, 1.0));
 
     let tile_size = 32;
-    let rows = 3;
-    let cols = 3;
+    let rows = 1;
+    let cols = 1;
     let image = assets.load::<Image>("ui/button.png", "image::button");
     let atlas = assets.add(
         texture_atlases.add(TextureAtlasLayout::from_grid(
-            UVec2::splat(tile_size),
+            UVec2::splat(tile_size * 3),
             cols,
             rows,
             None,
@@ -53,7 +53,7 @@ fn on_enter(
         "atlas::button",
     );
     let slicer = TextureSlicer {
-        border: BorderRect::all(tile_size as f32),
+        border: BorderRect::all(tile_size as f32 * 3. / 10.),
         center_scale_mode: SliceScaleMode::Stretch,
         sides_scale_mode: SliceScaleMode::Stretch,
         max_corner_scale: 1.0,
@@ -81,6 +81,13 @@ fn on_enter(
                     }
                 )
                 .with_mode(NodeImageMode::Sliced(slicer.clone())),
+                children![
+                    Node {
+                        width: Val::Px(1000.),
+                        height: Val::Px(100.),
+                        ..default()
+                    }
+                ]
             ),
             (
                 Marker,
@@ -110,7 +117,7 @@ fn update(
     mut screen: ResMut<NextState<Screen>>,
     mut greeter: ResMut<Greeter>,
 ) {
-    greeter.timer.tick(timer.delta());
+    // greeter.timer.tick(timer.delta());
 
     if greeter.timer.finished() {
         screen.set(Screen::Menu);
