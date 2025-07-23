@@ -41,7 +41,7 @@ fn on_enter(
     let tile_size = 32;
     let rows = 1;
     let cols = 1;
-    let image = assets.load::<Image>("ui/button.png", "image::button");
+    let image = assets.load::<Image>("ui/atlas.png", "image::ui::atlas");
     let atlas = assets.add(
         texture_atlases.add(TextureAtlasLayout::from_grid(
             UVec2::splat(tile_size * 3),
@@ -53,7 +53,7 @@ fn on_enter(
         "atlas::button",
     );
     let slicer = TextureSlicer {
-        border: BorderRect::all(tile_size as f32 * 3. / 10.),
+        border: BorderRect::all(tile_size as f32),
         center_scale_mode: SliceScaleMode::Stretch,
         sides_scale_mode: SliceScaleMode::Stretch,
         max_corner_scale: 1.0,
@@ -81,13 +81,11 @@ fn on_enter(
                     }
                 )
                 .with_mode(NodeImageMode::Sliced(slicer.clone())),
-                children![
-                    Node {
-                        width: Val::Px(1000.),
-                        height: Val::Px(100.),
-                        ..default()
-                    }
-                ]
+                children![Node {
+                    width: Val::Px(1000.),
+                    height: Val::Px(100.),
+                    ..default()
+                }]
             ),
             (
                 Marker,
