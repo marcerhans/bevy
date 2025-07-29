@@ -31,57 +31,63 @@ impl Default for Greeter {
     }
 }
 
-fn bundle_button() -> impl Bundle {
-    (
-        Marker,
-        StateScoped(Screen::Greeter),
-        Node {
-            height: Val::Percent(100.0),
-            width: Val::Percent(100.0),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            flex_direction: FlexDirection::Column,
-            ..default()
-        },
-        BackgroundColor(Color::srgb(0.5, 0.5, 0.5)),
-    )
-        // .(|parent| {
-        //     parent
-        //         .spawn((
-        //             Node {
-        //                 padding: UiRect::all(Val::Px(4.0)),
-        //                 ..default()
-        //             },
-        //             ImageNode {
-        //                 image: image.clone(),
-        //                 texture_atlas: Some(TextureAtlas {
-        //                     index: 1,
-        //                     layout: atlas.clone(),
-        //                 }),
-        //                 image_mode: NodeImageMode::Sliced(slicer_large.clone()),
-        //                 ..default()
-        //             },
-        //         ))
-        //         .with_children(|parent| {
-        //             parent.spawn((
-        //                 Node {
-        //                     padding: UiRect::all(Val::Px(10.)),
-        //                     width: Val::Px(1000.),
-        //                     ..default()
-        //                 },
-        //                 ImageNode {
-        //                     image: image.clone(),
-        //                     texture_atlas: Some(TextureAtlas {
-        //                         index: 0,
-        //                         layout: atlas.clone(),
-        //                     }),
-        //                     image_mode: NodeImageMode::Sliced(slicer_small.clone()),
-        //                     ..default()
-        //                 },
-        //                 children![Text::new("hej")],
-        //             ));
-        //         });
-        // })
+mod prefab {
+    use super::*;
+
+    pub fn button(
+        image: Handle<Image>,
+        atlas: Handle<TextureAtlasLayout>,
+        slicer_large: &TextureSlicer,
+        slicer_small: &TextureSlicer,
+    ) -> impl Bundle {
+        (
+            Marker,
+            StateScoped(Screen::Greeter),
+            Node {
+                height: Val::Percent(100.0),
+                width: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
+                ..default()
+            },
+            BackgroundColor(Color::srgb(0.5, 0.5, 0.5)),
+            children![
+                Node {
+                    padding: UiRect::all(Val::Px(4.0)),
+                    ..default()
+                },
+                ImageNode {
+                    image: image.clone(),
+                    texture_atlas: Some(TextureAtlas {
+                        index: 1,
+                        layout: atlas.clone(),
+                    }),
+                    image_mode: NodeImageMode::Sliced(slicer_large.clone()),
+                    ..default()
+                },
+                BackgroundColor(Color::srgb(1.0, 0., 0.)),
+                Text::new("hej"),
+                // children![
+                //     Node {
+                //         padding: UiRect::all(Val::Px(10.)),
+                //         width: Val::Px(1000.),
+                //         ..default()
+                //     },
+                //     ImageNode {
+                //         image: image.clone(),
+                //         texture_atlas: Some(TextureAtlas {
+                //             index: 0,
+                //             layout: atlas.clone(),
+                //         }),
+                //         image_mode: NodeImageMode::Sliced(slicer_small.clone()),
+                //         ..default()
+                //     },
+                //     children![Text::new("hej")],
+                // ],
+            ],
+        )
+    }
 }
 
 fn on_enter(
@@ -89,8 +95,6 @@ fn on_enter(
     mut assets: ResMut<asset::Assets>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let text_color = TextColor(Color::srgba(0.9, 0.8, 0.0, 1.0));
-
     let tile_size = 32;
     let rows = 1;
     let cols = 2;
@@ -119,58 +123,7 @@ fn on_enter(
         max_corner_scale: 10.0,
     };
 
-    commands.spawn(bundle_button());
-
-    // commands.spawn((
-    //     Marker,
-    //     StateScoped(Screen::Greeter),
-    //     Node {
-    //         height: Val::Percent(100.0),
-    //         width: Val::Percent(100.0),
-    //         justify_content: JustifyContent::Center,
-    //         align_items: AlignItems::Center,
-    //         flex_direction: FlexDirection::Column,
-    //         ..default()
-    //     },
-    //     // BackgroundColor(Color::srgb(0.5, 0.5, 0.5)),
-    //     BackgroundColor(Color::WHITE),
-    //     children![
-    //         (
-    //             Marker,
-    //             ImageNode::from_atlas_image(
-    //                 image,
-    //                 TextureAtlas {
-    //                     index: 0,
-    //                     layout: atlas.clone(),
-    //                 }
-    //             )
-    //             .with_mode(NodeImageMode::Sliced(slicer.clone())),
-    //             children![Node {
-    //                 width: Val::Px(1000.),
-    //                 height: Val::Px(100.),
-    //                 ..default()
-    //             }]
-    //         ),
-    //         (
-    //             Marker,
-    //             Text::new("Mah Dong Interactive Presents:"),
-    //             TextFont {
-    //                 font_size: 32.0,
-    //                 ..default()
-    //             },
-    //             text_color,
-    //         ),
-    //         (
-    //             Marker,
-    //             Text::new("Mah Jong"),
-    //             TextFont {
-    //                 font_size: 64.0,
-    //                 ..default()
-    //             },
-    //             text_color,
-    //         ),
-    //     ],
-    // ));
+    commands.spawn(prefab::button(image, atlas, &slicer_large, &slicer_small));
 }
 
 fn update(
