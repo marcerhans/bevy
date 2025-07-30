@@ -46,7 +46,7 @@ mod prefab {
                 flex_direction: FlexDirection::Column,
                 ..default()
             },
-            BackgroundColor(Color::srgb(0.5, 0.5, 0.5)),
+            BackgroundColor(Color::BLACK),
         )
     }
 
@@ -128,7 +128,7 @@ fn on_enter(
             atlas,
             &slicer_large,
             &slicer_small,
-            Text::new("hej")
+            Text::new("Mah Dong Inc. Presents:\nMah Jong")
         )],
     ));
 }
