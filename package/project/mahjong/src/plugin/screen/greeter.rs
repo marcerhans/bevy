@@ -34,12 +34,7 @@ impl Default for Greeter {
 mod prefab {
     use super::*;
 
-    pub fn button(
-        image: Handle<Image>,
-        atlas: Handle<TextureAtlasLayout>,
-        slicer_large: &TextureSlicer,
-        slicer_small: &TextureSlicer,
-    ) -> impl Bundle {
+    pub fn root() -> impl Bundle {
         (
             Marker,
             StateScoped(Screen::Greeter),
@@ -52,39 +47,41 @@ mod prefab {
                 ..default()
             },
             BackgroundColor(Color::srgb(0.5, 0.5, 0.5)),
+        )
+    }
+
+    pub fn button(
+        image: Handle<Image>,
+        atlas: Handle<TextureAtlasLayout>,
+        slicer_large: &TextureSlicer,
+        slicer_small: &TextureSlicer,
+        content: impl Bundle,
+    ) -> impl Bundle {
+        (
+            Node {
+                padding: UiRect::all(Val::Px(8.0)),
+                ..default()
+            },
+            ImageNode {
+                image: image.clone(),
+                texture_atlas: Some(TextureAtlas {
+                    index: 1,
+                    layout: atlas.clone(),
+                }),
+                image_mode: NodeImageMode::Sliced(slicer_large.clone()),
+                ..default()
+            },
             children![
-                Node {
-                    padding: UiRect::all(Val::Px(4.0)),
-                    ..default()
-                },
                 ImageNode {
                     image: image.clone(),
                     texture_atlas: Some(TextureAtlas {
-                        index: 1,
+                        index: 0,
                         layout: atlas.clone(),
                     }),
-                    image_mode: NodeImageMode::Sliced(slicer_large.clone()),
+                    image_mode: NodeImageMode::Sliced(slicer_small.clone()),
                     ..default()
                 },
-                BackgroundColor(Color::srgb(1.0, 0., 0.)),
-                Text::new("hej"),
-                // children![
-                //     Node {
-                //         padding: UiRect::all(Val::Px(10.)),
-                //         width: Val::Px(1000.),
-                //         ..default()
-                //     },
-                //     ImageNode {
-                //         image: image.clone(),
-                //         texture_atlas: Some(TextureAtlas {
-                //             index: 0,
-                //             layout: atlas.clone(),
-                //         }),
-                //         image_mode: NodeImageMode::Sliced(slicer_small.clone()),
-                //         ..default()
-                //     },
-                //     children![Text::new("hej")],
-                // ],
+                content,
             ],
         )
     }
@@ -123,7 +120,17 @@ fn on_enter(
         max_corner_scale: 10.0,
     };
 
-    commands.spawn(prefab::button(image, atlas, &slicer_large, &slicer_small));
+    use prefab::*;
+    commands.spawn((
+        root(),
+        children![button(
+            image,
+            atlas,
+            &slicer_large,
+            &slicer_small,
+            Text::new("hej")
+        )],
+    ));
 }
 
 fn update(
