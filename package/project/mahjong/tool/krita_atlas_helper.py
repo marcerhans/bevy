@@ -6,7 +6,7 @@ def create_tiled_layers_with_masks(n, tile_size, x_offset=0, y_offset=0, padding
     tile_size = individual size of tile (pixels)
     x_offset = start x coordinate
     y_offset = start y coordinate
-    padding = padding BETWEEN tiles
+    padding = padding between tiles and origin
     """
     doc = Krita.instance().activeDocument()
 
@@ -56,4 +56,4 @@ def create_tiled_layers_with_masks(n, tile_size, x_offset=0, y_offset=0, padding
             mask.setPixelData(qba, x, y, tile_size, tile_size)
 
 # Usage
-create_tiled_layers_with_masks(2, 32, 4, 4, 2)
+create_tiled_layers_with_masks(3, 128, 128*3+2)

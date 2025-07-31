@@ -59,8 +59,6 @@ mod prefab {
     ) -> impl Bundle {
         (
             Node {
-                // height: Val::Px(100.0),
-                // width: Val::Px(100.0),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 flex_direction: FlexDirection::Column,
@@ -76,19 +74,26 @@ mod prefab {
                 image_mode: NodeImageMode::Sliced(slicer_large.clone()),
                 ..default()
             },
-            content,
-            // children![
-            //     ImageNode {
-            //         image: image.clone(),
-            //         texture_atlas: Some(TextureAtlas {
-            //             index: 0,
-            //             layout: atlas.clone(),
-            //         }),
-            //         image_mode: NodeImageMode::Sliced(slicer_small.clone()),
-            //         ..default()
-            //     },
-            //     content,
-            // ],
+            children![(
+                Node {
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    flex_direction: FlexDirection::Column,
+                    padding: UiRect::all(Val::Px(8.0)),
+                    ..default()
+                },
+                ImageNode {
+                    image: image.clone(),
+                    texture_atlas: Some(TextureAtlas {
+                        index: 0,
+                        layout: atlas.clone(),
+                    }),
+                    image_mode: NodeImageMode::Sliced(slicer_small.clone()),
+                    ..default()
+                },
+                content,
+                // children![content]
+            )],
         )
     }
 }
@@ -98,11 +103,11 @@ fn on_enter(
     mut assets: ResMut<asset::Assets>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let tile_size = 32;
-    let rows = 3;
-    let cols = 6;
+    let tile_size = 128 * 3;
+    let rows = 1;
+    let cols = 2;
     let padding = 2;
-    let image = assets.load::<Image>("ui/atlas.png", "image::ui::atlas");
+    let image = assets.load::<Image>("atlas/384.png", "image::atlas::384");
     let atlas = assets.add(
         texture_atlas_layouts.add(TextureAtlasLayout::from_grid(
             UVec2::splat(tile_size),
@@ -114,15 +119,15 @@ fn on_enter(
         "texture_atlas_layout::button",
     );
     let slicer_small = TextureSlicer {
-        border: BorderRect::all(16 as f32),
+        border: BorderRect::all(128 as f32),
         center_scale_mode: SliceScaleMode::Stretch,
-        sides_scale_mode: SliceScaleMode::Stretch,
+        sides_scale_mode: SliceScaleMode::Tile { stretch_value: 1.0 },
         max_corner_scale: 1.0,
     };
     let slicer_large = TextureSlicer {
-        border: BorderRect::all(16 as f32),
+        border: BorderRect::all(128 as f32),
         center_scale_mode: SliceScaleMode::Stretch,
-        sides_scale_mode: SliceScaleMode::Stretch,
+        sides_scale_mode: SliceScaleMode::Tile { stretch_value: 1.0 },
         max_corner_scale: 1.0,
     };
 
