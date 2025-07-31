@@ -59,6 +59,11 @@ mod prefab {
     ) -> impl Bundle {
         (
             Node {
+                // height: Val::Px(100.0),
+                // width: Val::Px(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
                 padding: UiRect::all(Val::Px(8.0)),
                 ..default()
             },
@@ -71,18 +76,19 @@ mod prefab {
                 image_mode: NodeImageMode::Sliced(slicer_large.clone()),
                 ..default()
             },
-            children![
-                ImageNode {
-                    image: image.clone(),
-                    texture_atlas: Some(TextureAtlas {
-                        index: 0,
-                        layout: atlas.clone(),
-                    }),
-                    image_mode: NodeImageMode::Sliced(slicer_small.clone()),
-                    ..default()
-                },
-                content,
-            ],
+            content,
+            // children![
+            //     ImageNode {
+            //         image: image.clone(),
+            //         texture_atlas: Some(TextureAtlas {
+            //             index: 0,
+            //             layout: atlas.clone(),
+            //         }),
+            //         image_mode: NodeImageMode::Sliced(slicer_small.clone()),
+            //         ..default()
+            //     },
+            //     content,
+            // ],
         )
     }
 }
@@ -93,31 +99,31 @@ fn on_enter(
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let tile_size = 32;
-    let rows = 1;
-    let cols = 2;
+    let rows = 3;
+    let cols = 6;
     let padding = 2;
     let image = assets.load::<Image>("ui/atlas.png", "image::ui::atlas");
     let atlas = assets.add(
         texture_atlas_layouts.add(TextureAtlasLayout::from_grid(
-            UVec2::splat(tile_size * 3 - padding),
+            UVec2::splat(tile_size),
             cols,
             rows,
-            Some(UVec2::splat(2)),
+            Some(UVec2::splat(padding)),
             None,
         )),
         "texture_atlas_layout::button",
     );
     let slicer_small = TextureSlicer {
-        border: BorderRect::all(tile_size as f32),
+        border: BorderRect::all(16 as f32),
         center_scale_mode: SliceScaleMode::Stretch,
         sides_scale_mode: SliceScaleMode::Stretch,
         max_corner_scale: 1.0,
     };
     let slicer_large = TextureSlicer {
-        border: BorderRect::all(tile_size as f32),
+        border: BorderRect::all(16 as f32),
         center_scale_mode: SliceScaleMode::Stretch,
         sides_scale_mode: SliceScaleMode::Stretch,
-        max_corner_scale: 10.0,
+        max_corner_scale: 1.0,
     };
 
     use prefab::*;
@@ -128,7 +134,10 @@ fn on_enter(
             atlas,
             &slicer_large,
             &slicer_small,
-            Text::new("Mah Dong Inc. Presents:\nMah Jong")
+            children![
+                (Node::default(), Text::new("Mah Dong Inc. Presents:")),
+                (Node::default(), Text::new("Mah Jong")),
+            ],
         )],
     ));
 }
