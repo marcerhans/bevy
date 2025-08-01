@@ -121,13 +121,15 @@ fn on_enter(
     let slicer_small = TextureSlicer {
         border: BorderRect::all(128 as f32),
         center_scale_mode: SliceScaleMode::Stretch,
-        sides_scale_mode: SliceScaleMode::Tile { stretch_value: 1.0 },
+        sides_scale_mode: SliceScaleMode::Tile { stretch_value: 2.0 },
         max_corner_scale: 1.0,
     };
     let slicer_large = TextureSlicer {
         border: BorderRect::all(128 as f32),
         center_scale_mode: SliceScaleMode::Stretch,
-        sides_scale_mode: SliceScaleMode::Tile { stretch_value: 1.0 },
+        sides_scale_mode: SliceScaleMode::Tile {
+            stretch_value: 10.0,
+        },
         max_corner_scale: 1.0,
     };
 
