@@ -26,7 +26,7 @@ struct Greeter {
 impl Default for Greeter {
     fn default() -> Self {
         Self {
-            timer: Timer::from_seconds(4.0, TimerMode::Once),
+            timer: Timer::from_seconds(5.0, TimerMode::Once),
         }
     }
 }
@@ -79,7 +79,7 @@ mod prefab {
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     flex_direction: FlexDirection::Column,
-                    padding: UiRect::all(Val::Px(8.0)),
+                    padding: UiRect::all(Val::Px(16.0)),
                     ..default()
                 },
                 ImageNode {
@@ -92,7 +92,6 @@ mod prefab {
                     ..default()
                 },
                 content,
-                // children![content]
             )],
         )
     }
@@ -142,8 +141,12 @@ fn on_enter(
             &slicer_large,
             &slicer_small,
             children![
-                (Node::default(), Text::new("Mah Dong Inc. Presents:")),
-                (Node::default(), Text::new("Mah Jong")),
+                (
+                    Marker,
+                    Node::default(),
+                    Text::new("Mah Dong Inc. Presents:")
+                ),
+                (Marker, Node::default(), Text::new("Mah Jong")),
             ],
         )],
     ));
@@ -151,25 +154,27 @@ fn on_enter(
 
 fn update(
     timer: Res<Time>,
-    colors: Query<&mut TextColor, With<Marker>>,
+    mut text_color: Query<&mut TextColor>,
+    mut image_node: Query<&mut ImageNode>,
     mut screen: ResMut<NextState<Screen>>,
     mut greeter: ResMut<Greeter>,
 ) {
-    // greeter.timer.tick(timer.delta());
+    greeter.timer.tick(timer.delta());
 
     if greeter.timer.finished() {
         screen.set(Screen::Menu);
     } else {
         let timer = &greeter.timer;
-        let div = 4.0;
+        let div = 5.0;
         let extra = timer.duration().as_secs_f32() / div;
-        let extra_time = 4.0;
+        let extra_time = 5.0;
         let gradient = (timer.fraction_remaining() + extra
             - (extra * (timer.elapsed_secs() / extra_time)).min(extra))
         .min(1.0);
 
-        for mut color in colors {
-            color.0.set_alpha(gradient.powi(5));
+        for (mut text_color, mut image_node) in text_color.iter_mut().zip(image_node.reborrow()) {
+            text_color.0.set_alpha(gradient.powi(5));
+            image_node.color.set_alpha(gradient.powi(5));
         }
     }
 }
