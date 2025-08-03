@@ -9,6 +9,3 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
     }
 }
-
-#[derive(Component, Default)]
-pub struct Clickable;

@@ -9,6 +9,3 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
     }
 }
-
-#[derive(Event)]
-pub struct Clicked(pub Entity);
