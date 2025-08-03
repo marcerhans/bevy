@@ -40,7 +40,7 @@ mod root {
 
     fn on_enter(
         mut commands: Commands,
-        mut assets: ResMut<resource::asset::Assets>,
+        // mut assets: ResMut<resource::asset::Assets>,
     ) {
         // let image = assets.load::<Image>("riichi_mahjong_tiles/ExampleBlack.png", "what");
 

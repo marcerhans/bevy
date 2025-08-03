@@ -10,6 +10,7 @@ impl bevy::prelude::Plugin for Plugin {
         app: &mut App,
     ) {
         app.insert_resource(Greeter::default())
+            .add_systems(Startup, on_startup)
             .add_systems(OnEnter(Screen::Greeter), on_enter)
             .add_systems(Update, update);
     }
@@ -21,12 +22,18 @@ struct Marker;
 #[derive(Resource)]
 struct Greeter {
     timer: Timer,
+    texture_atlas: Handle<TextureAtlasLayout>,
+}
+
+impl Greeter {
+    const TIMER_DURATION: f32 = 5.0;
 }
 
 impl Default for Greeter {
     fn default() -> Self {
         Self {
-            timer: Timer::from_seconds(5.0, TimerMode::Once),
+            timer: Timer::from_seconds(Self::TIMER_DURATION, TimerMode::Once),
+            ..default()
         }
     }
 }
@@ -97,26 +104,48 @@ mod prefab {
     }
 }
 
-fn on_enter(
-    mut commands: Commands,
-    mut assets: ResMut<asset::Assets>,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+fn on_startup(
+    asset_server: Res<AssetServer>,
+    asset_atlas: ResMut<Assets<TextureAtlasLayout>>,
+    resource_image: ResMut<asset::atlas::X384>,
+    resource_greeter: ResMut<Greeter>,
 ) {
-    let tile_size = 128 * 3;
-    let rows = 1;
-    let cols = 2;
-    let padding = 2;
-    let image = assets.load::<Image>("atlas/384.png", "image::atlas::384");
-    let atlas = assets.add(
-        texture_atlas_layouts.add(TextureAtlasLayout::from_grid(
+    #[inline]
+    fn load_assets(
+        asset_server: Res<AssetServer>,
+        mut resource_image: ResMut<asset::atlas::X384>,
+    ) {
+        let image = asset_server.load("atlas/384.png");
+        resource_image.0 = image.clone();
+    }
+
+    #[inline]
+    fn compute_and_store_atlas_layout(
+        mut resource_greeter: ResMut<Greeter>,
+        mut asset_atlas: ResMut<Assets<TextureAtlasLayout>>,
+    ) {
+        let tile_size = 128 * 3;
+        let rows = 1;
+        let cols = 2;
+        let padding = 2;
+        resource_greeter.texture_atlas = asset_atlas.add(TextureAtlasLayout::from_grid(
             UVec2::splat(tile_size),
             cols,
             rows,
             Some(UVec2::splat(padding)),
             None,
-        )),
-        "texture_atlas_layout::button",
-    );
+        ));
+    }
+
+    load_assets(asset_server, resource_image);
+    compute_and_store_atlas_layout(resource_greeter, asset_atlas);
+}
+
+fn on_enter(
+    mut commands: Commands,
+    resource_image: ResMut<asset::atlas::X384>,
+    resource_greeter: ResMut<Greeter>,
+) {
     let slicer_small = TextureSlicer {
         border: BorderRect::all(128 as f32),
         center_scale_mode: SliceScaleMode::Stretch,
@@ -136,8 +165,8 @@ fn on_enter(
     commands.spawn((
         root(),
         children![button(
-            image,
-            atlas,
+            resource_image.0.clone(),
+            resource_greeter.texture_atlas.clone(),
             &slicer_large,
             &slicer_small,
             children![
@@ -164,17 +193,13 @@ fn update(
     if greeter.timer.finished() {
         screen.set(Screen::Menu);
     } else {
+        let ef = EaseFunction::CubicIn;
         let timer = &greeter.timer;
-        let div = 5.0;
-        let extra = timer.duration().as_secs_f32() / div;
-        let extra_time = 5.0;
-        let gradient = (timer.fraction_remaining() + extra
-            - (extra * (timer.elapsed_secs() / extra_time)).min(extra))
-        .min(1.0);
+        let gradient = 1.0 - ef.sample_clamped(timer.fraction());
 
         for (mut text_color, mut image_node) in text_color.iter_mut().zip(image_node.reborrow()) {
-            text_color.0.set_alpha(gradient.powi(5));
-            image_node.color.set_alpha(gradient.powi(5));
+            text_color.0.set_alpha(gradient);
+            image_node.color.set_alpha(gradient);
         }
     }
 }
