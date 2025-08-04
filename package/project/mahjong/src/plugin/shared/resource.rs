@@ -12,12 +12,23 @@ impl bevy::prelude::Plugin for Plugin {
 }
 
 pub mod asset {
+    use bevy::prelude::*;
+
+    pub trait Load {
+        fn load<T: Asset>(asset_server: &Res<AssetServer>) -> Handle<T>;
+    }
 
     pub mod atlas {
         use bevy::prelude::*;
 
         #[derive(Resource, Default)]
         pub struct X384(pub Handle<Image>);
+
+        impl super::Load for X384 {
+            fn load<T: Asset>(asset_server: &Res<AssetServer>) -> Handle<T> {
+                asset_server.load::<T>("atlas/384.png")
+            }
+        }
     }
 
     #[deprecated]

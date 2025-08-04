@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::plugin::{screen::Screen, shared::resource::asset};
+use crate::plugin::{
+    screen::Screen,
+    shared::resource::asset::{self, Load},
+};
 
 pub struct Plugin;
 
@@ -106,23 +109,22 @@ mod prefab {
 
 fn on_startup(
     asset_server: Res<AssetServer>,
-    asset_atlas: ResMut<Assets<TextureAtlasLayout>>,
-    resource_image: ResMut<asset::atlas::X384>,
-    resource_greeter: ResMut<Greeter>,
+    mut asset_atlas: ResMut<Assets<TextureAtlasLayout>>,
+    mut resource_image: ResMut<asset::atlas::X384>,
+    mut resource_greeter: ResMut<Greeter>,
 ) {
     #[inline]
     fn load_assets(
-        asset_server: Res<AssetServer>,
-        mut resource_image: ResMut<asset::atlas::X384>,
+        asset_server: &Res<AssetServer>,
+        resource_image: &mut ResMut<asset::atlas::X384>,
     ) {
-        let image = asset_server.load("atlas/384.png");
-        resource_image.0 = image.clone();
+        resource_image.0 = asset::atlas::X384::load(&asset_server);
     }
 
     #[inline]
     fn compute_and_store_atlas_layout(
-        mut resource_greeter: ResMut<Greeter>,
-        mut asset_atlas: ResMut<Assets<TextureAtlasLayout>>,
+        resource_greeter: &mut ResMut<Greeter>,
+        asset_atlas: &mut ResMut<Assets<TextureAtlasLayout>>,
     ) {
         let tile_size = 128 * 3;
         let rows = 1;
@@ -137,8 +139,8 @@ fn on_startup(
         ));
     }
 
-    load_assets(asset_server, resource_image);
-    compute_and_store_atlas_layout(resource_greeter, asset_atlas);
+    load_assets(&asset_server, &mut resource_image);
+    compute_and_store_atlas_layout(&mut resource_greeter, &mut asset_atlas);
 }
 
 fn on_enter(
