@@ -36,7 +36,7 @@ impl Default for Greeter {
     fn default() -> Self {
         Self {
             timer: Timer::from_seconds(Self::TIMER_DURATION, TimerMode::Once),
-            ..default()
+            texture_atlas: default(),
         }
     }
 }

@@ -18,8 +18,8 @@ impl bevy::prelude::Plugin for Plugin {
                 })
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        title: "Mahjong".into(),
-                        name: Some("Mahjong".into()),
+                        title: "Mah Jong".into(),
+                        name: Some("Mah Jong".into()),
                         present_mode: PresentMode::AutoNoVsync,
                         fit_canvas_to_parent: true,
                         ..default()

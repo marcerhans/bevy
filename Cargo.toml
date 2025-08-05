@@ -18,7 +18,7 @@ repository = "https://github.com/marcerhans/bevy"
 version = "0.1.0"
 
 [workspace.dependencies]
-bevy = { version = "0.16.0", features = ["wayland"] }
+bevy = { version = "0.16.1", features = ["wayland"] }
 avian2d = { version = "0.3.1" }
 avian3d = { version = "0.3.1" }
 
