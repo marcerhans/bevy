@@ -13,12 +13,17 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_plugins((greeter::Plugin, menu::Plugin, in_game::Plugin))
             .init_state::<Screen>()
+            .add_systems(
+                OnEnter(Screen::Root),
+                |mut next_state: ResMut<NextState<Screen>>| {
+                    debug!("Entering screen: Root");
+                    next_state.set(Screen::Greeter);
+                },
+            )
             .add_systems(OnEnter(Screen::Greeter), || {
                 debug!("Entering screen: Greeter")
             })
-            .add_systems(OnEnter(Screen::Menu), || {
-                debug!("Entering screen: Menu ")
-            })
+            .add_systems(OnEnter(Screen::Menu), || debug!("Entering screen: Menu"))
             .add_systems(OnEnter(Screen::InGame), || {
                 debug!("Entering screen: InGame")
             });
@@ -29,6 +34,7 @@ impl bevy::prelude::Plugin for Plugin {
 #[states(scoped_entities)]
 enum Screen {
     #[default]
+    Root,
     Greeter,
     Menu,
     InGame,
