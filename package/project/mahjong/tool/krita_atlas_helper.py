@@ -31,7 +31,7 @@ def create_tiled_layers_with_masks(n, tile_size, x_offset=0, y_offset=0, padding
 
     for row in range(n):
         for col in range(n):
-            layer = doc.createNode(f"Tile_{row}_{col}", "paintlayer")
+            layer = doc.createNode(f"Tile_{row}_{col}", "grouplayer")
             group.addChildNode(layer, None)
 
             mask = doc.createTransparencyMask(f"TileMask_{row}_{col}")
@@ -56,4 +56,4 @@ def create_tiled_layers_with_masks(n, tile_size, x_offset=0, y_offset=0, padding
             mask.setPixelData(qba, x, y, tile_size, tile_size)
 
 # Usage
-create_tiled_layers_with_masks(3, 128, 128*3+2)
+create_tiled_layers_with_masks(3, 256)

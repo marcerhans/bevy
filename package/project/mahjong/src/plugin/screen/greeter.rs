@@ -78,7 +78,7 @@ mod prefab {
             ImageNode {
                 image: image.clone(),
                 texture_atlas: Some(TextureAtlas {
-                    index: 1,
+                    index: 0,
                     layout: atlas.clone(),
                 }),
                 image_mode: NodeImageMode::Sliced(slicer_large.clone()),
@@ -90,15 +90,6 @@ mod prefab {
                     align_items: AlignItems::Center,
                     flex_direction: FlexDirection::Column,
                     padding: UiRect::all(Val::Px(16.0)),
-                    ..default()
-                },
-                ImageNode {
-                    image: image.clone(),
-                    texture_atlas: Some(TextureAtlas {
-                        index: 0,
-                        layout: atlas.clone(),
-                    }),
-                    image_mode: NodeImageMode::Sliced(slicer_small.clone()),
                     ..default()
                 },
                 content,
@@ -126,10 +117,10 @@ fn on_startup(
         resource_greeter: &mut ResMut<Greeter>,
         asset_atlas: &mut ResMut<Assets<TextureAtlasLayout>>,
     ) {
-        let tile_size = 128 * 3;
+        let tile_size = 256 * 3;
         let rows = 1;
-        let cols = 2;
-        let padding = 2;
+        let cols = 1;
+        let padding = 1;
         resource_greeter.texture_atlas = asset_atlas.add(TextureAtlasLayout::from_grid(
             UVec2::splat(tile_size),
             cols,
@@ -149,13 +140,13 @@ fn on_enter(
     resource_greeter: ResMut<Greeter>,
 ) {
     let slicer_small = TextureSlicer {
-        border: BorderRect::all(128 as f32),
+        border: BorderRect::all(256 as f32),
         center_scale_mode: SliceScaleMode::Stretch,
         sides_scale_mode: SliceScaleMode::Tile { stretch_value: 2.0 },
         max_corner_scale: 1.0,
     };
     let slicer_large = TextureSlicer {
-        border: BorderRect::all(128 as f32),
+        border: BorderRect::all(256 as f32),
         center_scale_mode: SliceScaleMode::Stretch,
         sides_scale_mode: SliceScaleMode::Tile {
             stretch_value: 10.0,
