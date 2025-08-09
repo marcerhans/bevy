@@ -190,8 +190,11 @@ fn update(
         let timer = &greeter.timer;
         let gradient = 1.0 - ef.sample_clamped(timer.fraction());
 
-        for (mut text_color, mut image_node) in text_color.iter_mut().zip(image_node.reborrow()) {
+        for mut text_color in text_color {
             text_color.0.set_alpha(gradient);
+        }
+
+        for mut image_node in image_node {
             image_node.color.set_alpha(gradient);
         }
     }

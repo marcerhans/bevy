@@ -26,7 +26,7 @@ pub mod asset {
 
         impl super::Load for X384 {
             fn load<T: Asset>(asset_server: &Res<AssetServer>) -> Handle<T> {
-                asset_server.load::<T>("atlas/x384.png")
+                asset_server.load::<T>("atlas/x256.png")
             }
         }
     }
