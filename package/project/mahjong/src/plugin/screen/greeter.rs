@@ -63,8 +63,7 @@ mod prefab {
     pub fn button(
         image: Handle<Image>,
         atlas: Handle<TextureAtlasLayout>,
-        slicer_large: &TextureSlicer,
-        slicer_small: &TextureSlicer,
+        slicer: &TextureSlicer,
         content: impl Bundle,
     ) -> impl Bundle {
         (
@@ -81,7 +80,7 @@ mod prefab {
                     index: 0,
                     layout: atlas.clone(),
                 }),
-                image_mode: NodeImageMode::Sliced(slicer_large.clone()),
+                image_mode: NodeImageMode::Sliced(slicer.clone()),
                 ..default()
             },
             children![(
@@ -139,18 +138,10 @@ fn on_enter(
     resource_image: ResMut<asset::atlas::X384>,
     resource_greeter: ResMut<Greeter>,
 ) {
-    let slicer_small = TextureSlicer {
+    let slicer = TextureSlicer {
         border: BorderRect::all(256 as f32),
         center_scale_mode: SliceScaleMode::Stretch,
-        sides_scale_mode: SliceScaleMode::Tile { stretch_value: 2.0 },
-        max_corner_scale: 1.0,
-    };
-    let slicer_large = TextureSlicer {
-        border: BorderRect::all(256 as f32),
-        center_scale_mode: SliceScaleMode::Stretch,
-        sides_scale_mode: SliceScaleMode::Tile {
-            stretch_value: 10.0,
-        },
+        sides_scale_mode: SliceScaleMode::Stretch,
         max_corner_scale: 1.0,
     };
 
@@ -160,8 +151,7 @@ fn on_enter(
         children![button(
             resource_image.0.clone(),
             resource_greeter.texture_atlas.clone(),
-            &slicer_large,
-            &slicer_small,
+            &slicer,
             children![
                 (
                     Marker,
