@@ -60,20 +60,12 @@ mod root {
 
         // container.with_child((Text::new("hej"),));
 
-        use crate::plugin::shared::component::prefab::*;
+        // use crate::plugin::shared::component::prefab::*;
 
-        commands.spawn((
-            Node {
-                flex_direction: FlexDirection::Column,
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                ..default()
-            },
-            BackgroundColor(Color::srgb(0.5, 0.5, 1.0)),
-            children![(
+        fn button(children: impl Bundle) -> impl Bundle {
+            (
                 Node {
                     padding: UiRect::all(Val::Px(16.0)),
-                    margin: UiRect::all(Val::Px(32.0)),
                     border: UiRect::all(Val::Px(8.0)),
                     align_self: AlignSelf::Center,
                     ..default()
@@ -81,8 +73,25 @@ mod root {
                 BackgroundColor(Color::srgb(0.5, 0.5, 0.5)),
                 BorderColor(Color::srgb(0.0, 1.0, 0.0)),
                 BorderRadius::all(Val::Px(16.0)),
-                children![Text::new("hej")],
-            )],
+                children![children],
+            )
+        }
+
+        commands.spawn((
+            Node {
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                row_gap: Val::Px(16.0),
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                ..default()
+            },
+            BackgroundColor(Color::srgb(0.5, 0.5, 1.0)),
+            children![
+                button(Text::new("Play")),
+                button(Text::new("Settings")),
+                button(Text::new("Quit")),
+            ],
         ));
     }
 }
