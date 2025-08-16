@@ -24,9 +24,6 @@ enum Menu {
 
 mod root {
     use bevy::prelude::*;
-
-    use crate::plugin::shared::resource;
-
     pub struct Plugin;
 
     impl bevy::prelude::Plugin for Plugin {
@@ -62,5 +59,30 @@ mod root {
         // ));
 
         // container.with_child((Text::new("hej"),));
+
+        use crate::plugin::shared::component::prefab::*;
+
+        commands.spawn((
+            Node {
+                flex_direction: FlexDirection::Column,
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                ..default()
+            },
+            BackgroundColor(Color::srgb(0.5, 0.5, 1.0)),
+            children![(
+                Node {
+                    padding: UiRect::all(Val::Px(16.0)),
+                    margin: UiRect::all(Val::Px(32.0)),
+                    border: UiRect::all(Val::Px(8.0)),
+                    align_self: AlignSelf::Center,
+                    ..default()
+                },
+                BackgroundColor(Color::srgb(0.5, 0.5, 0.5)),
+                BorderColor(Color::srgb(0.0, 1.0, 0.0)),
+                BorderRadius::all(Val::Px(16.0)),
+                children![Text::new("hej")],
+            )],
+        ));
     }
 }

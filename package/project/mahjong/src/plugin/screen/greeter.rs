@@ -41,62 +41,6 @@ impl Default for Greeter {
     }
 }
 
-mod prefab {
-    use super::*;
-
-    pub fn root() -> impl Bundle {
-        (
-            Marker,
-            StateScoped(Screen::Greeter),
-            Node {
-                height: Val::Percent(100.0),
-                width: Val::Percent(100.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                flex_direction: FlexDirection::Column,
-                ..default()
-            },
-            BackgroundColor(Color::BLACK),
-        )
-    }
-
-    pub fn button(
-        image: Handle<Image>,
-        atlas: Handle<TextureAtlasLayout>,
-        slicer: &TextureSlicer,
-        content: impl Bundle,
-    ) -> impl Bundle {
-        (
-            Node {
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                flex_direction: FlexDirection::Column,
-                padding: UiRect::all(Val::Px(8.0)),
-                ..default()
-            },
-            ImageNode {
-                image: image.clone(),
-                texture_atlas: Some(TextureAtlas {
-                    index: 0,
-                    layout: atlas.clone(),
-                }),
-                image_mode: NodeImageMode::Sliced(slicer.clone()),
-                ..default()
-            },
-            children![(
-                Node {
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    flex_direction: FlexDirection::Column,
-                    padding: UiRect::all(Val::Px(16.0)),
-                    ..default()
-                },
-                content,
-            )],
-        )
-    }
-}
-
 fn on_startup(
     asset_server: Res<AssetServer>,
     mut asset_atlas: ResMut<Assets<TextureAtlasLayout>>,
@@ -133,34 +77,20 @@ fn on_startup(
     compute_and_store_atlas_layout(&mut resource_greeter, &mut asset_atlas);
 }
 
-fn on_enter(
-    mut commands: Commands,
-    resource_image: ResMut<asset::atlas::X384>,
-    resource_greeter: ResMut<Greeter>,
-) {
-    let slicer = TextureSlicer {
-        border: BorderRect::all(256 as f32),
-        center_scale_mode: SliceScaleMode::Stretch,
-        sides_scale_mode: SliceScaleMode::Stretch,
-        max_corner_scale: 1.0,
-    };
-
-    use prefab::*;
+fn on_enter(mut commands: Commands) {
+    use crate::plugin::shared::component::prefab::*;
     commands.spawn((
-        root(),
-        children![button(
-            resource_image.0.clone(),
-            resource_greeter.texture_atlas.clone(),
-            &slicer,
-            children![
-                (
-                    Marker,
-                    Node::default(),
-                    Text::new("Mah Dong Inc. Presents:")
-                ),
-                (Marker, Node::default(), Text::new("Mah Jong")),
-            ],
-        )],
+        Marker,
+        StateScoped(Screen::Greeter),
+        ui::root(),
+        children![ui::button(children![
+            (
+                Marker,
+                Node::default(),
+                Text::new("Mah Dong Inc. Presents:")
+            ),
+            (Marker, Node::default(), Text::new("Mah Jong")),
+        ],)],
     ));
 }
 
@@ -171,6 +101,10 @@ fn update(
     mut screen: ResMut<NextState<Screen>>,
     mut greeter: ResMut<Greeter>,
 ) {
+    // TMP
+    screen.set(Screen::Menu);
+    return;
+
     greeter.timer.tick(timer.delta());
 
     if greeter.timer.finished() {
