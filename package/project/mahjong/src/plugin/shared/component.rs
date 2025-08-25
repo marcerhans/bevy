@@ -46,7 +46,7 @@ pub mod prefab {
                 },
                 BorderColor(Color::srgb(0.5, 0.5, 0.5)),
                 BackgroundColor(Color::srgb(0.25, 0.25, 0.25)),
-                content,
+                children![content],
             )
         }
     }

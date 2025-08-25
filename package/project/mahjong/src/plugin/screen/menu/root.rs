@@ -26,9 +26,11 @@ fn on_enter(
             align_items: AlignItems::Center,
             flex_direction: FlexDirection::Column,
             row_gap: Val::Px(16.0),
+                    border: UiRect::all(Val::Px(8.0)),
             ..default()
         },
         BackgroundColor(Color::BLACK),
+        BorderColor(Color::srgb(0.5, 0.5, 0.0)),
         children![
             ui::button(Text::new("hej")),
             ui::button(Text::new("på")),
