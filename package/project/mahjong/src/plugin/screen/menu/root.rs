@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+
 pub struct Plugin;
 
 impl bevy::prelude::Plugin for Plugin {
@@ -10,11 +11,29 @@ impl bevy::prelude::Plugin for Plugin {
     }
 }
 
+#[derive(Component)]
+struct Marker;
+
 fn on_enter(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
 ) {
-    const SCENE_FILE_PATH: &str = "scene/menu/root.scn.ron";
-    let scene = asset_server.load(SCENE_FILE_PATH);
-    commands.spawn(DynamicSceneRoot(scene));
+    use crate::plugin::shared::component::prefab::*;
+    commands.spawn((
+        Node {
+            height: Val::Percent(100.0),
+            width: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            flex_direction: FlexDirection::Column,
+            row_gap: Val::Px(16.0),
+            ..default()
+        },
+        BackgroundColor(Color::BLACK),
+        children![
+            ui::button(Text::new("hej")),
+            ui::button(Text::new("på")),
+            ui::button(Text::new("dig")),
+            ui::button(Text::new(":)")),
+        ],
+    ));
 }
