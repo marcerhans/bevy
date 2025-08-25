@@ -78,6 +78,7 @@ fn on_startup(
 }
 
 fn on_enter(mut commands: Commands) {
+
     use crate::plugin::shared::component::prefab::*;
     commands.spawn((
         Marker,
