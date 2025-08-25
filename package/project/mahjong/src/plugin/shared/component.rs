@@ -40,6 +40,7 @@ pub mod prefab {
                     align_items: AlignItems::Center,
                     flex_direction: FlexDirection::Column,
                     margin: UiRect::all(Val::Px(16.0)),
+                    padding: UiRect::all(Val::Px(16.0)),
                     border: UiRect::all(Val::Px(8.0)),
                     ..default()
                 },
