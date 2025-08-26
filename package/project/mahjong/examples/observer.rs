@@ -2,10 +2,7 @@ use bevy::prelude::*;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: None,
-            ..default()
-        }))
+        .add_plugins(DefaultPlugins)
         .add_systems(Startup, on_startup)
         .run();
 }
@@ -38,9 +35,9 @@ fn on_startup(mut commands: Commands) {
     info!("Spawned: {:?}", e3);
 
     info!("Before trigger");
-    commands.trigger(Exploded);
+    // commands.trigger(Exploded);
     commands.trigger_targets(Exploded, e1);
-    commands.trigger_targets(Exploded, e2);
+    // commands.trigger_targets(Exploded, e2);
     commands.trigger_targets(Exploded, e3);
     info!("After trigger");
 }
