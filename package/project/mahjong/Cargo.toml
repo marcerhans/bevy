@@ -14,8 +14,9 @@ version.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+bevy-inspector-egui = { workspace = true }
+bevy_enhanced_input = { workspace = true }
 avian2d = { workspace = true }
-bevy-inspector-egui = { version = "0.31.0" }
 
 [features]
 debug = ["bevy/dynamic_linking"] # Use for debug/dev builds. Faster compile times.

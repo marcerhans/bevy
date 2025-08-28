@@ -35,6 +35,7 @@ pub mod prefab {
             content: impl Bundle,
         ) -> impl Bundle {
             (
+                Button,
                 Node {
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,

@@ -13,7 +13,7 @@ struct Exploded;
 fn on_startup(mut commands: Commands) {
     let e1 = commands
         .spawn(Name::new("1"))
-        .observe(on_exploded) //
+        // .observe(on_exploded) //
         .observe(|trigger: Trigger<Exploded>| {
             info!("WHAT1? {:?}", trigger.target());
         })
@@ -27,7 +27,7 @@ fn on_startup(mut commands: Commands) {
 
     let e3 = commands
         .spawn(Name::new("3"))
-        .observe(on_exploded) //
+        // .observe(on_exploded) //
         .observe(|trigger: Trigger<Exploded>| {
             info!("WHAT3? {:?}", trigger.target());
         })
@@ -35,7 +35,7 @@ fn on_startup(mut commands: Commands) {
     info!("Spawned: {:?}", e3);
 
     info!("Before trigger");
-    commands.trigger(Exploded);
+    // commands.trigger(Exploded);
     commands.trigger_targets(Exploded, e1);
     commands.trigger_targets(Exploded, e2);
     commands.trigger_targets(Exploded, e3);

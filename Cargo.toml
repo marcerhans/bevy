@@ -19,6 +19,8 @@ version = "0.1.0"
 
 [workspace.dependencies]
 bevy = { version = "0.16.1", features = ["wayland"] }
+bevy-inspector-egui = { version = "0.31.0" }
+bevy_enhanced_input = { version = "0.18.0" }
 avian2d = { version = "0.3.1" }
 avian3d = { version = "0.3.1" }
 

@@ -1,6 +1,4 @@
-use avian2d::PhysicsPlugins;
 use bevy::{asset::AssetMetaCheck, log::LogPlugin, prelude::*, window::PresentMode};
-use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 
 pub struct Plugin;
 
@@ -9,8 +7,8 @@ impl bevy::prelude::Plugin for Plugin {
         &self,
         app: &mut App,
     ) {
-        app.add_plugins((
-            bevy::DefaultPlugins
+        app.add_plugins(
+            (bevy::DefaultPlugins
                 .set(LogPlugin {
                     filter: "error,mahjong=debug".into(),
                     level: bevy::log::Level::DEBUG,
@@ -34,12 +32,7 @@ impl bevy::prelude::Plugin for Plugin {
                     },
                     file_path: "asset".to_string(),
                     ..default()
-                }),
-            EguiPlugin {
-                enable_multipass_for_primary_context: true,
-            },
-            WorldInspectorPlugin::new(),
-            PhysicsPlugins::default(),
-        ));
+                })),
+        );
     }
 }
