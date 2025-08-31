@@ -33,6 +33,7 @@ pub mod prefab {
             // atlas: Handle<TextureAtlasLayout>,
             // slicer: &TextureSlicer,
             content: impl Bundle,
+            children: impl Bundle,
         ) -> impl Bundle {
             (
                 Button,
@@ -47,7 +48,8 @@ pub mod prefab {
                 },
                 BorderColor(Color::srgb(0.5, 0.5, 0.5)),
                 BackgroundColor(Color::srgb(0.25, 0.25, 0.25)),
-                children![content],
+                content,
+                children![children],
             )
         }
     }

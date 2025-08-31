@@ -20,5 +20,7 @@ impl bevy::prelude::Plugin for Plugin {
 enum Menu {
     #[default]
     Root,
+    Play,
     Settings,
+    Quit,
 }

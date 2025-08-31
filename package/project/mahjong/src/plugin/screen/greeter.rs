@@ -78,20 +78,22 @@ fn on_startup(
 }
 
 fn on_enter(mut commands: Commands) {
-
     use crate::plugin::shared::component::prefab::*;
     commands.spawn((
         Marker,
         StateScoped(Screen::Greeter),
         ui::root(),
-        children![ui::button(children![
-            (
-                Marker,
-                Node::default(),
-                Text::new("Mah Dong Inc. Presents:")
-            ),
-            (Marker, Node::default(), Text::new("Mah Jong")),
-        ],)],
+        children![ui::button(
+            (),
+            children![
+                (
+                    Marker,
+                    Node::default(),
+                    Text::new("Mah Dong Inc. Presents:")
+                ),
+                (Marker, Node::default(), Text::new("Mah Jong")),
+            ],
+        )],
     ));
 }
 
