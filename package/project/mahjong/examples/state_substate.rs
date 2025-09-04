@@ -56,11 +56,11 @@ pub enum State {
 }
 
 mod sub {
+    use super::{Despawned, Simple, State};
     use bevy::prelude::*;
-    use super::{State, Simple, Despawned};
 
     #[derive(SubStates, Clone, PartialEq, Eq, Hash, Debug, Default)]
-    #[source(State = State::B)]
+    #[source(State = State::C)]
     #[states(scoped_entities)]
     enum SubState {
         #[default]
@@ -76,13 +76,13 @@ mod sub {
             &self,
             app: &mut App,
         ) {
-            app.add_systems(
+            app.init_state::<SubState>().add_systems(
                 OnEnter(SubState::AA),
                 |mut commands: Commands, mut next_state: ResMut<NextState<SubState>>| {
                     info!("Entered state: {:?}", SubState::AA);
                     info!("Switching to {:?}", SubState::BB);
                     let name = Name::new("AA Component");
-                    commands.spawn((StateScoped(State::A), Simple, name.clone()));
+                    commands.spawn((StateScoped(SubState::AA), Simple, name.clone()));
                     commands.trigger(Despawned(name));
                     next_state.set(SubState::BB);
                 },
