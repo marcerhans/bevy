@@ -2373,6 +2373,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "examples"
+version = "0.1.0"
+dependencies = [
+ "avian2d",
+ "bevy",
+ "bevy-inspector-egui",
+ "bevy_enhanced_input",
+]
+
+[[package]]
 name = "exr"
 version = "1.73.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

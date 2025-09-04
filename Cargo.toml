@@ -53,3 +53,27 @@ inherits = "release"
 opt-level = "s"
 # Strip all debugging information from the binary to slightly reduce file size.
 strip = "debuginfo"
+
+# This workspace root package exists purely to run examples
+[package]
+name = "examples"
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license-file.workspace = true
+publish.workspace = true
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+bevy-inspector-egui = { workspace = true }
+bevy_enhanced_input = { workspace = true }
+avian2d = { workspace = true }
+
+[features]
+debug = ["bevy/dynamic_linking"] # Use for debug/dev builds. Faster compile times.
