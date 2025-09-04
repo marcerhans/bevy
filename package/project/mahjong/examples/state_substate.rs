@@ -1,34 +1,31 @@
 use bevy::prelude::*;
 
-#[derive(Component)]
-#[require(Name)]
-struct Simple;
-
-#[derive(Event)]
-struct Despawned(Name);
-
-impl Simple {
-    fn on_despawn(trigger: Trigger<Despawned>) {
-        info!("Despawned: {:?}", trigger.0);
-    }
-}
-
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .init_state::<State>()
         .add_plugins(sub::Plugin)
+        .add_systems(Update, |mut removed: RemovedComponents<Name>| {
+            for entity in removed.read() {
+                info!("Removed: {entity:?}")
+            }
+        })
+        .add_systems(
+            Startup,
+            |mut commands: Commands, mut next_state: ResMut<NextState<State>>| {
+                info!("Init");
+                next_state.set(State::A);
+            },
+        )
         .add_systems(
             OnEnter(State::A),
             |mut commands: Commands, mut next_state: ResMut<NextState<State>>| {
-                info!("Observing despawn events");
-                commands.spawn(Observer::new(Simple::on_despawn));
-
                 info!("Entered state: {:?}", State::A);
                 info!("Switching to {:?}", State::B);
-                let name = Name::new("A Component");
-                commands.spawn((StateScoped(State::A), Simple, name.clone()));
-                commands.trigger(Despawned(name));
+                info!(
+                    "Spawned: {:?}",
+                    commands.spawn((StateScoped(State::A), Name::new("A"))).id()
+                );
                 next_state.set(State::B);
             },
         )
@@ -37,12 +34,20 @@ fn main() {
             |mut commands: Commands, mut next_state: ResMut<NextState<State>>| {
                 info!("Entered state: {:?}", State::B);
                 info!("Switching to {:?}", State::C);
-                let name = Name::new("B Component");
-                commands.spawn((StateScoped(State::B), Simple, name.clone()));
-                commands.trigger(Despawned(name));
+                info!(
+                    "Spawned: {:?}",
+                    commands.spawn((StateScoped(State::B), Name::new("B"))).id()
+                );
                 next_state.set(State::C);
             },
         )
+        .add_systems(OnEnter(State::C), |mut commands: Commands| {
+            info!("Entered state: {:?}", State::C);
+            info!(
+                "Spawned: {:?}",
+                commands.spawn((StateScoped(State::C), Name::new("C"))).id()
+            );
+        })
         .run();
 }
 
@@ -50,13 +55,14 @@ fn main() {
 #[states(scoped_entities)]
 pub enum State {
     #[default]
+    Init,
     A,
     B,
     C,
 }
 
 mod sub {
-    use super::{Despawned, Simple, State};
+    use super::State;
     use bevy::prelude::*;
 
     #[derive(SubStates, Clone, PartialEq, Eq, Hash, Debug, Default)]
@@ -76,17 +82,49 @@ mod sub {
             &self,
             app: &mut App,
         ) {
-            app.init_state::<SubState>().add_systems(
-                OnEnter(SubState::AA),
-                |mut commands: Commands, mut next_state: ResMut<NextState<SubState>>| {
-                    info!("Entered state: {:?}", SubState::AA);
-                    info!("Switching to {:?}", SubState::BB);
-                    let name = Name::new("AA Component");
-                    commands.spawn((StateScoped(SubState::AA), Simple, name.clone()));
-                    commands.trigger(Despawned(name));
-                    next_state.set(SubState::BB);
-                },
-            );
+            app.add_sub_state::<SubState>()
+                .add_systems(
+                    OnEnter(SubState::AA),
+                    |mut commands: Commands, mut next_state: ResMut<NextState<SubState>>| {
+                        info!("Entered state: {:?}", SubState::AA);
+                        info!("Switching to {:?}", SubState::BB);
+                        info!(
+                            "Spawned: {:?}",
+                            commands
+                                .spawn((StateScoped(SubState::AA), Name::new("AA")))
+                                .id()
+                        );
+                        next_state.set(SubState::BB);
+                    },
+                )
+                .add_systems(
+                    OnEnter(SubState::BB),
+                    |mut commands: Commands, mut next_state: ResMut<NextState<SubState>>| {
+                        info!("Entered state: {:?}", SubState::BB);
+                        info!("Switching to {:?}", SubState::CC);
+                        info!(
+                            "Spawned: {:?}",
+                            commands
+                                .spawn((StateScoped(SubState::BB), Name::new("BB")))
+                                .id()
+                        );
+                        next_state.set(SubState::CC);
+                    },
+                )
+                .add_systems(
+                    OnEnter(SubState::CC),
+                    |mut commands: Commands, mut next_state: ResMut<NextState<State>>| {
+                        info!("Entered state: {:?}", SubState::CC);
+                        info!("Switching to super State {:?}", State::Init);
+                        info!(
+                            "Spawned: {:?}",
+                            commands
+                                .spawn((StateScoped(SubState::CC), Name::new("CC")))
+                                .id()
+                        );
+                        next_state.set(State::Init);
+                    },
+                );
         }
     }
 }
