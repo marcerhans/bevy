@@ -1,21 +1,31 @@
-use bevy::prelude::*;
+use bevy::{ecs::component::HookContext, prelude::*};
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .init_state::<State>()
         .add_plugins(sub::Plugin)
-        .add_systems(Update, |mut removed: RemovedComponents<Name>| {
-            for entity in removed.read() {
-                info!("Removed: {entity:?}")
-            }
-        })
         .add_systems(
             Startup,
-            |mut commands: Commands, mut next_state: ResMut<NextState<State>>| {
-                info!("Init");
-                next_state.set(State::A);
-            },
+            (
+                |mut world: &mut World| {
+                    info!("Init");
+                    world.register_component_hooks::<Name>().on_remove(
+                        |world,
+                         HookContext {
+                             entity,
+                             ..
+                         }| {
+                            let name = world.get::<Name>(entity).unwrap();
+                            info!("Removed {name:?} ({:?})", entity);
+                        },
+                    );
+                },
+                |mut next_state: ResMut<NextState<State>>| {
+                    info!("Init2");
+                    next_state.set(State::A);
+                },
+            ),
         )
         .add_systems(
             OnEnter(State::A),
@@ -49,6 +59,10 @@ fn main() {
             );
         })
         .run();
+}
+
+pub fn on_remove(trigger: Trigger<OnRemove>) {
+    info!("Removed: {:?}", trigger.target());
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
