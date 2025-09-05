@@ -32,7 +32,9 @@ impl Default for TimerRes {
 #[derive(Component)]
 struct Marker;
 
-fn on_enter(mut commands: Commands) {
+fn on_enter(mut commands: Commands, mut timer: ResMut<TimerRes>) {
+    timer.inner.reset();
+
     let font = (
         TextFont { ..default() },
         TextColor(Color::srgb(0.9, 0.9, 0.9)),
