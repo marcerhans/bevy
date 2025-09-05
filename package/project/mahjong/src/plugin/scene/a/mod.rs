@@ -106,9 +106,11 @@ pub mod root {
                         },
                     }
                 },
-                Interaction::Hovered => {},
+                Interaction::Hovered => {
+                    bg_color.0.set_alpha(0.5);
+                },
                 Interaction::None => {
-                    *bg_color = Color::default().into();
+                    *bg_color = Color::srgba(0.0, 0.0, 0.0, 0.0).into();
                 },
             }
         }
