@@ -1,7 +1,6 @@
 pub mod default;
 pub mod external;
 pub mod scene;
-pub mod util;
 
 use bevy::prelude::*;
 

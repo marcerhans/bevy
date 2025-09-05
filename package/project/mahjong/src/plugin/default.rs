@@ -34,5 +34,7 @@ impl bevy::prelude::Plugin for Plugin {
                     ..default()
                 }),
         );
+
+        app.world_mut().spawn(Camera2d);
     }
 }
