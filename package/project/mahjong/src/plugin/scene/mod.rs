@@ -1,4 +1,5 @@
 mod greeter;
+mod a;
 
 use bevy::prelude::*;
 
@@ -11,7 +12,8 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.init_state::<Startup>()
             .add_systems(Startup, startup)
-            .add_plugins(greeter::Plugin);
+            .add_plugins(greeter::Plugin)
+            .add_plugins(a::Plugin);
     }
 }
 
@@ -19,7 +21,7 @@ impl bevy::prelude::Plugin for Plugin {
 #[states(scoped_entities)]
 pub enum Startup {
     #[default]
-    Init,
+    Root,
     Greeter,
     Running,
 }
