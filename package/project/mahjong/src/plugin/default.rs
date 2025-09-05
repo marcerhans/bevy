@@ -8,7 +8,7 @@ impl bevy::prelude::Plugin for Plugin {
         app: &mut App,
     ) {
         app.add_plugins(
-            (bevy::DefaultPlugins
+            bevy::DefaultPlugins
                 .set(LogPlugin {
                     filter: "error,mahjong=debug".into(),
                     level: bevy::log::Level::DEBUG,
@@ -32,7 +32,7 @@ impl bevy::prelude::Plugin for Plugin {
                     },
                     file_path: "asset".to_string(),
                     ..default()
-                })),
+                }),
         );
     }
 }

@@ -1,9 +1,7 @@
-pub mod camera;
 pub mod default;
 pub mod external;
-pub mod input;
-pub mod screen;
-pub mod shared;
+pub mod scene;
+pub mod util;
 
 use bevy::prelude::*;
 
@@ -17,10 +15,7 @@ impl bevy::prelude::Plugin for Plugin {
         app.add_plugins((
             default::Plugin,
             external::Plugin,
-            input::Plugin,
-            shared::Plugin,
-            camera::Plugin,
-            screen::Plugin,
+            scene::Plugin,
         ));
     }
 }

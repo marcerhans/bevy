@@ -1,6 +1,5 @@
-use bevy::prelude::*;
 use avian2d::PhysicsPlugins;
-use bevy_enhanced_input::prelude::*;
+use bevy::prelude::*;
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 
 pub struct Plugin;
@@ -16,7 +15,6 @@ impl bevy::prelude::Plugin for Plugin {
             },
             WorldInspectorPlugin::new(),
             PhysicsPlugins::default(),
-            EnhancedInputPlugin,
         ));
     }
 }
