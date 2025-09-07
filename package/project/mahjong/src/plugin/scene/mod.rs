@@ -1,5 +1,5 @@
 mod greeter;
-mod a;
+mod running;
 
 use bevy::prelude::*;
 
@@ -13,7 +13,7 @@ impl bevy::prelude::Plugin for Plugin {
         app.init_state::<Startup>()
             .add_systems(Startup, startup)
             .add_plugins(greeter::Plugin)
-            .add_plugins(a::Plugin);
+            .add_plugins(running::Plugin);
     }
 }
 
