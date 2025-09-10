@@ -9,7 +9,7 @@ impl bevy::prelude::Plugin for Plugin {
         app: &mut App,
     ) {
         app.add_sub_state::<Menu>()
-            .add_systems(OnEnter(Startup::Running), on_enter)
+            .add_systems(OnEnter(Menu::Root), on_enter)
             .add_systems(Update, update.run_if(in_state(Menu::Root)))
             .add_systems(OnExit(Menu::Root), on_exit)
             .add_plugins(about::Plugin);
@@ -128,8 +128,17 @@ pub mod about {
             &self,
             app: &mut App,
         ) {
-            app.add_systems(OnEnter(Menu::About), on_enter);
+            app.add_systems(OnEnter(Menu::About), on_enter)
+                .add_systems(Update, on_action.run_if(in_state(Menu::About)));
         }
+    }
+
+    #[derive(Component)]
+    struct Marker;
+
+    #[derive(Component, Debug)]
+    enum Action {
+        Back,
     }
 
     fn on_enter(mut commands: Commands) {
@@ -139,6 +148,8 @@ pub mod about {
         );
 
         commands.spawn((
+            Marker,
+            StateScoped(Menu::About),
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -152,14 +163,51 @@ pub mod about {
             children![
                 (
                     Node {
-                        width: Val::Px(42.0),
-                        height: Val::Px(42.0),
+                        height: Val::Percent(32.0),
+                        aspect_ratio: Some(1.0),
                         ..default()
                     },
                     BackgroundColor(Color::WHITE),
                 ),
-                (Text::new("Built with Bevy <3!"), font.clone())
+                (Text::new("Built with Bevy <3!"), font.clone()),
+                (
+                    Button,
+                    Node {
+                        padding: UiRect::all(Val::Px(8.0)),
+                        ..default()
+                    },
+                    Action::Back,
+                    BorderRadius::all(Val::Px(8.0)),
+                    children![(Text::new("Back"), font.clone()),]
+                ),
             ],
         ));
+    }
+
+    fn on_action(
+        query: Query<
+            (&Interaction, &Action, &mut BackgroundColor),
+            (Changed<Interaction>, With<Button>),
+        >,
+        mut next_state_sub: ResMut<NextState<Menu>>,
+    ) {
+        for (interaction, action, mut bg_color) in query {
+            info!("{interaction:?} {action:?}");
+
+            match interaction {
+                Interaction::Pressed => {
+                    *bg_color = Color::BLACK.into();
+                    match action {
+                        Action::Back => next_state_sub.set(Menu::Root),
+                    }
+                },
+                Interaction::Hovered => {
+                    bg_color.0.set_alpha(0.5);
+                },
+                Interaction::None => {
+                    *bg_color = Color::srgba(0.0, 0.0, 0.0, 0.0).into();
+                },
+            }
+        }
     }
 }
