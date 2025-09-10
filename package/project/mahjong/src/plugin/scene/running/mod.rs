@@ -133,6 +133,11 @@ pub mod about {
     }
 
     fn on_enter(mut commands: Commands) {
+        let font = (
+            TextFont { ..default() },
+            TextColor(Color::srgb(0.9, 0.9, 0.9)),
+        );
+
         commands.spawn((
             Node {
                 width: Val::Percent(100.0),
@@ -144,14 +149,17 @@ pub mod about {
                 ..default()
             },
             BackgroundColor(Color::srgb(0.2, 0.2, 0.2)),
-            children![(
-                Node {
-                    width: Val::Px(42.0),
-                    height: Val::Px(42.0),
-                    ..default()
-                },
-                ImageNode::default(),
-            )],
+            children![
+                (
+                    Node {
+                        width: Val::Px(42.0),
+                        height: Val::Px(42.0),
+                        ..default()
+                    },
+                    BackgroundColor(Color::WHITE),
+                ),
+                (Text::new("Built with Bevy <3!"), font.clone())
+            ],
         ));
     }
 }
