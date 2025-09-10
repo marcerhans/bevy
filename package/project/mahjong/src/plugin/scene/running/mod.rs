@@ -132,7 +132,26 @@ pub mod about {
         }
     }
 
-    fn on_enter() {
-        info!("about");
+    fn on_enter(mut commands: Commands) {
+        commands.spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(8.0),
+                ..default()
+            },
+            BackgroundColor(Color::srgb(0.2, 0.2, 0.2)),
+            children![(
+                Node {
+                    width: Val::Px(42.0),
+                    height: Val::Px(42.0),
+                    ..default()
+                },
+                ImageNode::default(),
+            )],
+        ));
     }
 }
