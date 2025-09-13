@@ -38,7 +38,7 @@ fn on_startup(mut commands: Commands) {
 
 fn on_update(
     mut commands: Commands,
-    entities: Query<Entity>,
+    entities: Query<Entity>, // Yes, without any filtering. I think it better exemplifies what the [Observer] component does (see entity 2).
     mut local: Local<u32>,
 ) {
     if *local < 2 {
