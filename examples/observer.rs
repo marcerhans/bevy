@@ -43,8 +43,9 @@ fn on_update(
 ) {
     if *local < 2 {
         info!("Before trigger(s)");
+        commands.trigger(Exploded); // Should just have the PLACEHOLDER entity. Registered by the 2:nd entity, through the [Observer] component.
         for e in entities {
-            commands.trigger_targets(Exploded, e);
+            commands.trigger_targets(Exploded, e); // Contrary to above, will have specific entities.
         }
         info!("After trigger(s)");
 
