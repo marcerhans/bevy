@@ -55,7 +55,7 @@ fn on_update(
 fn on_update2(mut local: Local<u32>) {
     if *local < 2 {
         info!("Just random update system, after the main update system.");
-        * local += 1;
+        *local += 1;
     }
 }
 
