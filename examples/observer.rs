@@ -4,6 +4,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, on_startup)
+        .add_systems(Update, (on_update, on_update2.after(on_update)))
         .run();
 }
 
@@ -33,13 +34,29 @@ fn on_startup(mut commands: Commands) {
         })
         .id();
     info!("Spawned: {:?}", e3);
+}
 
-    info!("Before trigger");
-    // commands.trigger(Exploded);
-    commands.trigger_targets(Exploded, e1);
-    commands.trigger_targets(Exploded, e2);
-    commands.trigger_targets(Exploded, e3);
-    info!("After trigger");
+fn on_update(
+    mut commands: Commands,
+    entities: Query<Entity>,
+    mut local: Local<u32>,
+) {
+    if *local < 2 {
+        info!("Before trigger(s)");
+        for e in entities {
+            commands.trigger_targets(Exploded, e);
+        }
+        info!("After trigger(s)");
+
+        *local += 1;
+    }
+}
+
+fn on_update2(mut local: Local<u32>) {
+    if *local < 2 {
+        info!("Just random update system, after the main update system.");
+        * local += 1;
+    }
 }
 
 fn on_exploded(
