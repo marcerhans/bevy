@@ -104,10 +104,10 @@ fn update(
                 }
             },
             Interaction::Hovered => {
-                bg_color.0.set_alpha(0.5);
+                *bg_color = Color::srgba(0.0, 0.0, 0.0, 0.5).into();
             },
             Interaction::None => {
-                *bg_color = Color::srgba(0.0, 0.0, 0.0, 0.0).into();
+                *bg_color = Color::srgba(0.5, 0.5, 0.5, 0.5).into();
             },
         }
     }
@@ -128,7 +128,9 @@ pub mod about {
             &self,
             app: &mut App,
         ) {
-            app.add_systems(OnEnter(Menu::About), on_enter)
+            app.init_resource::<BevyIcon>()
+                .add_systems(Startup, on_startup)
+                .add_systems(OnEnter(Menu::About), on_enter)
                 .add_systems(Update, on_action.run_if(in_state(Menu::About)));
         }
     }
@@ -136,12 +138,28 @@ pub mod about {
     #[derive(Component)]
     struct Marker;
 
+    #[derive(Resource, Default)]
+    struct BevyIcon {
+        handle: Option<Handle<Image>>,
+    }
+
     #[derive(Component, Debug)]
     enum Action {
         Back,
     }
 
-    fn on_enter(mut commands: Commands) {
+    fn on_startup(
+        asset_server: Res<AssetServer>,
+        mut image: ResMut<BevyIcon>,
+    ) {
+        assert!(image.handle.is_none());
+        image.handle = Some(asset_server.load("misc/bevy_logo_fill.png"));
+    }
+
+    fn on_enter(
+        mut commands: Commands,
+        image: ResMut<BevyIcon>,
+    ) {
         let font = (
             TextFont { ..default() },
             TextColor(Color::srgb(0.9, 0.9, 0.9)),
@@ -164,10 +182,17 @@ pub mod about {
                 (
                     Node {
                         height: Val::Percent(32.0),
-                        aspect_ratio: Some(1.0),
+                        // aspect_ratio: Some(1.0),
                         ..default()
                     },
-                    BackgroundColor(Color::WHITE),
+                    ImageNode {
+                        image: image
+                            .handle
+                            .as_ref()
+                            .expect("Bevy icon not loaded!")
+                            .clone(),
+                        ..default()
+                    },
                 ),
                 (Text::new("Built with Bevy <3!"), font.clone()),
                 (
@@ -202,10 +227,10 @@ pub mod about {
                     }
                 },
                 Interaction::Hovered => {
-                    bg_color.0.set_alpha(0.5);
+                    *bg_color = Color::srgba(0.0, 0.0, 0.0, 0.5).into();
                 },
                 Interaction::None => {
-                    *bg_color = Color::srgba(0.0, 0.0, 0.0, 0.0).into();
+                    *bg_color = Color::srgba(0.5, 0.5, 0.5, 0.5).into();
                 },
             }
         }
