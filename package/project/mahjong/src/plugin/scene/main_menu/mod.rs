@@ -2,6 +2,7 @@ mod about;
 mod settings;
 
 use crate::plugin::scene::Startup;
+use crate::plugin::scene::in_game;
 use bevy::prelude::*;
 
 pub struct Plugin;
@@ -14,7 +15,7 @@ impl bevy::prelude::Plugin for Plugin {
         app.add_sub_state::<MainMenu>()
             .add_systems(OnEnter(MainMenu::Root), on_enter)
             .add_systems(Update, update.run_if(in_state(MainMenu::Root)))
-            .add_plugins(about::Plugin);
+            .add_plugins((in_game::Plugin, about::Plugin));
     }
 }
 
@@ -89,8 +90,7 @@ fn update(
         (Changed<Interaction>, With<Button>),
     >,
     mut event_writer: EventWriter<AppExit>,
-    mut next_state: ResMut<NextState<crate::plugin::scene::Startup>>,
-    mut next_state_sub: ResMut<NextState<MainMenu>>,
+    mut next_state: ResMut<NextState<MainMenu>>,
 ) {
     for (interaction, menu_marker, mut bg_color) in query {
         info!("{interaction:?} {menu_marker:?}");
@@ -101,11 +101,11 @@ fn update(
                 match menu_marker {
                     MainMenu::Root => unreachable!(),
                     MainMenu::Play => {
-                        next_state.set(crate::plugin::scene::Startup::Greeter);
+                        next_state.set(MainMenu::Play);
                     },
                     MainMenu::Settings => {},
                     MainMenu::About => {
-                        next_state_sub.set(MainMenu::About);
+                        next_state.set(MainMenu::About);
                     },
                     MainMenu::Quit => {
                         event_writer.write(AppExit::Success);
