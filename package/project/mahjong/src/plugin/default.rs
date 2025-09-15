@@ -7,7 +7,7 @@ impl bevy::prelude::Plugin for Plugin {
         &self,
         app: &mut App,
     ) {
-        app.add_plugins(
+        app.add_plugins((
             bevy::DefaultPlugins
                 .set(LogPlugin {
                     filter: "error,bevy=info,mahjong=debug".into(),
@@ -33,7 +33,8 @@ impl bevy::prelude::Plugin for Plugin {
                     file_path: "asset".to_string(),
                     ..default()
                 }),
-        );
+            MeshPickingPlugin,
+        ));
 
         app.world_mut().spawn(Camera2d);
     }

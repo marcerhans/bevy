@@ -50,61 +50,36 @@ fn on_enter(
         )
         .resolution(3);
 
-    commands.spawn(Gizmo {
-        handle: gizmo_assets.add(gizmo),
-        line_config: GizmoLineConfig {
-            width: 4.0,
-            ..default()
-        },
-        ..default()
-    });
-    // let font = (
-    //     TextFont { ..default() },
-    //     TextColor(Color::srgb(0.9, 0.9, 0.9)),
-    // );
+    gizmo.rect_2d(
+        Isometry2d::IDENTITY,
+        Vec2::new(200.0, 200.0),
+        Color::srgb(0.0, 0.0, 1.0),
+    );
 
-    // commands
-    //     .spawn((
-    //         Marker,
-    //         StateScoped(MainMenu::Root),
-    //         Node {
-    //             width: Val::Percent(100.0),
-    //             height: Val::Percent(100.0),
-    //             justify_content: JustifyContent::Center,
-    //             align_items: AlignItems::Center,
-    //             flex_direction: FlexDirection::Column,
-    //             row_gap: Val::Px(8.0),
-    //             ..default()
-    //         },
-    //         BackgroundColor(Color::srgb(0.2, 0.2, 0.2)),
-    //     ))
-    //     .with_children(|parent| {
-    //         let common = (
-    //             Button,
-    //             Node {
-    //                 justify_content: JustifyContent::Center,
-    //                 align_items: AlignItems::Center,
-    //                 flex_direction: FlexDirection::Column,
-    //                 padding: UiRect::all(Val::Px(8.0)),
-    //                 ..default()
-    //             },
-    //             BorderRadius::all(Val::Px(8.0)),
-    //             font.clone(),
-    //         );
+    commands
+        .spawn((
+            Gizmo {
+                handle: gizmo_assets.add(gizmo),
+                line_config: GizmoLineConfig {
+                    width: 10.0,
+                    ..default()
+                },
+                ..default()
+            },
+            Pickable::default(),
+        ))
+        .observe(|trigger: Trigger<Pointer<Click>>| {
+            info!("Clicked!");
+        });
 
-    //         parent.spawn((common.clone(), MainMenu::Play, children![Text::new("Play")]));
-    //         parent.spawn((
-    //             common.clone(),
-    //             MainMenu::Settings,
-    //             children![Text::new("Settings")],
-    //         ));
-    //         parent.spawn((
-    //             common.clone(),
-    //             MainMenu::About,
-    //             children![Text::new("About")],
-    //         ));
-    //         parent.spawn((common.clone(), MainMenu::Quit, children![Text::new("Quit")]));
-    //     });
+    commands
+        .spawn((
+            Sprite::from_color(Color::WHITE, Vec2::splat(300.0)),
+            Pickable::default(),
+        ))
+        .observe(|trigger: Trigger<Pointer<Click>>| {
+            info!("Sprite click!");
+        });
 }
 
 fn update(
