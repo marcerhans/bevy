@@ -67,6 +67,6 @@ fn on_update(
     timer.inner.tick(time.delta());
 
     if timer.inner.just_finished() {
-        next_state.set(Startup::Running);
+        next_state.set(Startup::MainMenu);
     }
 }

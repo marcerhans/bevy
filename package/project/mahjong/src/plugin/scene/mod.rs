@@ -1,5 +1,5 @@
 mod greeter;
-mod running;
+mod main_menu;
 
 use bevy::prelude::*;
 
@@ -13,7 +13,7 @@ impl bevy::prelude::Plugin for Plugin {
         app.init_state::<Startup>()
             .add_systems(Startup, startup)
             .add_plugins(greeter::Plugin)
-            .add_plugins(running::Plugin);
+            .add_plugins(main_menu::Plugin);
     }
 }
 
@@ -23,7 +23,7 @@ pub enum Startup {
     #[default]
     Root,
     Greeter,
-    Running,
+    MainMenu,
 }
 
 fn startup(mut next_state: ResMut<NextState<Startup>>) {
