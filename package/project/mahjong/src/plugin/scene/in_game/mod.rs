@@ -24,9 +24,7 @@ pub enum InGame {
 }
 
 #[derive(Component)]
-struct Marker {
-    index: usize,
-}
+struct Marker;
 
 fn on_enter(
     mut commands: Commands,
@@ -44,7 +42,7 @@ fn on_enter(
     for (index, tile) in tiles.iter().enumerate() {
         commands
             .spawn((
-                Marker { index },
+                Marker,
                 StateScoped(InGame::Root),
                 Sprite::from_color(Color::BLACK, Vec2::new(width, height)),
                 Pickable::default(),
@@ -71,17 +69,28 @@ fn on_enter(
 
 fn update(
     window: Single<&Window, Changed<Window>>,
+    mut height_prev: Local<Option<f32>>,
     query: Query<(&mut Transform, &mut TextFont, &mut Sprite, &Marker)>,
 ) {
     let height = window.height() / 10.0;
+    if let None = *height_prev {
+        *height_prev = Some(height);
+    }
+
+    let height_prev = height_prev.as_mut().unwrap();
+    if height == *height_prev {
+        return;
+    }
+
+    *height_prev = height;
+    let scale = height / *height_prev;
+    let height = height * scale;
     let width = height * 0.7;
-    let start_x = -width * 14.0 / 2.0;
-    let start_y = height * 8.0 / 2.0;
 
     for (mut transform, mut font, mut sprite, marker) in query {
-        transform.translation.x = start_x + width * (marker.index % 14) as f32;
-        transform.translation.y = start_y - height * (marker.index / 14) as f32;
-        font.font_size = height / 5.0;
+        // transform.translation.x *= scale;
+        // transform.translation.y *= scale;
+        font.font_size *= scale;
         sprite.custom_size = Some(sprite.custom_size.unwrap().with_x(width).with_y(height));
     }
 }
