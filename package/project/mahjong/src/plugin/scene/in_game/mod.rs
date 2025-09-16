@@ -1,5 +1,3 @@
-use std::f32::consts::FRAC_PI_4;
-
 use crate::plugin::scene::main_menu::MainMenu;
 use bevy::prelude::*;
 
@@ -27,59 +25,23 @@ pub enum InGame {
 #[derive(Component)]
 struct Marker;
 
-fn on_enter(
-    mut commands: Commands,
-    mut gizmo_assets: ResMut<Assets<GizmoAsset>>,
-) {
-    let mut gizmo = GizmoAsset::default();
-    gizmo.arc_2d(
-        Isometry2d::IDENTITY,
-        FRAC_PI_4,
-        1.,
-        Color::srgb(1.0, 0.0, 0.0),
-    );
-
-    // Arcs have 32 line-segments by default.
-    // You may want to increase this for larger arcs.
-    gizmo
-        .arc_2d(
-            Isometry2d::IDENTITY,
-            FRAC_PI_4,
-            100.,
-            Color::srgb(0.0, 1.0, 0.0),
-        )
-        .resolution(3);
-
-    gizmo.rect_2d(
-        Isometry2d::IDENTITY,
-        Vec2::new(200.0, 200.0),
-        Color::srgb(0.0, 0.0, 1.0),
-    );
-
-    commands
-        .spawn((
-            Gizmo {
-                handle: gizmo_assets.add(gizmo),
-                line_config: GizmoLineConfig {
-                    width: 10.0,
-                    ..default()
-                },
-                ..default()
-            },
-            Pickable::default(),
-        ))
-        .observe(|trigger: Trigger<Pointer<Click>>| {
-            info!("Clicked!");
-        });
-
+fn on_enter(mut commands: Commands) {
     commands
         .spawn((
             Sprite::from_color(Color::WHITE, Vec2::splat(300.0)),
             Pickable::default(),
+            (Node { ..default() }, children![Text::new("hej")]),
         ))
         .observe(|trigger: Trigger<Pointer<Click>>| {
             info!("Sprite click!");
-        });
+        })
+        .observe(
+            |drag: Trigger<Pointer<Drag>>, mut transform: Query<&mut Transform>| {
+                let mut transform = transform.get_mut(drag.target).unwrap();
+                transform.translation.x += drag.delta.x;
+                transform.translation.y -= drag.delta.y;
+            },
+        );
 }
 
 fn update(

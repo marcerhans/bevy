@@ -10,9 +10,11 @@ impl bevy::prelude::Plugin for Plugin {
         app: &mut App,
     ) {
         app.add_plugins((
+            #[cfg(debug_assertions)]
             EguiPlugin {
                 enable_multipass_for_primary_context: true,
             },
+            #[cfg(debug_assertions)]
             WorldInspectorPlugin::new(),
             PhysicsPlugins::default(),
         ));
