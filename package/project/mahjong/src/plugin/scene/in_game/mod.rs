@@ -49,7 +49,7 @@ fn on_enter(
                 Sprite::from_color(Color::BLACK, Vec2::new(width, height)),
                 Pickable::default(),
                 Text2d::new(tile.to_string()),
-                TextFont::from_font_size(height / 8.0),
+                TextFont::from_font_size(height / 5.0),
                 Transform {
                     translation: Vec3 {
                         x: start_x + width * (index % 14) as f32,
@@ -81,7 +81,7 @@ fn update(
     for (mut transform, mut font, mut sprite, marker) in query {
         transform.translation.x = start_x + width * (marker.index % 14) as f32;
         transform.translation.y = start_y - height * (marker.index / 14) as f32;
-        font.font_size = height / 8.0;
+        font.font_size = height / 5.0;
         sprite.custom_size = Some(sprite.custom_size.unwrap().with_x(width).with_y(height));
     }
 }
