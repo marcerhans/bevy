@@ -30,7 +30,6 @@ fn on_enter(mut commands: Commands) {
         .spawn((
             Sprite::from_color(Color::WHITE, Vec2::splat(300.0)),
             Pickable::default(),
-            (Node { ..default() }, children![Text::new("hej")]),
         ))
         .observe(|trigger: Trigger<Pointer<Click>>| {
             info!("Sprite click!");
