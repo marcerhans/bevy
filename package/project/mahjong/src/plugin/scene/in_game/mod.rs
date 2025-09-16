@@ -1,5 +1,6 @@
 use crate::plugin::scene::main_menu::MainMenu;
 use bevy::prelude::*;
+use rand::{Rng, seq::SliceRandom};
 
 pub struct Plugin;
 
@@ -23,62 +24,64 @@ pub enum InGame {
 }
 
 #[derive(Component)]
-struct Marker;
+struct Marker {
+    index: usize,
+}
 
-fn on_enter(mut commands: Commands) {
-    commands
-        .spawn((
-            Sprite::from_color(Color::BLACK, Vec2::splat(300.0)),
-            Pickable::default(),
-            Text2d::new("hej"),
-        ))
-        .observe(|trigger: Trigger<Pointer<Click>>| {
-            info!("Sprite click!");
-        })
-        .observe(
-            |drag: Trigger<Pointer<Drag>>, mut transform: Query<&mut Transform>| {
-                let mut transform = transform.get_mut(drag.target).unwrap();
-                transform.translation.x += drag.delta.x;
-                transform.translation.y -= drag.delta.y;
-            },
-        );
+fn on_enter(
+    mut commands: Commands,
+    window: Single<&Window>,
+) {
+    let height = window.height() / 10.0;
+    let width = height * 0.7;
+    let mut rng = rand::rng();
+    let mut tiles: Vec<u32> = (0..144).collect();
+    tiles.shuffle(&mut rng);
+
+    let start_x = -width * 14.0 / 2.0;
+    let start_y = height * 8.0 / 2.0;
+
+    for (index, tile) in tiles.iter().enumerate() {
+        commands
+            .spawn((
+                Marker { index },
+                StateScoped(InGame::Root),
+                Sprite::from_color(Color::BLACK, Vec2::new(width, height)),
+                Pickable::default(),
+                Text2d::new(tile.to_string()),
+                TextFont::from_font_size(height / 8.0),
+                Transform {
+                    translation: Vec3 {
+                        x: start_x + width * (index % 14) as f32,
+                        y: start_y - height * (index / 14) as f32,
+                        z: index as f32,
+                    },
+                    ..default()
+                },
+            ))
+            .observe(
+                |drag: Trigger<Pointer<Drag>>, mut transform: Query<&mut Transform>| {
+                    let mut transform = transform.get_mut(drag.target).unwrap();
+                    transform.translation.x += drag.delta.x;
+                    transform.translation.y -= drag.delta.y;
+                },
+            );
+    }
 }
 
 fn update(
-    query: Query<
-        (&Interaction, &MainMenu, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
-    >,
-    mut event_writer: EventWriter<AppExit>,
-    mut next_state: ResMut<NextState<crate::plugin::scene::Startup>>,
-    mut next_state_sub: ResMut<NextState<MainMenu>>,
+    window: Single<&Window, Changed<Window>>,
+    query: Query<(&mut Transform, &mut TextFont, &mut Sprite, &Marker)>,
 ) {
-    // for (interaction, menu_marker, mut bg_color) in query {
-    //     info!("{interaction:?} {menu_marker:?}");
+    let height = window.height() / 10.0;
+    let width = height * 0.7;
+    let start_x = -width * 14.0 / 2.0;
+    let start_y = height * 8.0 / 2.0;
 
-    //     match interaction {
-    //         Interaction::Pressed => {
-    //             *bg_color = Color::BLACK.into();
-    //             match menu_marker {
-    //                 MainMenu::Root => unreachable!(),
-    //                 MainMenu::Play => {
-    //                     next_state.set(crate::plugin::scene::Startup::Greeter);
-    //                 },
-    //                 MainMenu::Settings => {},
-    //                 MainMenu::About => {
-    //                     next_state_sub.set(MainMenu::About);
-    //                 },
-    //                 MainMenu::Quit => {
-    //                     event_writer.write(AppExit::Success);
-    //                 },
-    //             }
-    //         },
-    //         Interaction::Hovered => {
-    //             *bg_color = Color::srgba(0.0, 0.0, 0.0, 0.5).into();
-    //         },
-    //         Interaction::None => {
-    //             *bg_color = Color::srgba(0.5, 0.5, 0.5, 0.5).into();
-    //         },
-    //     }
-    // }
+    for (mut transform, mut font, mut sprite, marker) in query {
+        transform.translation.x = start_x + width * (marker.index % 14) as f32;
+        transform.translation.y = start_y - height * (marker.index / 14) as f32;
+        font.font_size = height / 8.0;
+        sprite.custom_size = Some(sprite.custom_size.unwrap().with_x(width).with_y(height));
+    }
 }

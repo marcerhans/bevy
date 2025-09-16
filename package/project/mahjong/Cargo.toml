@@ -17,6 +17,7 @@ bevy = { workspace = true }
 bevy-inspector-egui = { workspace = true }
 bevy_enhanced_input = { workspace = true }
 avian2d = { workspace = true }
+rand = { workspace = true }
 
 [features]
 debug = ["bevy/dynamic_linking"] # Use for debug/dev builds. Faster compile times.
