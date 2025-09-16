@@ -28,8 +28,9 @@ struct Marker;
 fn on_enter(mut commands: Commands) {
     commands
         .spawn((
-            Sprite::from_color(Color::WHITE, Vec2::splat(300.0)),
+            Sprite::from_color(Color::BLACK, Vec2::splat(300.0)),
             Pickable::default(),
+            Text2d::new("hej"),
         ))
         .observe(|trigger: Trigger<Pointer<Click>>| {
             info!("Sprite click!");
