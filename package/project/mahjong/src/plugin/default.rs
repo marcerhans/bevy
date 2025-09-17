@@ -44,6 +44,7 @@ impl bevy::prelude::Plugin for Plugin {
                 },
                 ..OrthographicProjection::default_2d()
             }),
+            Msaa::Off,
         ));
     }
 }

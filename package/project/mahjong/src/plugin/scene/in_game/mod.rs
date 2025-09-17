@@ -68,10 +68,12 @@ fn on_enter(
 }
 
 fn update(
-    window: Single<&Window, Changed<Window>>,
-    mut height_prev: Local<Option<f32>>,
-    query: Query<(&mut Transform, &mut TextFont, &mut Sprite, &Marker)>,
+    // window: Single<&Window, Changed<Window>>,
+    // mut height_prev: Local<Option<f32>>,
+    // query: Query<(&mut Transform, &mut TextFont, &mut Sprite, &Marker)>,
+    query: Single<&Projection, With<Camera>>
 ) {
+    info!("{:?}", *query)
     // let height = window.height() / 10.0;
     // if let None = *height_prev {
     //     *height_prev = Some(height);
