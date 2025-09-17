@@ -36,6 +36,14 @@ impl bevy::prelude::Plugin for Plugin {
             MeshPickingPlugin,
         ));
 
-        app.world_mut().spawn(Camera2d);
+        app.world_mut().spawn((
+            Camera2d,
+            Projection::Orthographic(OrthographicProjection {
+                scaling_mode: bevy::render::camera::ScalingMode::FixedVertical {
+                    viewport_height: 720.0,
+                },
+                ..OrthographicProjection::default_2d()
+            }),
+        ));
     }
 }
