@@ -1,4 +1,4 @@
-use crate::plugin::scene::main_menu::MainMenu;
+use crate::plugin::{global::WindowScaling, scene::main_menu::MainMenu};
 use bevy::prelude::*;
 use rand::{Rng, seq::SliceRandom};
 
@@ -58,10 +58,12 @@ fn on_enter(
                 },
             ))
             .observe(
-                |drag: Trigger<Pointer<Drag>>, mut transform: Query<&mut Transform>| {
+                |drag: Trigger<Pointer<Drag>>,
+                 mut transform: Query<&mut Transform>,
+                 window_scaling: Res<WindowScaling>| {
                     let mut transform = transform.get_mut(drag.target).unwrap();
-                    transform.translation.x += drag.delta.x;
-                    transform.translation.y -= drag.delta.y;
+                    transform.translation.x += drag.delta.x * window_scaling.value();
+                    transform.translation.y -= drag.delta.y * window_scaling.value();
                 },
             );
     }
@@ -71,9 +73,12 @@ fn update(
     // window: Single<&Window, Changed<Window>>,
     // mut height_prev: Local<Option<f32>>,
     // query: Query<(&mut Transform, &mut TextFont, &mut Sprite, &Marker)>,
-    query: Single<&Projection, With<Camera>>
+    // query: Single<&Projection, With<Camera>>
+    // window: Single<&Window, Changed<Window>>
+    window_scaling: Res<WindowScaling>,
 ) {
-    info!("{:?}", *query)
+    // info!("Scaling: {}", window_scaling.value());
+    // info!("{:?}", window.resolution)
     // let height = window.height() / 10.0;
     // if let None = *height_prev {
     //     *height_prev = Some(height);

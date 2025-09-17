@@ -1,4 +1,4 @@
-use bevy::{asset::AssetMetaCheck, log::LogPlugin, prelude::*, window::PresentMode};
+use bevy::{asset::AssetMetaCheck, log::LogPlugin, prelude::*, render::camera::ScalingMode, window::PresentMode};
 
 pub struct Plugin;
 
@@ -39,8 +39,8 @@ impl bevy::prelude::Plugin for Plugin {
         app.world_mut().spawn((
             Camera2d,
             Projection::Orthographic(OrthographicProjection {
-                scaling_mode: bevy::render::camera::ScalingMode::FixedVertical {
-                    viewport_height: 720.0,
+                scaling_mode: ScalingMode::FixedVertical {
+                    viewport_height: 1080.0,
                 },
                 ..OrthographicProjection::default_2d()
             }),
