@@ -30,7 +30,7 @@ fn on_preupdate(
 ) {
     if let Projection::Orthographic(projection) = *projection {
         if let ScalingMode::FixedVertical { viewport_height } = projection.scaling_mode {
-            window_scaling.value = (viewport_height / window.resolution.height() as f32);
+            window_scaling.value = viewport_height / window.resolution.height() as f32;
         }
     }
 }
