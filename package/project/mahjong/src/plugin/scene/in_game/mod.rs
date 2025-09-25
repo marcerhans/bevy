@@ -113,8 +113,12 @@ fn update(
 mod helper {
     use bevy::prelude::*;
 
-    trait PositionGenerator {
-        fn next(tile_size: Vec2, current: usize) -> Vec2;
+    pub trait PositionGenerator {
+        fn next(
+            &self,
+            tile_size: Vec2,
+            current: usize,
+        ) -> Vec2;
     }
 
     pub struct Placer<G: PositionGenerator> {
@@ -124,8 +128,16 @@ mod helper {
     }
 
     impl<G: PositionGenerator> Placer<G> {
-        pub fn new(n_tiles: usize, tile_size: Vec2, generator: G) -> Self {
-            Self { n_tiles, tile_size, generator }
+        pub fn new(
+            n_tiles: usize,
+            tile_size: Vec2,
+            generator: G,
+        ) -> Self {
+            Self {
+                n_tiles,
+                tile_size,
+                generator,
+            }
         }
     }
 
@@ -140,19 +152,20 @@ mod helper {
         const A: usize = 2;
     }
 
-    impl<'a, G:PositionGenerator> Iterator for PlacerIterator<'a, G> {
+    impl<'a, G: PositionGenerator> Iterator for PlacerIterator<'a, G> {
         type Item = PlaceIteratorItem;
-    
+
         fn next(&mut self) -> Option<Self::Item> {
             if self.counter >= self.placer.n_tiles {
                 return None;
             }
 
             self.counter += 1;
-
-            todo!()
-
-            // Some(self.next())
+            Some(
+                self.placer
+                    .generator
+                    .next(self.placer.tile_size, self.counter - 1),
+            )
         }
     }
 
