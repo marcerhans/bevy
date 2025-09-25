@@ -39,10 +39,17 @@ fn on_enter(
     let mut tiles: Vec<u32> = (0..144).collect();
     tiles.shuffle(&mut rng);
 
+    use helper::*;
+    let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
+    let positions = placer.into_iter().collect::<Vec<Vec2>>();
+    // for position in &placer {
+    //     println!("{:?}", position);
+    // }
+
     let start_x = -width * 14.0 / 2.0;
     let start_y = height * 8.0 / 2.0;
 
-    for (index, tile) in tiles.iter().enumerate() {
+    for ((index, tile), pos) in tiles.iter().enumerate().zip(positions) {
         commands
             .spawn((
                 Marker,
@@ -53,8 +60,8 @@ fn on_enter(
                 TextFont::from_font_size(height / 5.0),
                 Transform {
                     translation: Vec3 {
-                        x: start_x + width * (index % 14) as f32,
-                        y: start_y - height * (index / 14) as f32,
+                        x: start_x + pos.x,
+                        y: start_y - pos.y,
                         z: index as f32,
                     },
                     ..default()
@@ -73,12 +80,6 @@ fn on_enter(
 
     // Determine position(s)
     // Spawn
-    use helper::*;
-    let placer = Placer::new(Vec2::new(2.0, 3.0), Generator::<Turtle>::new());
-
-    for position in &placer {
-        println!("{:?}", position);
-    }
 }
 
 fn update(
@@ -125,13 +126,17 @@ impl<T> Generator<T> {
     }
 }
 
+impl Generator<Turtle> {
+    const TILES: usize = 144;
+}
+
 impl PositionGenerator for Generator<Turtle> {
     fn generate(
         &self,
         tile_size: Vec2,
         current: usize,
     ) -> Option<Vec2> {
-        if current >= 144 {
+        if current >= Self::TILES {
             return None;
         }
 
@@ -147,21 +152,24 @@ impl PositionGenerator for Generator<Turtle> {
             72..84 => row = 7,
             84..87 => row = 8,
             87.. => return None,
-            _ => unreachable!("Number of valid tiles exceeded!"),
+            // _ => unreachable!("Number of valid tiles exceeded!"),
         }
 
-        match row {
-            0 => Some(Vec2::new((current - 0) as f32, row as f32)),
-            1 => Some(Vec2::new((current - 12) as f32, row as f32)),
-            2 => Some(Vec2::new((current - 20) as f32, row as f32)),
-            3 => Some(Vec2::new((current - 30) as f32, row as f32)),
-            4 => Some(Vec2::new((current - 42) as f32, row as f32)),
-            5 => Some(Vec2::new((current - 54) as f32, row as f32)),
-            6 => Some(Vec2::new((current - 64) as f32, row as f32)),
-            7 => Some(Vec2::new((current - 72) as f32, row as f32)),
-            8 => Some(Vec2::new((current - 84) as f32, row as f32)),
-            _ => unreachable!("Logic error. Invalid row, somehow.")
-        }
+        // Note: Include an offset
+        let column = match row {
+            0 => 0 + current - 0,
+            1 => 2 + current - 12,
+            2 => 1 + current - 20,
+            3 => 0 + current - 30,
+            4 => 0 + current - 42,
+            5 => 1 + current - 54,
+            6 => 2 + current - 64,
+            7 => 0 + current - 72,
+            8 => 0 + current - 84, // TODO: Fix extras!
+            _ => unreachable!("Logic error. Invalid row, somehow."),
+        };
+
+        Some(Vec2::new(column as f32, row as f32) * tile_size)
     }
 }
 
