@@ -135,18 +135,32 @@ impl PositionGenerator for Generator<Turtle> {
             return None;
         }
 
+        let row;
         match current {
-            0..12 => todo!(),
-            12..20 => todo!(),
-            20..30 => todo!(),
-            30..42 => todo!(),
-            42..54 => todo!(),
-            54..64 => todo!(),
-            64..72 => todo!(),
-            72..84 => todo!(),
-            84..87 => todo!(),
-            87.. => todo!(),
+            0..12 => row = 0,
+            12..20 => row = 1,
+            20..30 => row = 2,
+            30..42 => row = 3,
+            42..54 => row = 4,
+            54..64 => row = 5,
+            64..72 => row = 6,
+            72..84 => row = 7,
+            84..87 => row = 8,
+            87.. => return None,
             _ => unreachable!("Number of valid tiles exceeded!"),
+        }
+
+        match row {
+            0 => Some(Vec2::new((current - 0) as f32, row as f32)),
+            1 => Some(Vec2::new((current - 12) as f32, row as f32)),
+            2 => Some(Vec2::new((current - 20) as f32, row as f32)),
+            3 => Some(Vec2::new((current - 30) as f32, row as f32)),
+            4 => Some(Vec2::new((current - 42) as f32, row as f32)),
+            5 => Some(Vec2::new((current - 54) as f32, row as f32)),
+            6 => Some(Vec2::new((current - 64) as f32, row as f32)),
+            7 => Some(Vec2::new((current - 72) as f32, row as f32)),
+            8 => Some(Vec2::new((current - 84) as f32, row as f32)),
+            _ => unreachable!("Logic error. Invalid row, somehow.")
         }
     }
 }
