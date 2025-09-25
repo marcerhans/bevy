@@ -67,6 +67,13 @@ fn on_enter(
                 },
             );
     }
+
+    // Determine position(s)
+    // Spawn
+    use helper::*;
+    let placer = Placer::new(144);
+
+    for position in &placer {}
 }
 
 fn update(
@@ -101,4 +108,67 @@ fn update(
     // }
 
     // *height_prev = height;
+}
+
+mod helper {
+    use bevy::prelude::*;
+
+    pub struct Placer {
+        n_tiles: usize,
+    }
+
+    impl Placer {
+        pub fn new(n_tiles: usize) -> Self {
+            Self { n_tiles }
+        }
+    }
+
+    pub struct PlacerIterator<'a> {
+        placer: &'a Placer,
+        counter: usize,
+    }
+
+    type PlaceIteratorItem = Vec2;
+
+    impl<'a> PlacerIterator<'a> {
+        fn next(&mut self) -> PlaceIteratorItem {
+            todo!()
+        }
+    }
+
+    impl<'a> Iterator for PlacerIterator<'a> {
+        type Item = PlaceIteratorItem;
+    
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.counter >= self.placer.n_tiles {
+                return None;
+            }
+
+            Some(self.next())
+        }
+    }
+
+    impl<'a> IntoIterator for &'a Placer {
+        type Item = PlaceIteratorItem;
+        type IntoIter = PlacerIterator<'a>;
+
+        fn into_iter(self) -> Self::IntoIter {
+            PlacerIterator {
+                placer: self,
+                counter: 0,
+            }
+        }
+    }
+
+    #[cfg(test)]
+    mod test {
+        use super::*;
+
+        #[test]
+        fn test() {
+            // let p = Placer::new(5);
+            // let mut pi = (&p).into_iter();
+            // let what = pi.next();
+        }
+    }
 }
