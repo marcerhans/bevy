@@ -114,7 +114,7 @@ mod helper {
     use bevy::prelude::*;
 
     pub trait PositionGenerator {
-        fn next(
+        fn generate(
             &self,
             tile_size: Vec2,
             current: usize,
@@ -164,7 +164,7 @@ mod helper {
             Some(
                 self.placer
                     .generator
-                    .next(self.placer.tile_size, self.counter - 1),
+                    .generate(self.placer.tile_size, self.counter - 1),
             )
         }
     }
@@ -183,11 +183,37 @@ mod helper {
 
     #[cfg(test)]
     mod test {
+        use std::marker::PhantomData;
+
         use super::*;
+
+        pub struct Turtle;
+
+        struct Generator<T>(PhantomData<T>);
+
+        impl<T> Generator<T> {
+            pub fn new() -> Self {
+                Self(PhantomData::<T>)
+            }
+        }
+
+        impl PositionGenerator for Generator<Turtle> {
+            fn generate(
+                &self,
+                tile_size: Vec2,
+                current: usize,
+            ) -> Vec2 {
+                Vec2::splat(2.0)
+            }
+        }
 
         #[test]
         fn test() {
-            // let p = Placer::new(5);
+            let p = Placer::new(4, Vec2::new(2.0, 3.0), Generator::<Turtle>::new());
+
+            for pos in &p {
+                println!("{:?}", pos);
+            }
             // let mut pi = (&p).into_iter();
             // let what = pi.next();
         }
