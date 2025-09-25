@@ -1,5 +1,6 @@
 [alias]
 debug = "run --features debug"
+debug-test = "test --features debug"
 debug-build = "build --features debug"
 release = "run --release"
 wasm-debug = "run --target wasm32-unknown-unknown"
