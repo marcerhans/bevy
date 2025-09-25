@@ -2,7 +2,6 @@ use std::marker::PhantomData;
 
 use crate::plugin::{global::WindowScaling, scene::main_menu::MainMenu};
 use bevy::prelude::*;
-use helper::*;
 use rand::{Rng, seq::SliceRandom};
 
 pub struct Plugin;
@@ -39,7 +38,6 @@ fn on_enter(
     let mut tiles: Vec<u32> = (0..144).collect();
     tiles.shuffle(&mut rng);
 
-    use helper::*;
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
     let positions = placer.into_iter().collect::<Vec<Vec2>>();
     // for position in &placer {
@@ -173,61 +171,57 @@ impl PositionGenerator for Generator<Turtle> {
     }
 }
 
-mod helper {
-    use bevy::prelude::*;
+pub trait PositionGenerator {
+    fn generate(
+        &self,
+        tile_size: Vec2,
+        current: usize,
+    ) -> Option<Vec2>;
+}
 
-    pub trait PositionGenerator {
-        fn generate(
-            &self,
-            tile_size: Vec2,
-            current: usize,
-        ) -> Option<Vec2>;
-    }
+pub struct Placer<G: PositionGenerator> {
+    tile_size: Vec2,
+    generator: G,
+}
 
-    pub struct Placer<G: PositionGenerator> {
+impl<G: PositionGenerator> Placer<G> {
+    pub fn new(
         tile_size: Vec2,
         generator: G,
-    }
-
-    impl<G: PositionGenerator> Placer<G> {
-        pub fn new(
-            tile_size: Vec2,
-            generator: G,
-        ) -> Self {
-            Self {
-                tile_size,
-                generator,
-            }
+    ) -> Self {
+        Self {
+            tile_size,
+            generator,
         }
     }
+}
 
-    pub struct PlacerIterator<'a, G: PositionGenerator> {
-        placer: &'a Placer<G>,
-        counter: usize,
+pub struct PlacerIterator<'a, G: PositionGenerator> {
+    placer: &'a Placer<G>,
+    counter: usize,
+}
+
+type PlaceIteratorItem = Vec2;
+
+impl<'a, G: PositionGenerator> Iterator for PlacerIterator<'a, G> {
+    type Item = PlaceIteratorItem;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.counter += 1;
+        self.placer
+            .generator
+            .generate(self.placer.tile_size, self.counter - 1)
     }
+}
 
-    type PlaceIteratorItem = Vec2;
+impl<'a, G: PositionGenerator> IntoIterator for &'a Placer<G> {
+    type Item = PlaceIteratorItem;
+    type IntoIter = PlacerIterator<'a, G>;
 
-    impl<'a, G: PositionGenerator> Iterator for PlacerIterator<'a, G> {
-        type Item = PlaceIteratorItem;
-
-        fn next(&mut self) -> Option<Self::Item> {
-            self.counter += 1;
-            self.placer
-                .generator
-                .generate(self.placer.tile_size, self.counter - 1)
-        }
-    }
-
-    impl<'a, G: PositionGenerator> IntoIterator for &'a Placer<G> {
-        type Item = PlaceIteratorItem;
-        type IntoIter = PlacerIterator<'a, G>;
-
-        fn into_iter(self) -> Self::IntoIter {
-            PlacerIterator {
-                placer: self,
-                counter: 0,
-            }
+    fn into_iter(self) -> Self::IntoIter {
+        PlacerIterator {
+            placer: self,
+            counter: 0,
         }
     }
 }
