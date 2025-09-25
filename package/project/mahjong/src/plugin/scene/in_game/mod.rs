@@ -71,9 +71,9 @@ fn on_enter(
     // Determine position(s)
     // Spawn
     use helper::*;
-    let placer = Placer::new(144);
+    // let placer = Placer::new(144);
 
-    for position in &placer {}
+    // for position in &placer {}
 }
 
 fn update(
@@ -113,30 +113,34 @@ fn update(
 mod helper {
     use bevy::prelude::*;
 
-    pub struct Placer {
-        n_tiles: usize,
+    trait PositionGenerator {
+        fn next(tile_size: Vec2, current: usize) -> Vec2;
     }
 
-    impl Placer {
-        pub fn new(n_tiles: usize) -> Self {
-            Self { n_tiles }
+    pub struct Placer<G: PositionGenerator> {
+        n_tiles: usize,
+        tile_size: Vec2,
+        generator: G,
+    }
+
+    impl<G: PositionGenerator> Placer<G> {
+        pub fn new(n_tiles: usize, tile_size: Vec2, generator: G) -> Self {
+            Self { n_tiles, tile_size, generator }
         }
     }
 
-    pub struct PlacerIterator<'a> {
-        placer: &'a Placer,
+    pub struct PlacerIterator<'a, G: PositionGenerator> {
+        placer: &'a Placer<G>,
         counter: usize,
     }
 
     type PlaceIteratorItem = Vec2;
 
-    impl<'a> PlacerIterator<'a> {
-        fn next(&mut self) -> PlaceIteratorItem {
-            todo!()
-        }
+    impl<'a, G: PositionGenerator> PlacerIterator<'a, G> {
+        const A: usize = 2;
     }
 
-    impl<'a> Iterator for PlacerIterator<'a> {
+    impl<'a, G:PositionGenerator> Iterator for PlacerIterator<'a, G> {
         type Item = PlaceIteratorItem;
     
         fn next(&mut self) -> Option<Self::Item> {
@@ -144,13 +148,17 @@ mod helper {
                 return None;
             }
 
-            Some(self.next())
+            self.counter += 1;
+
+            todo!()
+
+            // Some(self.next())
         }
     }
 
-    impl<'a> IntoIterator for &'a Placer {
+    impl<'a, G: PositionGenerator> IntoIterator for &'a Placer<G> {
         type Item = PlaceIteratorItem;
-        type IntoIter = PlacerIterator<'a>;
+        type IntoIter = PlacerIterator<'a, G>;
 
         fn into_iter(self) -> Self::IntoIter {
             PlacerIterator {
