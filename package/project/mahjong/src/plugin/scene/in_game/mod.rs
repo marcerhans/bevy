@@ -1,5 +1,8 @@
+use std::marker::PhantomData;
+
 use crate::plugin::{global::WindowScaling, scene::main_menu::MainMenu};
 use bevy::prelude::*;
+use helper::*;
 use rand::{Rng, seq::SliceRandom};
 
 pub struct Plugin;
@@ -71,9 +74,11 @@ fn on_enter(
     // Determine position(s)
     // Spawn
     use helper::*;
-    // let placer = Placer::new(144);
+    let placer = Placer::new(Vec2::new(2.0, 3.0), Generator::<Turtle>::new());
 
-    // for position in &placer {}
+    for position in &placer {
+        println!("{:?}", position);
+    }
 }
 
 fn update(
@@ -110,6 +115,42 @@ fn update(
     // *height_prev = height;
 }
 
+struct Turtle;
+
+struct Generator<T>(PhantomData<T>);
+
+impl<T> Generator<T> {
+    pub fn new() -> Self {
+        Self(PhantomData::<T>)
+    }
+}
+
+impl PositionGenerator for Generator<Turtle> {
+    fn generate(
+        &self,
+        tile_size: Vec2,
+        current: usize,
+    ) -> Option<Vec2> {
+        if current >= 144 {
+            return None;
+        }
+
+        match current {
+            0..12 => todo!(),
+            12..20 => todo!(),
+            20..30 => todo!(),
+            30..42 => todo!(),
+            42..54 => todo!(),
+            54..64 => todo!(),
+            64..72 => todo!(),
+            72..84 => todo!(),
+            84..87 => todo!(),
+            87.. => todo!(),
+            _ => unreachable!("Number of valid tiles exceeded!"),
+        }
+    }
+}
+
 mod helper {
     use bevy::prelude::*;
 
@@ -118,23 +159,20 @@ mod helper {
             &self,
             tile_size: Vec2,
             current: usize,
-        ) -> Vec2;
+        ) -> Option<Vec2>;
     }
 
     pub struct Placer<G: PositionGenerator> {
-        n_tiles: usize,
         tile_size: Vec2,
         generator: G,
     }
 
     impl<G: PositionGenerator> Placer<G> {
         pub fn new(
-            n_tiles: usize,
             tile_size: Vec2,
             generator: G,
         ) -> Self {
             Self {
-                n_tiles,
                 tile_size,
                 generator,
             }
@@ -148,24 +186,14 @@ mod helper {
 
     type PlaceIteratorItem = Vec2;
 
-    impl<'a, G: PositionGenerator> PlacerIterator<'a, G> {
-        const A: usize = 2;
-    }
-
     impl<'a, G: PositionGenerator> Iterator for PlacerIterator<'a, G> {
         type Item = PlaceIteratorItem;
 
         fn next(&mut self) -> Option<Self::Item> {
-            if self.counter >= self.placer.n_tiles {
-                return None;
-            }
-
             self.counter += 1;
-            Some(
-                self.placer
-                    .generator
-                    .generate(self.placer.tile_size, self.counter - 1),
-            )
+            self.placer
+                .generator
+                .generate(self.placer.tile_size, self.counter - 1)
         }
     }
 
@@ -178,44 +206,6 @@ mod helper {
                 placer: self,
                 counter: 0,
             }
-        }
-    }
-
-    #[cfg(test)]
-    mod test {
-        use std::marker::PhantomData;
-
-        use super::*;
-
-        pub struct Turtle;
-
-        struct Generator<T>(PhantomData<T>);
-
-        impl<T> Generator<T> {
-            pub fn new() -> Self {
-                Self(PhantomData::<T>)
-            }
-        }
-
-        impl PositionGenerator for Generator<Turtle> {
-            fn generate(
-                &self,
-                tile_size: Vec2,
-                current: usize,
-            ) -> Vec2 {
-                Vec2::splat(2.0)
-            }
-        }
-
-        #[test]
-        fn test() {
-            let p = Placer::new(4, Vec2::new(2.0, 3.0), Generator::<Turtle>::new());
-
-            for pos in &p {
-                println!("{:?}", pos);
-            }
-            // let mut pi = (&p).into_iter();
-            // let what = pi.next();
         }
     }
 }
