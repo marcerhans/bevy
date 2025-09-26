@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use crate::plugin::{global::WindowScaling, scene::main_menu::MainMenu};
 use bevy::prelude::*;
+use rand::seq::SliceRandom;
 
 pub struct Plugin;
 
@@ -42,7 +43,7 @@ fn on_enter(
     let width = height * 0.7;
     let mut rng = rand::rng();
     let mut tiles: Vec<usize> = (0..Generator::<Turtle>::TILES).collect();
-    // tiles.shuffle(&mut rng);
+    tiles.shuffle(&mut rng);
 
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
 
