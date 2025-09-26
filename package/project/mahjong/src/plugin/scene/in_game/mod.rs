@@ -35,7 +35,7 @@ fn on_enter(
     let height = window.height() / 8.0;
     let width = height * 0.7;
     let mut rng = rand::rng();
-    let mut tiles: Vec<u32> = (0..144).collect();
+    let mut tiles: Vec<usize> = (0..Generator::<Turtle>::TILES).collect();
     tiles.shuffle(&mut rng);
 
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
@@ -154,14 +154,11 @@ impl PositionGenerator for Generator<Turtle> {
                     _ => unreachable!(),
                 };
             },
-            87.. => {
-                return None;
-                todo!("Add next layer");
+            87..123 => {
                 layer = 1;
-                match current {
-                    _ => unreachable!(),
-                };
+                row = (current - 87) / 6 + 1;
             },
+            _ => return None, //unreachable!(),
         }
 
         let column = match layer {
@@ -185,6 +182,10 @@ impl PositionGenerator for Generator<Turtle> {
                     _ => unreachable!(),
                 }
             },
+            1 => {
+                info!(current);
+                3 + ((current - 87) % 6)
+            }
             _ => unreachable!(),
         };
 
