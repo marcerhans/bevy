@@ -32,7 +32,7 @@ fn on_enter(
     mut commands: Commands,
     window: Single<&Window>,
 ) {
-    let height = window.height() / 10.0;
+    let height = window.height() / 8.0;
     let width = height * 0.7;
     let mut rng = rand::rng();
     let mut tiles: Vec<u32> = (0..144).collect();
@@ -40,8 +40,10 @@ fn on_enter(
 
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
 
-    let start_x = -width * 14.0 / 2.0;
-    let start_y = height * 8.0 / 2.0;
+    let columns = 14.0;
+    let rows = 8.0;
+    let start_x = -width * columns / 2.0;
+    let start_y = height * rows / 2.0;
 
     for ((index, tile), pos) in tiles.iter().enumerate().zip(placer.into_iter()) {
         commands
@@ -179,7 +181,7 @@ impl PositionGenerator for Generator<Turtle> {
                         1 => return Some(Vec2::new(12.0, 3.5) * tile_size),
                         2 => return Some(Vec2::new(13.0, 3.5) * tile_size),
                         _ => unreachable!(),
-                    }
+                    },
                     _ => unreachable!(),
                 }
             },
