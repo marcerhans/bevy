@@ -36,7 +36,7 @@ fn on_enter(
     let width = height * 0.7;
     let mut rng = rand::rng();
     let mut tiles: Vec<usize> = (0..Generator::<Turtle>::TILES).collect();
-    tiles.shuffle(&mut rng);
+    // tiles.shuffle(&mut rng);
 
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
 
@@ -50,7 +50,16 @@ fn on_enter(
             .spawn((
                 Marker,
                 StateScoped(InGame::Root),
-                Sprite::from_color(Color::BLACK, Vec2::new(width, height)),
+                Sprite::from_color(
+                    match index {
+                        ..87 => Color::srgb_u8(255, 0, 0),
+                        87..123 => Color::srgb_u8(0, 255, 0),
+                        123..139 => Color::srgb_u8(0, 0, 255),
+                        139..143 => Color::srgb_u8(255, 255, 0),
+                        143.. => Color::srgb_u8(255, 0, 255),
+                    },
+                    Vec2::new(width, height),
+                ),
                 Pickable::default(),
                 Text2d::new(tile.to_string()),
                 TextFont::from_font_size(height / 5.0),
@@ -158,7 +167,19 @@ impl PositionGenerator for Generator<Turtle> {
                 layer = 1;
                 row = (current - 87) / 6 + 1;
             },
-            _ => return None, //unreachable!(),
+            123..139 => {
+                layer = 2;
+                row = (current - 123) / 4 + 2;
+            },
+            139..143 => {
+                layer = 3;
+                row = (current - 139) / 2 + 3;
+            },
+            143 => {
+                // Special case. Just return value immediately.
+                return Some(Vec2::new(5.5, 3.5) * tile_size);
+            },
+            _ => return None,
         }
 
         let column = match layer {
@@ -182,10 +203,9 @@ impl PositionGenerator for Generator<Turtle> {
                     _ => unreachable!(),
                 }
             },
-            1 => {
-                info!(current);
-                3 + ((current - 87) % 6)
-            }
+            1 => 3 + ((current - 87) % 6),
+            2 => 4 + ((current - 123) % 4),
+            3 => 5 + ((current - 139) % 2),
             _ => unreachable!(),
         };
 
