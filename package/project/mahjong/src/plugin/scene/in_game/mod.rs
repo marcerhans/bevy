@@ -42,7 +42,7 @@ fn on_enter(
     let height = window.height() / 8.0;
     let width = height * 0.7;
     let mut rng = rand::rng();
-    let mut tiles: Vec<usize> = (0..Generator::<Turtle>::TILES).collect();
+    let mut tiles: Vec<usize> = (0..Generator::<Turtle>::TILES).map(|x| x / 2).collect();
     tiles.shuffle(&mut rng);
 
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
@@ -80,38 +80,45 @@ fn on_enter(
                     ..default()
                 },
             ))
-            .observe(
-                |drag: Trigger<Pointer<Drag>>,
-                 mut transform: Query<&mut Transform>,
-                 window_scaling: Res<WindowScaling>| {
-                    let mut transform = transform.get_mut(drag.target).unwrap();
-                    transform.translation.x += drag.delta.x * window_scaling.value();
-                    transform.translation.y -= drag.delta.y * window_scaling.value();
-                },
-            )
-            .observe(
-                |click: Trigger<Pointer<Click>>,
-                 mut previous: ResMut<PreviouslySelectedTile>,
-                 id: Query<&ID, With<Marker>>| {
-                    if previous.0.is_none() {
-                        info!("{:?}", click.target);
-                        previous.0 = Some(click.target);
-                        return;
-                    }
-
-                    if id.get(click.target).unwrap().0 == id.get(previous.0.unwrap()).unwrap().0 {
-                        info!("Match! Do something!");
-                        previous.0 = None;
-                    } else {
-                        info!("Not a match :(");
-                        previous.0 = Some(click.target);
-                    }
-                },
-            );
+            // .observe(
+            //     |drag: Trigger<Pointer<Drag>>,
+            //      mut transform: Query<&mut Transform>,
+            //      window_scaling: Res<WindowScaling>| {
+            //         let mut transform = transform.get_mut(drag.target).unwrap();
+            //         transform.translation.x += drag.delta.x * window_scaling.value();
+            //         transform.translation.y -= drag.delta.y * window_scaling.value();
+            //     },
+            // )
+            .observe(on_click);
     }
 
     // Determine position(s)
     // Spawn
+}
+
+fn on_click(
+    click: Trigger<Pointer<Click>>,
+    mut commands: Commands,
+    mut previous: ResMut<PreviouslySelectedTile>,
+    id: Query<&ID, With<Marker>>,
+) {
+    if previous.0.is_none() {
+        info!("{:?}", click.target);
+        previous.0 = Some(click.target);
+        return;
+    }
+
+    if click.target != previous.0.unwrap()
+        && id.get(click.target).unwrap().0 == id.get(previous.0.unwrap()).unwrap().0
+    {
+        info!("Match! Do something!");
+        commands.entity(previous.0.unwrap()).despawn();
+        commands.entity(click.target).despawn();
+        previous.0 = None;
+    } else {
+        info!("Not a match :(");
+        previous.0 = Some(click.target);
+    }
 }
 
 fn update(

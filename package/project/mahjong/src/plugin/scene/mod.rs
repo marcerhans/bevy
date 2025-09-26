@@ -28,5 +28,5 @@ pub enum Startup {
 
 fn startup(mut next_state: ResMut<NextState<Startup>>) {
     info!("Initializing...");
-    next_state.set(Startup::Greeter);
+    next_state.set(Startup::MainMenu);
 }

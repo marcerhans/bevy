@@ -23,8 +23,8 @@ impl bevy::prelude::Plugin for Plugin {
 #[source(Startup = Startup::MainMenu)]
 #[states(scoped_entities)]
 pub enum MainMenu {
-    #[default]
     Root,
+    #[default]
     Play,
     Settings,
     About,
