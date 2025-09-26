@@ -39,15 +39,11 @@ fn on_enter(
     tiles.shuffle(&mut rng);
 
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
-    let positions = placer.into_iter().collect::<Vec<Vec2>>();
-    // for position in &placer {
-    //     println!("{:?}", position);
-    // }
 
     let start_x = -width * 14.0 / 2.0;
     let start_y = height * 8.0 / 2.0;
 
-    for ((index, tile), pos) in tiles.iter().enumerate().zip(positions) {
+    for ((index, tile), pos) in tiles.iter().enumerate().zip(placer.into_iter()) {
         commands
             .spawn((
                 Marker,
@@ -138,33 +134,56 @@ impl PositionGenerator for Generator<Turtle> {
             return None;
         }
 
+        let layer;
         let row;
         match current {
-            0..12 => row = 0,
-            12..20 => row = 1,
-            20..30 => row = 2,
-            30..42 => row = 3,
-            42..54 => row = 4,
-            54..64 => row = 5,
-            64..72 => row = 6,
-            72..84 => row = 7,
-            84..87 => row = 8,
-            87.. => return None,
-            // _ => unreachable!("Number of valid tiles exceeded!"),
+            ..87 => {
+                layer = 0;
+                match current {
+                    0..12 => row = 0,
+                    12..20 => row = 1,
+                    20..30 => row = 2,
+                    30..42 => row = 3,
+                    42..54 => row = 4,
+                    54..64 => row = 5,
+                    64..72 => row = 6,
+                    72..84 => row = 7,
+                    84..87 => row = 8,
+                    _ => unreachable!(),
+                };
+            },
+            87.. => {
+                return None;
+                todo!("Add next layer");
+                layer = 1;
+                match current {
+                    _ => unreachable!(),
+                };
+            },
         }
 
-        // Note: Include an offset
-        let column = match row {
-            0 => 0 + current - 0,
-            1 => 2 + current - 12,
-            2 => 1 + current - 20,
-            3 => 0 + current - 30,
-            4 => 0 + current - 42,
-            5 => 1 + current - 54,
-            6 => 2 + current - 64,
-            7 => 0 + current - 72,
-            8 => 0 + current - 84, // TODO: Fix extras!
-            _ => unreachable!("Logic error. Invalid row, somehow."),
+        let column = match layer {
+            0 => {
+                match row {
+                    0 => 0 + current - 0,
+                    1 => 2 + current - 12,
+                    2 => 1 + current - 20,
+                    3 => 0 + current - 30,
+                    4 => 0 + current - 42,
+                    5 => 1 + current - 54,
+                    6 => 2 + current - 64,
+                    7 => 0 + current - 72,
+                    8 => match current - 84 {
+                        // Last 3 are special cases. Do not follow a pattern.
+                        0 => return Some(Vec2::new(-1.0, 3.5) * tile_size),
+                        1 => return Some(Vec2::new(12.0, 3.5) * tile_size),
+                        2 => return Some(Vec2::new(13.0, 3.5) * tile_size),
+                        _ => unreachable!(),
+                    }
+                    _ => unreachable!(),
+                }
+            },
+            _ => unreachable!(),
         };
 
         Some(Vec2::new(column as f32, row as f32) * tile_size)
