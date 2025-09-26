@@ -2,7 +2,6 @@ use std::marker::PhantomData;
 
 use crate::plugin::{global::WindowScaling, scene::main_menu::MainMenu};
 use bevy::prelude::*;
-use rand::{Rng, seq::SliceRandom};
 
 pub struct Plugin;
 
@@ -12,6 +11,7 @@ impl bevy::prelude::Plugin for Plugin {
         app: &mut App,
     ) {
         app.add_sub_state::<InGame>()
+            .insert_resource(PreviouslySelectedTile::default())
             .add_systems(OnEnter(InGame::Root), on_enter)
             .add_systems(Update, update.run_if(in_state(InGame::Root)));
     }
@@ -25,8 +25,14 @@ pub enum InGame {
     Root,
 }
 
+#[derive(Resource, Default)]
+struct PreviouslySelectedTile(Option<Entity>);
+
 #[derive(Component)]
 struct Marker;
+
+#[derive(Component)]
+struct ID(usize);
 
 fn on_enter(
     mut commands: Commands,
@@ -49,6 +55,7 @@ fn on_enter(
         commands
             .spawn((
                 Marker,
+                ID(*tile),
                 StateScoped(InGame::Root),
                 Sprite::from_color(
                     match index {
@@ -79,6 +86,25 @@ fn on_enter(
                     let mut transform = transform.get_mut(drag.target).unwrap();
                     transform.translation.x += drag.delta.x * window_scaling.value();
                     transform.translation.y -= drag.delta.y * window_scaling.value();
+                },
+            )
+            .observe(
+                |click: Trigger<Pointer<Click>>,
+                 mut previous: ResMut<PreviouslySelectedTile>,
+                 id: Query<&ID, With<Marker>>| {
+                    if previous.0.is_none() {
+                        info!("{:?}", click.target);
+                        previous.0 = Some(click.target);
+                        return;
+                    }
+
+                    if id.get(click.target).unwrap().0 == id.get(previous.0.unwrap()).unwrap().0 {
+                        info!("Match! Do something!");
+                        previous.0 = None;
+                    } else {
+                        info!("Not a match :(");
+                        previous.0 = Some(click.target);
+                    }
                 },
             );
     }
