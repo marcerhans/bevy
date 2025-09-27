@@ -1,3 +1,5 @@
+mod grid;
+
 use std::marker::PhantomData;
 
 use crate::plugin::{global::WindowScaling, scene::main_menu::MainMenu};
