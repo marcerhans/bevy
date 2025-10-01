@@ -41,7 +41,7 @@ fn on_enter(mut commands: Commands, mut timer: ResMut<TimerRes>) {
     );
 
     commands.spawn((
-        StateScoped(Startup::Greeter),
+        DespawnOnExit(Startup::Greeter),
         Marker,
         Node {
             width: Val::Percent(100.0),

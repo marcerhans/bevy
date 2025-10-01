@@ -1,6 +1,5 @@
 use bevy::{
-    asset::AssetMetaCheck, log::LogPlugin, prelude::*, render::camera::ScalingMode,
-    window::PresentMode, winit::WinitSettings,
+    asset::AssetMetaCheck, camera::ScalingMode, log::LogPlugin, prelude::*, window::PresentMode,
 };
 
 pub struct Plugin;

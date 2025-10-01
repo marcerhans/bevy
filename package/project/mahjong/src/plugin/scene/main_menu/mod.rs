@@ -43,7 +43,7 @@ fn on_enter(mut commands: Commands) {
     commands
         .spawn((
             Marker,
-            StateScoped(MainMenu::Root),
+            DespawnOnExit(MainMenu::Root),
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),

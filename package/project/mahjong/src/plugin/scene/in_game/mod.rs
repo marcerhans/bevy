@@ -59,7 +59,7 @@ fn on_enter(
             .spawn((
                 Marker,
                 ID(*tile),
-                StateScoped(InGame::Root),
+                DespawnOnExit(InGame::Root),
                 Sprite::from_color(
                     match index {
                         ..87 => Color::srgb_u8(255, 0, 0),
@@ -99,40 +99,41 @@ fn on_enter(
 }
 
 fn on_click(
-    click: Trigger<Pointer<Click>>,
+    click: On<Pointer<Click>>,
     mut commands: Commands,
     mut previous: ResMut<PreviouslySelectedTile>,
     id: Query<&ID, With<Marker>>,
 ) {
     if previous.0.is_none() {
-        info!("{:?}", click.target);
-        previous.0 = Some(click.target);
+        info!("{:?}", click);
+        previous.0 = Some(click.original_event_target());
         return;
     }
 
-    if click.target != previous.0.unwrap()
-        && id.get(click.target).unwrap().0 == id.get(previous.0.unwrap()).unwrap().0
+    if click.original_event_target() != previous.0.unwrap()
+        && id.get(click.original_event_target()).unwrap().0
+            == id.get(previous.0.unwrap()).unwrap().0
     {
         info!("Match! Do something!");
         commands.entity(previous.0.unwrap()).despawn();
-        commands.entity(click.target).despawn();
+        commands.entity(click.original_event_target()).despawn();
         previous.0 = None;
     } else {
         info!("Not a match :(");
-        previous.0 = Some(click.target);
+        previous.0 = Some(click.original_event_target());
     }
 }
 
 fn update(
-    // window: Single<&Window, Changed<Window>>,
+    window: Single<&Window, Changed<Window>>,
     // mut height_prev: Local<Option<f32>>,
-    // query: Query<(&mut Transform, &mut TextFont, &mut Sprite, &Marker)>,
-    // query: Single<&Projection, With<Camera>>
-    // window: Single<&Window, Changed<Window>>
+    query: Query<(&mut Transform, &mut TextFont, &mut Sprite, &Marker)>,
+    // // query: Single<&Projection, With<Camera>>
+    // // window: Single<&Window, Changed<Window>>
     window_scaling: Res<WindowScaling>,
 ) {
-    // info!("Scaling: {}", window_scaling.value());
-    // info!("{:?}", window.resolution)
+    info!("Scaling: {}", window_scaling.value());
+    // // info!("{:?}", window.resolution);
     // let height = window.height() / 10.0;
     // if let None = *height_prev {
     //     *height_prev = Some(height);
@@ -147,12 +148,12 @@ fn update(
     // let height = height * scale;
     // let width = height * 0.7;
 
-    // for (mut transform, mut font, mut sprite, marker) in query {
-    //     transform.translation.x *= scale;
-    //     transform.translation.y *= scale;
-    //     font.font_size *= scale;
-    //     sprite.custom_size = Some(sprite.custom_size.unwrap().with_x(width).with_y(height));
-    // }
+    for (mut transform, mut font, mut sprite, marker) in query {
+        transform.translation.x *= window_scaling.value();
+        transform.translation.y *= window_scaling.value();
+        font.font_size *= window_scaling.value();
+        // sprite.custom_size = Some(sprite.custom_size.unwrap().with_x(width).with_y(height));
+    }
 
     // *height_prev = height;
 }

@@ -17,7 +17,7 @@ fn main() {
                 info!("Switching to {:?}", State::B);
                 info!(
                     "Spawned: {:?}",
-                    commands.spawn((StateScoped(State::A), Name::new("A"))).id()
+                    commands.spawn((DespawnOnExit(State::A), Name::new("A"))).id()
                 );
                 next_state.set(State::B);
             },
@@ -29,7 +29,7 @@ fn main() {
                 info!("Switching to {:?}", State::C);
                 info!(
                     "Spawned: {:?}",
-                    commands.spawn((StateScoped(State::B), Name::new("B"))).id()
+                    commands.spawn((DespawnOnExit(State::B), Name::new("B"))).id()
                 );
                 next_state.set(State::C);
             },
@@ -38,7 +38,7 @@ fn main() {
             info!("Entered state: {:?}", State::C);
             info!(
                 "Spawned: {:?}",
-                commands.spawn((StateScoped(State::C), Name::new("C"))).id()
+                commands.spawn((DespawnOnExit(State::C), Name::new("C"))).id()
             );
         })
         .run();
@@ -92,7 +92,7 @@ mod sub {
                         info!(
                             "Spawned: {:?}",
                             commands
-                                .spawn((StateScoped(SubState::AA), Name::new("AA")))
+                                .spawn((DespawnOnExit(SubState::AA), Name::new("AA")))
                                 .id()
                         );
                         next_state.set(SubState::BB);
@@ -106,7 +106,7 @@ mod sub {
                         info!(
                             "Spawned: {:?}",
                             commands
-                                .spawn((StateScoped(SubState::BB), Name::new("BB")))
+                                .spawn((DespawnOnExit(SubState::BB), Name::new("BB")))
                                 .id()
                         );
                         next_state.set(SubState::CC);
@@ -120,7 +120,7 @@ mod sub {
                         info!(
                             "Spawned: {:?}",
                             commands
-                                .spawn((StateScoped(SubState::CC), Name::new("CC")))
+                                .spawn((DespawnOnExit(SubState::CC), Name::new("CC")))
                                 .id()
                         );
                         next_state.set(State::Init);

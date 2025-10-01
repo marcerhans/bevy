@@ -47,7 +47,7 @@ fn on_enter(
 
     commands.spawn((
         Marker,
-        StateScoped(MainMenu::About),
+        DespawnOnExit(MainMenu::About),
         Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
