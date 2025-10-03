@@ -15,8 +15,8 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_sub_state::<InGame>()
             .insert_resource(PreviouslySelectedTile::default())
-            .add_systems(OnEnter(InGame::Root), on_enter)
-            .add_systems(Update, update.run_if(in_state(InGame::Root)));
+            .add_systems(OnEnter(InGame::Root), on_enter);
+            // .add_systems(Update, update.run_if(in_state(InGame::Root)));
     }
 }
 
@@ -124,39 +124,39 @@ fn on_click(
     }
 }
 
-fn update(
-    window: Single<&Window, Changed<Window>>,
-    // mut height_prev: Local<Option<f32>>,
-    query: Query<(&mut Transform, &mut TextFont, &mut Sprite, &Marker)>,
-    // // query: Single<&Projection, With<Camera>>
-    // // window: Single<&Window, Changed<Window>>
-    window_scaling: Res<WindowScaling>,
-) {
-    info!("Scaling: {}", window_scaling.value());
-    // // info!("{:?}", window.resolution);
-    // let height = window.height() / 10.0;
-    // if let None = *height_prev {
-    //     *height_prev = Some(height);
-    // }
+// fn update(
+//     window: Single<&Window, Changed<Window>>,
+//     // mut height_prev: Local<Option<f32>>,
+//     query: Query<(&mut Transform, &mut TextFont, &mut Sprite, &Marker)>,
+//     // // query: Single<&Projection, With<Camera>>
+//     // // window: Single<&Window, Changed<Window>>
+//     window_scaling: Res<WindowScaling>,
+// ) {
+//     info!("Scaling: {}", window_scaling.value());
+//     // // info!("{:?}", window.resolution);
+//     // let height = window.height() / 10.0;
+//     // if let None = *height_prev {
+//     //     *height_prev = Some(height);
+//     // }
 
-    // let height_prev = height_prev.as_mut().unwrap();
-    // if height == *height_prev {
-    //     return;
-    // }
+//     // let height_prev = height_prev.as_mut().unwrap();
+//     // if height == *height_prev {
+//     //     return;
+//     // }
 
-    // let scale = height / *height_prev;
-    // let height = height * scale;
-    // let width = height * 0.7;
+//     // let scale = height / *height_prev;
+//     // let height = height * scale;
+//     // let width = height * 0.7;
 
-    for (mut transform, mut font, mut sprite, marker) in query {
-        transform.translation.x *= window_scaling.value();
-        transform.translation.y *= window_scaling.value();
-        font.font_size *= window_scaling.value();
-        // sprite.custom_size = Some(sprite.custom_size.unwrap().with_x(width).with_y(height));
-    }
+//     // for (mut transform, mut font, mut sprite, marker) in query {
+//     //     transform.translation.x *= window_scaling.value();
+//     //     transform.translation.y *= window_scaling.value();
+//     //     font.font_size *= window_scaling.value();
+//     //     // sprite.custom_size = Some(sprite.custom_size.unwrap().with_x(width).with_y(height));
+//     // }
 
-    // *height_prev = height;
-}
+//     // *height_prev = height;
+// }
 
 struct Turtle;
 
