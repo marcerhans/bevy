@@ -46,7 +46,7 @@ fn on_enter(
 
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
 
-    let columns = 14.0;
+    let columns = 11.0;
     let rows = 8.0;
     let start_x = -width * columns / 2.0;
     let start_y = height * rows / 2.0;
@@ -125,8 +125,8 @@ fn on_click(
     // 3. BOTH entities have free space to either left or right.
     // 4. BOTH entities are not blocked by any above
     fn overlapping(
-        (size_a, pos_a): (Vec2, Vec2),
-        (size_b, pos_b): (Vec2, Vec2),
+        (size_a, pos_a): (Vec2, Vec3),
+        (size_b, pos_b): (Vec2, Vec3),
     ) -> bool {
         let x_overlap = (pos_a.x - pos_b.x).abs() < ((size_a.x + size_b.x) / 2.0);
         let y_overlap = (pos_a.y - pos_b.y).abs() < ((size_a.y + size_b.y) / 2.0);
@@ -139,9 +139,13 @@ fn on_click(
     }
 
     fn which_side(
-        (size_a, pos_a): (Vec2, Vec2),
-        (size_b, pos_b): (Vec2, Vec2),
+        (size_a, pos_a): (Vec2, Vec3),
+        (size_b, pos_b): (Vec2, Vec3),
     ) -> Option<LR> {
+        if pos_a.z != pos_b.z {
+            return None;
+        }
+
         let y_overlap = (pos_a.y - pos_b.y).abs() < ((size_a.y + size_b.y) / 2.0);
 
         if !y_overlap {
@@ -162,8 +166,8 @@ fn on_click(
     let mut curr_obscured = false;
     let prev_size = prev_entity.3.custom_size.unwrap();
     let curr_size = curr_entity.3.custom_size.unwrap();
-    let prev_pos = prev_entity.2.translation.truncate();
-    let curr_pos = curr_entity.2.translation.truncate();
+    let prev_pos = prev_entity.2.translation;
+    let curr_pos = curr_entity.2.translation;
 
     for entity in query {
         if entity.0 == prev_entity.0 || entity.0 == curr_entity.0 {
@@ -171,7 +175,7 @@ fn on_click(
         }
 
         let size = entity.3.custom_size.unwrap();
-        let pos = entity.2.translation.truncate();
+        let pos = entity.2.translation;
 
         if let Some(side) = which_side((prev_size, prev_pos), (size, pos)) {
             match side {
@@ -188,9 +192,9 @@ fn on_click(
         }
 
         prev_obscured |= overlapping((prev_size, prev_pos), (size, pos))
-            && prev_entity.2.translation.z < entity.2.translation.z;
+            && prev_pos.z < pos.z;
         curr_obscured |= overlapping((curr_size, curr_pos), (size, pos))
-            && curr_entity.2.translation.z < entity.2.translation.z;
+            && curr_pos.z < pos.z;
     }
 
     info!(
