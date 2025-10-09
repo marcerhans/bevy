@@ -202,42 +202,17 @@ fn on_click(
         curr_left, curr_right, curr_obscured
     );
 
-    // Successfull match?
-    // True: Set previous to None
-    // False: Just update previous to current
+    if ((prev_left && prev_right) || prev_obscured) || ((curr_left && curr_right) || curr_obscured)
+    {
+        info!("Failed pairing due to neighbouring rules.");
+        prev_res.0 = Some(curr_entity.0);
+        return;
+    }
 
-    // =========================================================
-
-    // let previous_entity = previous_res.0.unwrap();
-    // let previous_id = query.get(previous_entity).unwrap().0.0;
-    // let current_entity = click.original_event_target();
-    // let current_id = query.get(current_entity).unwrap().0.0;
-
-    // if previous_entity != current_entity && previous_id == current_id {
-    //     info!("Match! Do something!");
-
-    //     let valid_removal = {
-    //         todo!();
-    //         // // Removal is valid if there is no tile to the left, right, or above the selected pair (individually).
-    //         // for (_, transform, sprite) in query {}
-
-    //         // // fn no_tile_to_left_or_right() -> bool {
-    //         // //     false
-    //         // // }
-
-    //         false
-    //     };
-
-    //     if valid_removal {
-    //         commands.entity(previous_entity).despawn();
-    //         commands.entity(current_entity).despawn();
-    //         previous_res.0 = None;
-    //         return;
-    //     }
-    // }
-
-    // info!("Not a match :(");
-    // previous_res.0 = Some(click.original_event_target());
+    commands.entity(prev_entity.0).despawn();
+    commands.entity(curr_entity.0).despawn();
+    prev_res.0 = None;
+    return;
 }
 
 mod generator {
