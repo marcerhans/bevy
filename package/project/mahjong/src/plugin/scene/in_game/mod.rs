@@ -1,6 +1,7 @@
 use crate::plugin::scene::main_menu::MainMenu;
 use bevy::prelude::*;
 use generator::*;
+use helpers::*;
 use rand::seq::SliceRandom;
 
 pub struct Plugin;
@@ -124,40 +125,6 @@ fn on_click(
 
     // 3. BOTH entities have free space to either left or right.
     // 4. BOTH entities are not blocked by any above
-    fn overlapping(
-        (size_a, pos_a): (Vec2, Vec3),
-        (size_b, pos_b): (Vec2, Vec3),
-    ) -> bool {
-        let x_overlap = (pos_a.x - pos_b.x).abs() < ((size_a.x + size_b.x) / 2.0);
-        let y_overlap = (pos_a.y - pos_b.y).abs() < ((size_a.y + size_b.y) / 2.0);
-        x_overlap && y_overlap
-    }
-
-    enum LR {
-        Left,
-        Right,
-    }
-
-    fn which_side(
-        (size_a, pos_a): (Vec2, Vec3),
-        (size_b, pos_b): (Vec2, Vec3),
-    ) -> Option<LR> {
-        if pos_a.z != pos_b.z {
-            return None;
-        }
-
-        let y_overlap = (pos_a.y - pos_b.y).abs() < ((size_a.y + size_b.y) / 2.0);
-
-        if !y_overlap {
-            return None;
-        }
-
-        match pos_a.x > pos_b.x {
-            true => Some(LR::Left),
-            false => Some(LR::Right),
-        }
-    }
-
     let mut prev_left = false;
     let mut prev_right = false;
     let mut prev_obscured = false;
@@ -191,10 +158,8 @@ fn on_click(
             }
         }
 
-        prev_obscured |= overlapping((prev_size, prev_pos), (size, pos))
-            && prev_pos.z < pos.z;
-        curr_obscured |= overlapping((curr_size, curr_pos), (size, pos))
-            && curr_pos.z < pos.z;
+        prev_obscured |= overlapping((prev_size, prev_pos), (size, pos)) && prev_pos.z < pos.z;
+        curr_obscured |= overlapping((curr_size, curr_pos), (size, pos)) && curr_pos.z < pos.z;
     }
 
     info!(
@@ -217,6 +182,44 @@ fn on_click(
     commands.entity(curr_entity.0).despawn();
     prev_res.0 = None;
     return;
+}
+
+mod helpers {
+    use bevy::prelude::{Vec2, Vec3};
+
+    pub fn overlapping(
+        (size_a, pos_a): (Vec2, Vec3),
+        (size_b, pos_b): (Vec2, Vec3),
+    ) -> bool {
+        let x_overlap = (pos_a.x - pos_b.x).abs() < ((size_a.x + size_b.x) / 2.0);
+        let y_overlap = (pos_a.y - pos_b.y).abs() < ((size_a.y + size_b.y) / 2.0);
+        x_overlap && y_overlap
+    }
+
+    pub enum LR {
+        Left,
+        Right,
+    }
+
+    pub fn which_side(
+        (size_a, pos_a): (Vec2, Vec3),
+        (size_b, pos_b): (Vec2, Vec3),
+    ) -> Option<LR> {
+        if pos_a.z != pos_b.z {
+            return None;
+        }
+
+        let y_overlap = (pos_a.y - pos_b.y).abs() < ((size_a.y + size_b.y) / 2.0);
+
+        if !y_overlap {
+            return None;
+        }
+
+        match pos_a.x > pos_b.x {
+            true => Some(LR::Left),
+            false => Some(LR::Right),
+        }
+    }
 }
 
 mod generator {
