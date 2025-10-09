@@ -99,16 +99,15 @@ fn on_click(
     mut prev_res: ResMut<PreviouslySelectedTile>,
     query: Query<(Entity, &ID, &Transform, &Sprite), With<Tile>>,
 ) {
-    if let Ok(entity) = query.get(click.original_event_target()) {
-        info!("Clicked:\n{:?}", entity);
-    } else {
-        panic!();
-    }
+    let curr_entity = query.get(click.original_event_target()).unwrap();
 
     let Some(prev_entity) = prev_res.0 else {
         prev_res.0 = Some(click.original_event_target());
         return;
     };
+
+    info!("Clicked:\n{:?}", curr_entity);
+    info!("Prevously clicked:\n{:?}", prev_entity);
 
     // Check rules:
     // 1. Same id?
