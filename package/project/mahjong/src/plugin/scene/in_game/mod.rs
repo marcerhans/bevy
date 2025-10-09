@@ -13,7 +13,8 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_sub_state::<InGame>()
             .insert_resource(PreviouslySelectedTile::default())
-            .add_systems(OnEnter(InGame::Root), on_enter);
+            .add_systems(OnEnter(InGame::Root), on_enter)
+            .add_systems(Update, next_move.run_if(in_state(InGame::Root)));
         // .add_systems(Update, update.run_if(in_state(InGame::Root)));
     }
 }
@@ -92,6 +93,10 @@ fn on_enter(
             // )
             .observe(on_click);
     }
+}
+
+fn next_move() {
+    todo!()
 }
 
 fn on_click(
