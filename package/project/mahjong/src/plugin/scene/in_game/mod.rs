@@ -36,6 +36,9 @@ struct Tile;
 #[derive(Component, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct ID(usize);
 
+#[derive(Event)]
+struct TileRemoved;
+
 fn on_enter(
     mut commands: Commands,
     window: Single<&Window>,
@@ -95,8 +98,21 @@ fn on_enter(
     }
 }
 
-fn next_move() {
-    todo!()
+fn next_move(
+    mut removed: RemovedComponents<Tile>,
+    query: Query<(Entity, &ID, &Transform, &Sprite), With<Tile>>,
+) {
+    if removed.is_empty() {
+        return;
+    }
+
+    removed.clear();
+
+    for (entity, id, transform, sprite) in query {
+        for (entity, id, transform, sprite) in query {
+            todo!("Loop through like this or just pair them when spawning them...");
+        }
+    }
 }
 
 fn on_click(
