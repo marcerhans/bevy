@@ -123,9 +123,84 @@ fn on_click(
     }
 
     // 3. BOTH entities have free space to either left or right.
-
     // 4. BOTH entities are not blocked by any above
+    fn overlapping(
+        (size_a, pos_a): (Vec2, Vec2),
+        (size_b, pos_b): (Vec2, Vec2),
+    ) -> bool {
+        let x_overlap = (pos_a.x - pos_b.x).abs() < ((size_a.x + size_b.x) / 2.0);
+        let y_overlap = (pos_a.y - pos_b.y).abs() < ((size_a.y + size_b.y) / 2.0);
+        x_overlap && y_overlap
+    }
 
+    enum LR {
+        Left,
+        Right,
+    }
+
+    fn which_side(
+        (size_a, pos_a): (Vec2, Vec2),
+        (size_b, pos_b): (Vec2, Vec2),
+    ) -> Option<LR> {
+        let y_overlap = (pos_a.y - pos_b.y).abs() < ((size_a.y + size_b.y) / 2.0);
+
+        if !y_overlap {
+            return None;
+        }
+
+        match pos_a.x > pos_b.x {
+            true => Some(LR::Left),
+            false => Some(LR::Right),
+        }
+    }
+
+    let mut prev_left = false;
+    let mut prev_right = false;
+    let mut prev_obscured = false;
+    let mut curr_left = false;
+    let mut curr_right = false;
+    let mut curr_obscured = false;
+    let prev_size = prev_entity.3.custom_size.unwrap();
+    let curr_size = curr_entity.3.custom_size.unwrap();
+    let prev_pos = prev_entity.2.translation.truncate();
+    let curr_pos = curr_entity.2.translation.truncate();
+
+    for entity in query {
+        if entity.0 == prev_entity.0 || entity.0 == curr_entity.0 {
+            continue;
+        }
+
+        let size = entity.3.custom_size.unwrap();
+        let pos = entity.2.translation.truncate();
+
+        if let Some(side) = which_side((prev_size, prev_pos), (size, pos)) {
+            match side {
+                LR::Left => prev_left = true,
+                LR::Right => prev_right = true,
+            }
+        }
+
+        if let Some(side) = which_side((curr_size, curr_pos), (size, pos)) {
+            match side {
+                LR::Left => curr_left = true,
+                LR::Right => curr_right = true,
+            }
+        }
+
+        prev_obscured |= overlapping((prev_size, prev_pos), (size, pos))
+            && prev_entity.2.translation.z < entity.2.translation.z;
+        curr_obscured |= overlapping((curr_size, curr_pos), (size, pos))
+            && curr_entity.2.translation.z < entity.2.translation.z;
+    }
+
+    info!(
+        "Prev left|right|obscured: {:?}|{:?}|{:?}",
+        prev_left, prev_right, prev_obscured
+    );
+    info!(
+        "Curr left|right|obscured: {:?}|{:?}|{:?}",
+        curr_left, curr_right, curr_obscured
+    );
 
     // Successfull match?
     // True: Set previous to None
