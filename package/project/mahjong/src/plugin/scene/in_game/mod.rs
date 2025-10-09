@@ -1,6 +1,6 @@
 use crate::plugin::scene::main_menu::MainMenu;
-use generator::*;
 use bevy::prelude::*;
+use generator::*;
 use rand::seq::SliceRandom;
 
 pub struct Plugin;
@@ -29,7 +29,7 @@ pub enum InGame {
 struct PreviouslySelectedTile(Option<Entity>);
 
 #[derive(Component)]
-struct Marker;
+struct Tile;
 
 #[derive(Component)]
 struct ID(usize);
@@ -54,7 +54,7 @@ fn on_enter(
     for ((index, tile), pos) in tiles.iter().enumerate().zip(placer.into_iter()) {
         commands
             .spawn((
-                Marker,
+                Tile,
                 ID(*tile),
                 DespawnOnExit(InGame::Root),
                 Sprite::from_color(
@@ -70,6 +70,7 @@ fn on_enter(
                 Pickable::default(),
                 Text2d::new(tile.to_string()),
                 TextFont::from_font_size(height / 5.0),
+                TextColor::BLACK,
                 Transform {
                     translation: Vec3 {
                         x: start_x + pos.x,
@@ -95,62 +96,46 @@ fn on_enter(
 fn on_click(
     click: On<Pointer<Click>>,
     mut commands: Commands,
-    mut previous: ResMut<PreviouslySelectedTile>,
-    id: Query<&ID, With<Marker>>,
+    mut previous_res: ResMut<PreviouslySelectedTile>,
+    query: Query<(&ID, &Transform, &Sprite), With<Tile>>,
 ) {
-    if previous.0.is_none() {
+    if previous_res.0.is_none() {
         info!("{:?}", click);
-        previous.0 = Some(click.original_event_target());
+        previous_res.0 = Some(click.original_event_target());
         return;
     }
 
-    if click.original_event_target() != previous.0.unwrap()
-        && id.get(click.original_event_target()).unwrap().0
-            == id.get(previous.0.unwrap()).unwrap().0
-    {
+    let previous_entity = previous_res.0.unwrap();
+    let previous_id = query.get(previous_entity).unwrap().0.0;
+    let current_entity = click.original_event_target();
+    let current_id = query.get(current_entity).unwrap().0.0;
+
+    if previous_entity != current_entity && previous_id == current_id {
         info!("Match! Do something!");
-        commands.entity(previous.0.unwrap()).despawn();
-        commands.entity(click.original_event_target()).despawn();
-        previous.0 = None;
-    } else {
-        info!("Not a match :(");
-        previous.0 = Some(click.original_event_target());
+
+        let valid_removal = {
+            todo!();
+            // // Removal is valid if there is no tile to the left, right, or above the selected pair (individually).
+            // for (_, transform, sprite) in query {}
+
+            // // fn no_tile_to_left_or_right() -> bool {
+            // //     false
+            // // }
+
+            false
+        };
+
+        if valid_removal {
+            commands.entity(previous_entity).despawn();
+            commands.entity(current_entity).despawn();
+            previous_res.0 = None;
+            return;
+        }
     }
+
+    info!("Not a match :(");
+    previous_res.0 = Some(click.original_event_target());
 }
-
-// fn update(
-//     window: Single<&Window, Changed<Window>>,
-//     // mut height_prev: Local<Option<f32>>,
-//     query: Query<(&mut Transform, &mut TextFont, &mut Sprite, &Marker)>,
-//     // // query: Single<&Projection, With<Camera>>
-//     // // window: Single<&Window, Changed<Window>>
-//     window_scaling: Res<WindowScaling>,
-// ) {
-//     info!("Scaling: {}", window_scaling.value());
-//     // // info!("{:?}", window.resolution);
-//     // let height = window.height() / 10.0;
-//     // if let None = *height_prev {
-//     //     *height_prev = Some(height);
-//     // }
-
-//     // let height_prev = height_prev.as_mut().unwrap();
-//     // if height == *height_prev {
-//     //     return;
-//     // }
-
-//     // let scale = height / *height_prev;
-//     // let height = height * scale;
-//     // let width = height * 0.7;
-
-//     // for (mut transform, mut font, mut sprite, marker) in query {
-//     //     transform.translation.x *= window_scaling.value();
-//     //     transform.translation.y *= window_scaling.value();
-//     //     font.font_size *= window_scaling.value();
-//     //     // sprite.custom_size = Some(sprite.custom_size.unwrap().with_x(width).with_y(height));
-//     // }
-
-//     // *height_prev = height;
-// }
 
 mod generator {
     use bevy::prelude::Vec2;
