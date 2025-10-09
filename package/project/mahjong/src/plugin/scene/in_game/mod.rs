@@ -31,7 +31,7 @@ struct PreviouslySelectedTile(Option<Entity>);
 #[derive(Component)]
 struct Tile;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 struct ID(usize);
 
 fn on_enter(
@@ -75,7 +75,7 @@ fn on_enter(
                     translation: Vec3 {
                         x: start_x + pos.x,
                         y: start_y - pos.y,
-                        z: index as f32,
+                        z: pos.z,
                     },
                     ..default()
                 },
@@ -96,49 +96,60 @@ fn on_enter(
 fn on_click(
     click: On<Pointer<Click>>,
     mut commands: Commands,
-    mut previous_res: ResMut<PreviouslySelectedTile>,
-    query: Query<(&ID, &Transform, &Sprite), With<Tile>>,
+    mut prev_res: ResMut<PreviouslySelectedTile>,
+    query: Query<(Entity, &ID, &Transform, &Sprite), With<Tile>>,
 ) {
-    if previous_res.0.is_none() {
-        info!("{:?}", click);
-        previous_res.0 = Some(click.original_event_target());
+    if let Ok(entity) = query.get(click.original_event_target()) {
+        info!("Clicked:\n{:?}", entity);
+    } else {
+        panic!();
+    }
+
+    let Some(prev_entity) = prev_res.0 else {
+        prev_res.0 = Some(click.original_event_target());
         return;
-    }
+    };
 
-    let previous_entity = previous_res.0.unwrap();
-    let previous_id = query.get(previous_entity).unwrap().0.0;
-    let current_entity = click.original_event_target();
-    let current_id = query.get(current_entity).unwrap().0.0;
+    // Check rules:
+    // 1. Same id?
+    // 2. NOT same entity?
+    // 3. BOTH entities have free space to either left or right.
+    // 4. BOTH entities are not blocked by any above
 
-    if previous_entity != current_entity && previous_id == current_id {
-        info!("Match! Do something!");
+    // let previous_entity = previous_res.0.unwrap();
+    // let previous_id = query.get(previous_entity).unwrap().0.0;
+    // let current_entity = click.original_event_target();
+    // let current_id = query.get(current_entity).unwrap().0.0;
 
-        let valid_removal = {
-            todo!();
-            // // Removal is valid if there is no tile to the left, right, or above the selected pair (individually).
-            // for (_, transform, sprite) in query {}
+    // if previous_entity != current_entity && previous_id == current_id {
+    //     info!("Match! Do something!");
 
-            // // fn no_tile_to_left_or_right() -> bool {
-            // //     false
-            // // }
+    //     let valid_removal = {
+    //         todo!();
+    //         // // Removal is valid if there is no tile to the left, right, or above the selected pair (individually).
+    //         // for (_, transform, sprite) in query {}
 
-            false
-        };
+    //         // // fn no_tile_to_left_or_right() -> bool {
+    //         // //     false
+    //         // // }
 
-        if valid_removal {
-            commands.entity(previous_entity).despawn();
-            commands.entity(current_entity).despawn();
-            previous_res.0 = None;
-            return;
-        }
-    }
+    //         false
+    //     };
 
-    info!("Not a match :(");
-    previous_res.0 = Some(click.original_event_target());
+    //     if valid_removal {
+    //         commands.entity(previous_entity).despawn();
+    //         commands.entity(current_entity).despawn();
+    //         previous_res.0 = None;
+    //         return;
+    //     }
+    // }
+
+    // info!("Not a match :(");
+    // previous_res.0 = Some(click.original_event_target());
 }
 
 mod generator {
-    use bevy::prelude::Vec2;
+    use bevy::prelude::{Vec2, Vec3};
     use std::marker::PhantomData;
 
     pub struct Turtle;
@@ -160,7 +171,7 @@ mod generator {
             &self,
             tile_size: Vec2,
             current: usize,
-        ) -> Option<Vec2> {
+        ) -> Option<Vec3> {
             if current >= Self::TILES {
                 return None;
             }
@@ -197,7 +208,8 @@ mod generator {
                 },
                 143 => {
                     // Special case. Just return value immediately.
-                    return Some(Vec2::new(5.5, 3.5) * tile_size);
+                    layer = 4;
+                    return Some(Vec3::new(5.5, 3.5, layer as f32) * tile_size.extend(1.0));
                 },
                 _ => return None,
             }
@@ -215,9 +227,21 @@ mod generator {
                         7 => 0 + current - 72,
                         8 => match current - 84 {
                             // Last 3 are special cases. Do not follow a pattern.
-                            0 => return Some(Vec2::new(-1.0, 3.5) * tile_size),
-                            1 => return Some(Vec2::new(12.0, 3.5) * tile_size),
-                            2 => return Some(Vec2::new(13.0, 3.5) * tile_size),
+                            0 => {
+                                return Some(
+                                    Vec3::new(-1.0, 3.5, layer as f32) * tile_size.extend(1.0),
+                                );
+                            },
+                            1 => {
+                                return Some(
+                                    Vec3::new(12.0, 3.5, layer as f32) * tile_size.extend(1.0),
+                                );
+                            },
+                            2 => {
+                                return Some(
+                                    Vec3::new(13.0, 3.5, layer as f32) * tile_size.extend(1.0),
+                                );
+                            },
                             _ => unreachable!(),
                         },
                         _ => unreachable!(),
@@ -229,7 +253,7 @@ mod generator {
                 _ => unreachable!(),
             };
 
-            Some(Vec2::new(column as f32, row as f32) * tile_size)
+            Some(Vec3::new(column as f32, row as f32, layer as f32) * tile_size.extend(1.0))
         }
     }
 
@@ -238,7 +262,7 @@ mod generator {
             &self,
             tile_size: Vec2,
             current: usize,
-        ) -> Option<Vec2>;
+        ) -> Option<Vec3>;
     }
 
     pub struct Placer<G: PositionGenerator> {
@@ -263,7 +287,7 @@ mod generator {
         counter: usize,
     }
 
-    type PlaceIteratorItem = Vec2;
+    type PlaceIteratorItem = Vec3;
 
     impl<'a, G: PositionGenerator> Iterator for PlacerIterator<'a, G> {
         type Item = PlaceIteratorItem;
