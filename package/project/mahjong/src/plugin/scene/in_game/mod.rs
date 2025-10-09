@@ -31,7 +31,7 @@ struct PreviouslySelectedTile(Option<Entity>);
 #[derive(Component)]
 struct Tile;
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct ID(usize);
 
 fn on_enter(
@@ -102,7 +102,11 @@ fn on_click(
     let curr_entity = query.get(click.original_event_target()).unwrap();
 
     let Some(prev_entity) = prev_res.0 else {
-        prev_res.0 = Some(click.original_event_target());
+        prev_res.0 = Some(curr_entity.0);
+        return;
+    };
+
+    let Ok(prev_entity) = query.get(prev_entity) else {
         return;
     };
 
@@ -110,10 +114,24 @@ fn on_click(
     info!("Prevously clicked:\n{:?}", prev_entity);
 
     // Check rules:
-    // 1. Same id?
-    // 2. NOT same entity?
+    // 1. NOT Same id?
+    // 2. Same entity?
+    if *prev_entity.1 != *curr_entity.1 || prev_entity.0 == curr_entity.0 {
+        info!("Same entity or non-matching ids");
+        prev_res.0 = Some(curr_entity.0);
+        return;
+    }
+
     // 3. BOTH entities have free space to either left or right.
+
     // 4. BOTH entities are not blocked by any above
+
+
+    // Successfull match?
+    // True: Set previous to None
+    // False: Just update previous to current
+
+    // =========================================================
 
     // let previous_entity = previous_res.0.unwrap();
     // let previous_id = query.get(previous_entity).unwrap().0.0;
