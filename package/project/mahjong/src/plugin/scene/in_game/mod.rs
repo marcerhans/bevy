@@ -82,50 +82,50 @@ fn on_enter(
                     ..default()
                 },
             ))
-            .observe(
-                |drag: On<Pointer<Drag>>,
-                 window: Single<&Window>,
-                 mut transform: Query<&mut Transform>,
-                 camera: Single<(&Camera, &GlobalTransform, &Projection)>| {
-                    let window = *window;
-                    let (_camera, camera_transform, projection) = *camera;
+            // .observe(
+            //     |drag: On<Pointer<Drag>>,
+            //      window: Single<&Window>,
+            //      mut transform: Query<&mut Transform>,
+            //      camera: Single<(&Camera, &GlobalTransform, &Projection)>| {
+            //         let window = *window;
+            //         let (_camera, camera_transform, projection) = *camera;
 
-                    let Projection::Orthographic(ortho) = projection else {
-                        panic!();
-                    };
+            //         let Projection::Orthographic(ortho) = projection else {
+            //             panic!();
+            //         };
 
-                    let window_size = Vec2::new(window.width(), window.height());
-                    let ortho_size = ortho.area.size() * ortho.scale;
-                    let world_per_pixel;
+            //         let window_size = Vec2::new(window.width(), window.height());
+            //         let ortho_size = ortho.area.size() * ortho.scale;
+            //         let world_per_pixel;
 
-                    match ortho.scaling_mode {
-                        ScalingMode::WindowSize => {
-                            // uniform scaling: world units per pixel is linear
-                            world_per_pixel = ortho_size / window_size;
-                        },
-                        ScalingMode::FixedVertical { viewport_height: _ } => {
-                            let scale = ortho_size.y / window_size.y;
-                            world_per_pixel = Vec2::new(scale, scale); // horizontal scales proportionally
-                        },
-                        ScalingMode::FixedHorizontal { viewport_width: _ } => {
-                            let scale = ortho_size.x / window_size.x;
-                            world_per_pixel = Vec2::new(scale, scale); // vertical scales proportionally
-                        },
-                        _ => panic!(),
-                    }
+            //         match ortho.scaling_mode {
+            //             ScalingMode::WindowSize => {
+            //                 // uniform scaling: world units per pixel is linear
+            //                 world_per_pixel = ortho_size / window_size;
+            //             },
+            //             ScalingMode::FixedVertical { viewport_height: _ } => {
+            //                 let scale = ortho_size.y / window_size.y;
+            //                 world_per_pixel = Vec2::new(scale, scale); // horizontal scales proportionally
+            //             },
+            //             ScalingMode::FixedHorizontal { viewport_width: _ } => {
+            //                 let scale = ortho_size.x / window_size.x;
+            //                 world_per_pixel = Vec2::new(scale, scale); // vertical scales proportionally
+            //             },
+            //             _ => panic!(),
+            //         }
 
-                    let mut world_delta = Vec2::new(drag.delta.x, -drag.delta.y) * world_per_pixel;
+            //         let mut world_delta = Vec2::new(drag.delta.x, -drag.delta.y) * world_per_pixel;
 
-                    // Apply camera rotation if needed
-                    world_delta =
-                        (camera_transform.rotation() * world_delta.extend(0.0)).truncate();
+            //         // Apply camera rotation if needed
+            //         world_delta =
+            //             (camera_transform.rotation() * world_delta.extend(0.0)).truncate();
 
-                    // Move the entity
-                    let mut transform = transform.get_mut(drag.original_event_target()).unwrap();
-                    transform.translation.x += world_delta.x;
-                    transform.translation.y += world_delta.y;
-                },
-            )
+            //         // Move the entity
+            //         let mut transform = transform.get_mut(drag.original_event_target()).unwrap();
+            //         transform.translation.x += world_delta.x;
+            //         transform.translation.y += world_delta.y;
+            //     },
+            // )
             .observe(on_click);
     }
 }
