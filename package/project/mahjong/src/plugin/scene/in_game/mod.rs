@@ -55,7 +55,7 @@ fn on_enter(
     tile_pairs.shuffle(&mut rng);
 
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
-    let tile_positions: Vec<Vec3> = placer.into_iter().collect();
+    let tile_positions: Vec<(usize, Vec3)> = placer.into_iter().enumerate().collect();
 
     let columns = 11.0;
     let rows = 8.0;
@@ -65,13 +65,13 @@ fn on_enter(
     let tile_components = (
         Tile,
         DespawnOnExit(InGame::Root),
-        Sprite::from_color(Color::srgb_u8(255, 0, 0), Vec2::new(width, height)),
+        // Sprite::from_color(Color::srgb_u8(255, 0, 0), Vec2::new(width, height)),
         Pickable::default(),
         TextFont::from_font_size(height / 5.0),
         TextColor::BLACK,
     );
 
-    for (tile_pair, position_pair) in tile_pairs.iter().zip(tile_positions.windows(2)) {
+    for (tile_pair, position_pair) in tile_pairs.iter().zip(tile_positions.windows(2).step_by(2)) {
         let tile_a = commands
             .spawn((
                 tile_components.clone(),
@@ -79,12 +79,22 @@ fn on_enter(
                 Text2d::new(tile_pair.to_string()),
                 Transform {
                     translation: Vec3 {
-                        x: start_x + position_pair[0].x,
-                        y: start_y + position_pair[0].y,
-                        z: position_pair[0].z,
+                        x: start_x + position_pair[0].1.x,
+                        y: start_y - position_pair[0].1.y,
+                        z: position_pair[0].1.z,
                     },
                     ..default()
                 },
+                Sprite::from_color(
+                    match position_pair[0].0 {
+                        ..87 => Color::srgb_u8(255, 0, 0),
+                        87..123 => Color::srgb_u8(0, 255, 0),
+                        123..139 => Color::srgb_u8(0, 0, 255),
+                        139..143 => Color::srgb_u8(255, 255, 0),
+                        143.. => Color::srgb_u8(255, 0, 255),
+                    },
+                    Vec2::new(width, height),
+                ),
             ))
             .observe(on_click)
             .id();
@@ -96,12 +106,22 @@ fn on_enter(
                 Text2d::new(tile_pair.to_string()),
                 Transform {
                     translation: Vec3 {
-                        x: start_x + position_pair[0].x,
-                        y: start_y + position_pair[0].y,
-                        z: position_pair[0].z,
+                        x: start_x + position_pair[1].1.x,
+                        y: start_y - position_pair[1].1.y,
+                        z: position_pair[1].1.z,
                     },
                     ..default()
                 },
+                Sprite::from_color(
+                    match position_pair[1].0 {
+                        ..87 => Color::srgb_u8(255, 0, 0),
+                        87..123 => Color::srgb_u8(0, 255, 0),
+                        123..139 => Color::srgb_u8(0, 0, 255),
+                        139..143 => Color::srgb_u8(255, 255, 0),
+                        143.. => Color::srgb_u8(255, 0, 255),
+                    },
+                    Vec2::new(width, height),
+                ),
                 PairWithTile(tile_a),
             ))
             .observe(on_click);
