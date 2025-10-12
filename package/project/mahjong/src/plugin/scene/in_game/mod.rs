@@ -233,10 +233,6 @@ fn on_click(
     let curr_pos = curr_entity.2.translation;
 
     for entity in query {
-        if entity.0 == prev_entity.0 || entity.0 == curr_entity.0 {
-            continue;
-        }
-
         let size = entity.3.custom_size.unwrap();
         let pos = entity.2.translation;
 
