@@ -15,7 +15,6 @@ impl bevy::prelude::Plugin for Plugin {
             .insert_resource(PreviouslySelectedTile::default())
             .add_systems(OnEnter(InGame::Root), on_enter)
             .add_systems(Update, next_move.run_if(in_state(InGame::Root)));
-        // .add_systems(Update, update.run_if(in_state(InGame::Root)));
     }
 }
 
@@ -30,7 +29,7 @@ pub enum InGame {
 #[derive(Resource, Default)]
 struct PreviouslySelectedTile(Option<Entity>);
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 struct Tile;
 
 #[derive(Component)]
@@ -40,7 +39,6 @@ struct TilePairs(Vec<Entity>);
 #[derive(Component)]
 #[relationship(relationship_target = TilePairs)]
 struct PairWithTile(pub Entity);
-
 
 #[derive(Component, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct ID(usize);
@@ -66,83 +64,92 @@ fn on_enter(
 
     let tile_components = (
         Tile,
-        todo!("FILL HERE AND THEN JUST ADD THEM IN PAIRS USING THE RELATIONSHIP.")
+        DespawnOnExit(InGame::Root),
+        Sprite::from_color(Color::srgb_u8(255, 0, 0), Vec2::new(width, height)),
+        Pickable::default(),
+        TextFont::from_font_size(height / 5.0),
+        TextColor::BLACK,
     );
 
     for (tile_pair, position_pair) in tile_pairs.iter().zip(tile_positions.windows(2)) {
-        // commands
-        //     .spawn((
-        //         Tile,
-        //         ID(*tile),
-        //         DespawnOnExit(InGame::Root),
-        //         Sprite::from_color(
-        //             match tile {
-        //                 ..87 => Color::srgb_u8(255, 0, 0),
-        //                 87..123 => Color::srgb_u8(0, 255, 0),
-        //                 123..139 => Color::srgb_u8(0, 0, 255),
-        //                 139..143 => Color::srgb_u8(255, 255, 0),
-        //                 143.. => Color::srgb_u8(255, 0, 255),
+        let tile_a = commands
+            .spawn((
+                tile_components.clone(),
+                ID(*tile_pair),
+                Text2d::new(tile_pair.to_string()),
+                Transform {
+                    translation: Vec3 {
+                        x: start_x + position_pair[0].x,
+                        y: start_y + position_pair[0].y,
+                        z: position_pair[0].z,
+                    },
+                    ..default()
+                },
+            ))
+            .observe(on_click)
+            .id();
+
+        commands
+            .spawn((
+                tile_components.clone(),
+                ID(*tile_pair),
+                Text2d::new(tile_pair.to_string()),
+                Transform {
+                    translation: Vec3 {
+                        x: start_x + position_pair[0].x,
+                        y: start_y + position_pair[0].y,
+                        z: position_pair[0].z,
+                    },
+                    ..default()
+                },
+                PairWithTile(tile_a),
+            ))
+            .observe(on_click);
+
+        // .observe(
+        //     |drag: On<Pointer<Drag>>,
+        //      window: Single<&Window>,
+        //      mut transform: Query<&mut Transform>,
+        //      camera: Single<(&Camera, &GlobalTransform, &Projection)>| {
+        //         let window = *window;
+        //         let (_camera, camera_transform, projection) = *camera;
+
+        //         let Projection::Orthographic(ortho) = projection else {
+        //             panic!();
+        //         };
+
+        //         let window_size = Vec2::new(window.width(), window.height());
+        //         let ortho_size = ortho.area.size() * ortho.scale;
+        //         let world_per_pixel;
+
+        //         match ortho.scaling_mode {
+        //             ScalingMode::WindowSize => {
+        //                 // uniform scaling: world units per pixel is linear
+        //                 world_per_pixel = ortho_size / window_size;
         //             },
-        //             Vec2::new(width, height),
-        //         ),
-        //         Pickable::default(),
-        //         Text2d::new(tile.to_string()),
-        //         TextFont::from_font_size(height / 5.0),
-        //         TextColor::BLACK,
-        //         Transform {
-        //             translation: Vec3 {
-        //                 x: start_x + pos.x,
-        //                 y: start_y - pos.y,
-        //                 z: pos.z,
+        //             ScalingMode::FixedVertical { viewport_height: _ } => {
+        //                 let scale = ortho_size.y / window_size.y;
+        //                 world_per_pixel = Vec2::new(scale, scale); // horizontal scales proportionally
         //             },
-        //             ..default()
-        //         },
-        //     ))
-            // .observe(
-            //     |drag: On<Pointer<Drag>>,
-            //      window: Single<&Window>,
-            //      mut transform: Query<&mut Transform>,
-            //      camera: Single<(&Camera, &GlobalTransform, &Projection)>| {
-            //         let window = *window;
-            //         let (_camera, camera_transform, projection) = *camera;
+        //             ScalingMode::FixedHorizontal { viewport_width: _ } => {
+        //                 let scale = ortho_size.x / window_size.x;
+        //                 world_per_pixel = Vec2::new(scale, scale); // vertical scales proportionally
+        //             },
+        //             _ => panic!(),
+        //         }
 
-            //         let Projection::Orthographic(ortho) = projection else {
-            //             panic!();
-            //         };
+        //         let mut world_delta = Vec2::new(drag.delta.x, -drag.delta.y) * world_per_pixel;
 
-            //         let window_size = Vec2::new(window.width(), window.height());
-            //         let ortho_size = ortho.area.size() * ortho.scale;
-            //         let world_per_pixel;
+        //         // Apply camera rotation if needed
+        //         world_delta =
+        //             (camera_transform.rotation() * world_delta.extend(0.0)).truncate();
 
-            //         match ortho.scaling_mode {
-            //             ScalingMode::WindowSize => {
-            //                 // uniform scaling: world units per pixel is linear
-            //                 world_per_pixel = ortho_size / window_size;
-            //             },
-            //             ScalingMode::FixedVertical { viewport_height: _ } => {
-            //                 let scale = ortho_size.y / window_size.y;
-            //                 world_per_pixel = Vec2::new(scale, scale); // horizontal scales proportionally
-            //             },
-            //             ScalingMode::FixedHorizontal { viewport_width: _ } => {
-            //                 let scale = ortho_size.x / window_size.x;
-            //                 world_per_pixel = Vec2::new(scale, scale); // vertical scales proportionally
-            //             },
-            //             _ => panic!(),
-            //         }
-
-            //         let mut world_delta = Vec2::new(drag.delta.x, -drag.delta.y) * world_per_pixel;
-
-            //         // Apply camera rotation if needed
-            //         world_delta =
-            //             (camera_transform.rotation() * world_delta.extend(0.0)).truncate();
-
-            //         // Move the entity
-            //         let mut transform = transform.get_mut(drag.original_event_target()).unwrap();
-            //         transform.translation.x += world_delta.x;
-            //         transform.translation.y += world_delta.y;
-            //     },
-            // )
-            // .observe(on_click);
+        //         // Move the entity
+        //         let mut transform = transform.get_mut(drag.original_event_target()).unwrap();
+        //         transform.translation.x += world_delta.x;
+        //         transform.translation.y += world_delta.y;
+        //     },
+        // )
     }
 }
 
