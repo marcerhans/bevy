@@ -1,5 +1,5 @@
 use crate::plugin::scene::main_menu::MainMenu;
-use bevy::{camera::ScalingMode, prelude::*};
+use bevy::prelude::*;
 use generator::*;
 use helpers::*;
 use rand::seq::SliceRandom;
@@ -33,6 +33,15 @@ struct PreviouslySelectedTile(Option<Entity>);
 #[derive(Component)]
 struct Tile;
 
+#[derive(Component)]
+#[relationship_target(relationship = PairWithTile)]
+struct TilePairs(Vec<Entity>);
+
+#[derive(Component)]
+#[relationship(relationship_target = TilePairs)]
+struct PairWithTile(pub Entity);
+
+
 #[derive(Component, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct ID(usize);
 
@@ -42,46 +51,53 @@ fn on_enter(
 ) {
     let height = window.height() / 8.0;
     let width = height * 0.7;
+
     let mut rng = rand::rng();
-    let mut tiles: Vec<usize> = (0..Generator::<Turtle>::TILES).map(|x| x / 2).collect();
-    tiles.shuffle(&mut rng);
+    let mut tile_pairs: Vec<usize> = (0..Generator::<Turtle>::TILES / 2).collect();
+    tile_pairs.shuffle(&mut rng);
 
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
+    let tile_positions: Vec<Vec3> = placer.into_iter().collect();
 
     let columns = 11.0;
     let rows = 8.0;
     let start_x = -width * columns / 2.0;
     let start_y = height * rows / 2.0;
 
-    for ((index, tile), pos) in tiles.iter().enumerate().zip(placer.into_iter()) {
-        commands
-            .spawn((
-                Tile,
-                ID(*tile),
-                DespawnOnExit(InGame::Root),
-                Sprite::from_color(
-                    match index {
-                        ..87 => Color::srgb_u8(255, 0, 0),
-                        87..123 => Color::srgb_u8(0, 255, 0),
-                        123..139 => Color::srgb_u8(0, 0, 255),
-                        139..143 => Color::srgb_u8(255, 255, 0),
-                        143.. => Color::srgb_u8(255, 0, 255),
-                    },
-                    Vec2::new(width, height),
-                ),
-                Pickable::default(),
-                Text2d::new(tile.to_string()),
-                TextFont::from_font_size(height / 5.0),
-                TextColor::BLACK,
-                Transform {
-                    translation: Vec3 {
-                        x: start_x + pos.x,
-                        y: start_y - pos.y,
-                        z: pos.z,
-                    },
-                    ..default()
-                },
-            ))
+    let tile_components = (
+        Tile,
+        todo!("FILL HERE AND THEN JUST ADD THEM IN PAIRS USING THE RELATIONSHIP.")
+    );
+
+    for (tile_pair, position_pair) in tile_pairs.iter().zip(tile_positions.windows(2)) {
+        // commands
+        //     .spawn((
+        //         Tile,
+        //         ID(*tile),
+        //         DespawnOnExit(InGame::Root),
+        //         Sprite::from_color(
+        //             match tile {
+        //                 ..87 => Color::srgb_u8(255, 0, 0),
+        //                 87..123 => Color::srgb_u8(0, 255, 0),
+        //                 123..139 => Color::srgb_u8(0, 0, 255),
+        //                 139..143 => Color::srgb_u8(255, 255, 0),
+        //                 143.. => Color::srgb_u8(255, 0, 255),
+        //             },
+        //             Vec2::new(width, height),
+        //         ),
+        //         Pickable::default(),
+        //         Text2d::new(tile.to_string()),
+        //         TextFont::from_font_size(height / 5.0),
+        //         TextColor::BLACK,
+        //         Transform {
+        //             translation: Vec3 {
+        //                 x: start_x + pos.x,
+        //                 y: start_y - pos.y,
+        //                 z: pos.z,
+        //             },
+        //             ..default()
+        //         },
+        //     ))
             // .observe(
             //     |drag: On<Pointer<Drag>>,
             //      window: Single<&Window>,
@@ -126,7 +142,7 @@ fn on_enter(
             //         transform.translation.y += world_delta.y;
             //     },
             // )
-            .observe(on_click);
+            // .observe(on_click);
     }
 }
 
