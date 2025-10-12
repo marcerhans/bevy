@@ -297,6 +297,10 @@ mod helpers {
         (size_a, pos_a): (Vec2, Vec3),
         (size_b, pos_b): (Vec2, Vec3),
     ) -> Option<LR> {
+        if pos_a == pos_b {
+            return None;
+        }
+
         if pos_a.z != pos_b.z {
             return None;
         }
