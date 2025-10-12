@@ -175,7 +175,7 @@ fn on_enter(
 
 fn next_move(
     mut removed: RemovedComponents<Tile>,
-    query: Query<(Entity, &ID, &Transform, &Sprite), With<Tile>>,
+    query: Query<(Entity, &PairWithTile), With<Tile>>,
 ) {
     if removed.is_empty() {
         return;
@@ -188,6 +188,10 @@ fn next_move(
     //         todo!("Loop through like this or just pair them when spawning them...");
     //     }
     // }
+    for (entity, pair) in query {
+        todo!("also loop through EACH OTHER ENTITY and check the rules like on_click.");
+        info!("Next solution is {:?}{:?}", entity, pair.0);
+    }
 }
 
 fn on_click(
