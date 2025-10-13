@@ -13,7 +13,7 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_sub_state::<InGame>()
             .insert_resource(PreviouslySelectedTile::default())
-            .add_systems(OnEnter(InGame::Root), on_enter)
+            .add_systems(OnEnter(InGame::Root), (on_enter, rule_check).chain())
             .add_systems(Update, next_move.run_if(in_state(InGame::Root)));
     }
 }
@@ -42,6 +42,9 @@ struct PairWithTile(pub Entity);
 
 #[derive(Component, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct ID(usize);
+
+#[derive(Component)]
+struct EdgeTile;
 
 fn on_enter(
     mut commands: Commands,
@@ -125,51 +128,48 @@ fn on_enter(
                 PairWithTile(tile_a),
             ))
             .observe(on_click);
+    }
+}
 
-        // .observe(
-        //     |drag: On<Pointer<Drag>>,
-        //      window: Single<&Window>,
-        //      mut transform: Query<&mut Transform>,
-        //      camera: Single<(&Camera, &GlobalTransform, &Projection)>| {
-        //         let window = *window;
-        //         let (_camera, camera_transform, projection) = *camera;
+fn rule_check(
+    mut commands: Commands,
+    query: Query<(Entity, &Tile, &Transform, &Sprite)>,
+) {
+    for (entity, tile, transform, sprite) in query {
+        let mut left = false;
+        let mut right = false;
+        let mut obscured = false;
+        let size = sprite.custom_size.unwrap();
+        let pos = transform.translation;
 
-        //         let Projection::Orthographic(ortho) = projection else {
-        //             panic!();
-        //         };
+        for (_other_entity, _other_tile, other_transform, other_sprite) in query {
+            if let Some(side) = which_side(
+                (size, pos),
+                (
+                    other_sprite.custom_size.unwrap(),
+                    other_transform.translation,
+                ),
+            ) {
+                match side {
+                    LR::Left => left = true,
+                    LR::Right => right = true,
+                }
+            }
 
-        //         let window_size = Vec2::new(window.width(), window.height());
-        //         let ortho_size = ortho.area.size() * ortho.scale;
-        //         let world_per_pixel;
+            obscured |= overlapping(
+                (size, pos),
+                (
+                    other_sprite.custom_size.unwrap(),
+                    other_transform.translation,
+                ),
+            ) && pos.z < other_transform.translation.z;
+        }
 
-        //         match ortho.scaling_mode {
-        //             ScalingMode::WindowSize => {
-        //                 // uniform scaling: world units per pixel is linear
-        //                 world_per_pixel = ortho_size / window_size;
-        //             },
-        //             ScalingMode::FixedVertical { viewport_height: _ } => {
-        //                 let scale = ortho_size.y / window_size.y;
-        //                 world_per_pixel = Vec2::new(scale, scale); // horizontal scales proportionally
-        //             },
-        //             ScalingMode::FixedHorizontal { viewport_width: _ } => {
-        //                 let scale = ortho_size.x / window_size.x;
-        //                 world_per_pixel = Vec2::new(scale, scale); // vertical scales proportionally
-        //             },
-        //             _ => panic!(),
-        //         }
-
-        //         let mut world_delta = Vec2::new(drag.delta.x, -drag.delta.y) * world_per_pixel;
-
-        //         // Apply camera rotation if needed
-        //         world_delta =
-        //             (camera_transform.rotation() * world_delta.extend(0.0)).truncate();
-
-        //         // Move the entity
-        //         let mut transform = transform.get_mut(drag.original_event_target()).unwrap();
-        //         transform.translation.x += world_delta.x;
-        //         transform.translation.y += world_delta.y;
-        //     },
-        // )
+        if !((left && right) || obscured) {
+            commands.entity(entity).insert(EdgeTile);
+        } else {
+            commands.entity(entity).try_remove::<EdgeTile>();
+        }
     }
 }
 
