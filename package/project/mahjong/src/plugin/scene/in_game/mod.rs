@@ -13,8 +13,8 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_sub_state::<InGame>()
             .insert_resource(PreviouslySelectedTile::default())
-            .add_systems(OnEnter(InGame::Root), (on_enter, update).chain());
-            // .add_systems(Update, next_move.run_if(in_state(InGame::Root)));
+            .add_systems(OnEnter(InGame::Root), on_enter)
+            .add_systems(Update, (update, print_edge_pairs).chain().run_if(in_state(InGame::Root)));
     }
 }
 
@@ -175,26 +175,46 @@ fn update(
     }
 }
 
-// fn next_move(
-//     mut removed: RemovedComponents<Tile>,
-//     query: Query<(Entity, &EdgeTile), With<Tile>>,
-// ) {
-//     if removed.is_empty() {
-//         return;
-//     }
+fn print_edge_pairs(
+    mut removed: RemovedComponents<Tile>,
+    query: Query<(&ID), With<EdgeTile>>,
+) {
+    if removed.is_empty() {
+        return;
+    }
 
-//     removed.clear();
+    removed.clear();
 
-//     // for (entity, id, transform, sprite) in query {
-//     //     for (entity, id, transform, sprite) in query {
-//     //         todo!("Loop through like this or just pair them when spawning them...");
-//     //     }
-//     // }
-//     for (entity, pair) in query {
-//         todo!("also loop through EACH OTHER ENTITY and check the rules like on_click.");
-//         info!("Next solution is {:?}{:?}", entity, pair.0);
-//     }
-// }
+    let mut ids: Vec<usize> = query.iter().map(|id| id.0).collect();
+    ids.sort();
+    let mut prev = ids.first().unwrap();
+
+    for id in ids.iter().skip(1) {
+        if prev == id {
+            info!("Next edge pair is id: {id}");
+            return;
+        }
+        prev = id;
+    }
+
+    info!("No new edge pair available! Game cannot continue without shuffle.");
+
+    // query.filter()
+
+    // for (_edge_tile, id) in query {
+
+    // }
+
+    // for (entity, id, transform, sprite) in query {
+    //     for (entity, id, transform, sprite) in query {
+    //         todo!("Loop through like this or just pair them when spawning them...");
+    //     }
+    // }
+    // for (entity, pair) in query {
+    //     todo!("also loop through EACH OTHER ENTITY and check the rules like on_click.");
+    //     info!("Next solution is {:?}{:?}", entity, pair.0);
+    // }
+}
 
 fn on_click(
     click: On<Pointer<Click>>,
