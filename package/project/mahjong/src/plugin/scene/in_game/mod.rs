@@ -188,16 +188,19 @@ fn print_edge_pairs(
     let mut ids: Vec<usize> = query.iter().map(|id| id.0).collect();
     ids.sort();
     let mut prev = ids.first().unwrap();
+    let mut available_moves = 0;
 
     for id in ids.iter().skip(1) {
         if prev == id {
             info!("Next edge pair is id: {id}");
-            return;
+            available_moves += 1;
         }
         prev = id;
     }
 
-    info!("No new edge pair available! Game cannot continue without shuffle.");
+    info!("Available moves: {:?}", available_moves);
+
+    // info!("No new edge pair available! Game cannot continue without shuffle.");
 
     // query.filter()
 
