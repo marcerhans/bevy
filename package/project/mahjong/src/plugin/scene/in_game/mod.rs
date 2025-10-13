@@ -13,8 +13,8 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_sub_state::<InGame>()
             .insert_resource(PreviouslySelectedTile::default())
-            .add_systems(OnEnter(InGame::Root), (on_enter, rule_check).chain())
-            .add_systems(Update, next_move.run_if(in_state(InGame::Root)));
+            .add_systems(OnEnter(InGame::Root), (on_enter, update).chain());
+            // .add_systems(Update, next_move.run_if(in_state(InGame::Root)));
     }
 }
 
@@ -58,7 +58,9 @@ fn on_enter(
     tile_pairs.shuffle(&mut rng);
 
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
-    let tile_positions: Vec<(usize, Vec3)> = placer.into_iter().enumerate().collect();
+    let mut tile_positions: Vec<Vec3> = placer.into_iter().collect();
+    // tile_positions.shuffle(&mut rng);
+    let tile_positions: Vec<(usize, Vec3)> = tile_positions.into_iter().enumerate().collect();
 
     let columns = 11.0;
     let rows = 8.0;
@@ -131,18 +133,18 @@ fn on_enter(
     }
 }
 
-fn rule_check(
+fn update(
     mut commands: Commands,
-    query: Query<(Entity, &Tile, &Transform, &Sprite)>,
+    query: Query<(Entity, &Transform, &Sprite), With<Tile>>,
 ) {
-    for (entity, tile, transform, sprite) in query {
+    for (entity, transform, sprite) in query {
         let mut left = false;
         let mut right = false;
         let mut obscured = false;
         let size = sprite.custom_size.unwrap();
         let pos = transform.translation;
 
-        for (_other_entity, _other_tile, other_transform, other_sprite) in query {
+        for (_other_entity, other_transform, other_sprite) in query {
             if let Some(side) = which_side(
                 (size, pos),
                 (
@@ -173,26 +175,26 @@ fn rule_check(
     }
 }
 
-fn next_move(
-    mut removed: RemovedComponents<Tile>,
-    query: Query<(Entity, &PairWithTile), With<Tile>>,
-) {
-    if removed.is_empty() {
-        return;
-    }
+// fn next_move(
+//     mut removed: RemovedComponents<Tile>,
+//     query: Query<(Entity, &EdgeTile), With<Tile>>,
+// ) {
+//     if removed.is_empty() {
+//         return;
+//     }
 
-    removed.clear();
+//     removed.clear();
 
-    // for (entity, id, transform, sprite) in query {
-    //     for (entity, id, transform, sprite) in query {
-    //         todo!("Loop through like this or just pair them when spawning them...");
-    //     }
-    // }
-    for (entity, pair) in query {
-        todo!("also loop through EACH OTHER ENTITY and check the rules like on_click.");
-        info!("Next solution is {:?}{:?}", entity, pair.0);
-    }
-}
+//     // for (entity, id, transform, sprite) in query {
+//     //     for (entity, id, transform, sprite) in query {
+//     //         todo!("Loop through like this or just pair them when spawning them...");
+//     //     }
+//     // }
+//     for (entity, pair) in query {
+//         todo!("also loop through EACH OTHER ENTITY and check the rules like on_click.");
+//         info!("Next solution is {:?}{:?}", entity, pair.0);
+//     }
+// }
 
 fn on_click(
     click: On<Pointer<Click>>,
