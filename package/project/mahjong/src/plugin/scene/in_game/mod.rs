@@ -13,7 +13,7 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_sub_state::<InGame>()
             .insert_resource(PreviouslySelectedTile::default())
-            .add_systems(OnEnter(InGame::Root), on_enter)
+            .add_systems(OnEnter(InGame::Root), spawn_tiles)
             .add_systems(
                 Update,
                 (update_edge_tiles, determine_edge_tile_pairs)
@@ -43,13 +43,17 @@ struct ID(usize);
 #[derive(Component)]
 struct EdgeTile;
 
-fn on_enter(
+fn spawn_tiles(
     mut commands: Commands,
-    window: Single<&Window>,
+    projection: Single<&Projection, With<Camera>>,
 ) {
+    let Projection::Orthographic(projection) = *projection else {
+        panic!();
+    };
+
     let rows = Generator::<Turtle>::ROWS as f32;
     let columns = Generator::<Turtle>::COLUMNS as f32;
-    let height = 1080.0 / rows;
+    let height = projection.area.height() as f32 / rows;
     let width = height * 0.7;
 
     let mut rng = rand::rng();
@@ -61,8 +65,8 @@ fn on_enter(
     // tile_positions.shuffle(&mut rng);
     let tile_positions: Vec<(usize, Vec3)> = tile_positions.into_iter().enumerate().collect();
 
-    let start_x = -width * columns;
-    let start_y = height * rows / 2.0;
+    let start_x = -width * columns / 2.0;
+    let start_y = projection.area.height() / 2.0;
 
     let tile_components = (
         Tile,
@@ -80,8 +84,8 @@ fn on_enter(
                 Text2d::new(tile_pair.to_string()),
                 Transform {
                     translation: Vec3 {
-                        x: start_x + position_pair[0].1.x,
-                        y: start_y - position_pair[0].1.y,
+                        x: start_x + position_pair[0].1.x - width / 2.0,
+                        y: start_y - position_pair[0].1.y - height / 2.0,
                         z: position_pair[0].1.z,
                     },
                     ..default()
@@ -107,8 +111,8 @@ fn on_enter(
                 Text2d::new(tile_pair.to_string()),
                 Transform {
                     translation: Vec3 {
-                        x: start_x + position_pair[1].1.x,
-                        y: start_y - position_pair[1].1.y,
+                        x: start_x + position_pair[1].1.x - width / 2.0,
+                        y: start_y - position_pair[1].1.y - height / 2.0,
                         z: position_pair[1].1.z,
                     },
                     ..default()
