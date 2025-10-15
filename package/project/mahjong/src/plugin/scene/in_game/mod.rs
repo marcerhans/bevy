@@ -62,7 +62,7 @@ fn spawn_tiles(
 
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
     let mut tile_positions: Vec<Vec3> = placer.into_iter().collect();
-    // tile_positions.shuffle(&mut rng);
+    tile_positions.shuffle(&mut rng);
     let tile_positions: Vec<(usize, Vec3)> = tile_positions.into_iter().enumerate().collect();
 
     let start_x_offset = width * 1.5;
@@ -77,25 +77,8 @@ fn spawn_tiles(
         TextColor::BLACK,
     );
 
-    // for i in 0..4 {
-    //     commands.spawn((
-    //         Transform {
-    //             translation: Vec3 {
-    //                 x: start_x + width * i as f32,
-    //                 y: start_y - height * i as f32,
-    //                 z: 0.0,
-    //             },
-    //             ..default()
-    //         },
-    //         Sprite::from_color(
-    //             Color::srgb_u8(i * 10, i * 10, i * 10),
-    //             Vec2::new(width, height),
-    //         ),
-    //     ));
-    // }
-
     for (tile_pair, position_pair) in tile_pairs.iter().zip(tile_positions.windows(2).step_by(2)) {
-        let tile_a = commands
+        commands
             .spawn((
                 tile_components.clone(),
                 ID(*tile_pair),
@@ -109,18 +92,18 @@ fn spawn_tiles(
                     ..default()
                 },
                 Sprite::from_color(
-                    match position_pair[0].0 {
-                        ..87 => Color::srgb_u8(255, 0, 0),
-                        87..123 => Color::srgb_u8(0, 255, 0),
-                        123..139 => Color::srgb_u8(0, 0, 255),
-                        139..143 => Color::srgb_u8(255, 255, 0),
-                        143.. => Color::srgb_u8(255, 0, 255),
+                    match position_pair[0].1.z {
+                        0.0 => Color::srgb_u8(255, 0, 0),
+                        1.0 => Color::srgb_u8(0, 255, 0),
+                        2.0 => Color::srgb_u8(0, 0, 255),
+                        3.0 => Color::srgb_u8(255, 255, 0),
+                        4.0 => Color::srgb_u8(255, 0, 255),
+                        _ => unreachable!(),
                     },
                     Vec2::new(width, height),
                 ),
             ))
-            .observe(on_click)
-            .id();
+            .observe(on_click);
 
         commands
             .spawn((
@@ -136,12 +119,13 @@ fn spawn_tiles(
                     ..default()
                 },
                 Sprite::from_color(
-                    match position_pair[1].0 {
-                        ..87 => Color::srgb_u8(255, 0, 0),
-                        87..123 => Color::srgb_u8(0, 255, 0),
-                        123..139 => Color::srgb_u8(0, 0, 255),
-                        139..143 => Color::srgb_u8(255, 255, 0),
-                        143.. => Color::srgb_u8(255, 0, 255),
+                    match position_pair[1].1.z {
+                        0.0 => Color::srgb_u8(255, 0, 0),
+                        1.0 => Color::srgb_u8(0, 255, 0),
+                        2.0 => Color::srgb_u8(0, 0, 255),
+                        3.0 => Color::srgb_u8(255, 255, 0),
+                        4.0 => Color::srgb_u8(255, 0, 255),
+                        _ => unreachable!(),
                     },
                     Vec2::new(width, height),
                 ),
