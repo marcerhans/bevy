@@ -136,8 +136,20 @@ fn spawn_tiles(
 
 fn update_edge_tiles(
     mut commands: Commands,
+    mut removed: RemovedComponents<Tile>,
+    mut successive: Local<bool>,
     query: Query<(Entity, &Transform, &Sprite), With<Tile>>,
 ) {
+    if removed.is_empty() && *successive {
+        return;
+    }
+
+    if !*successive {
+        *successive = true;
+    }
+
+    removed.clear();
+
     for (entity, transform, sprite) in query {
         let mut left = false;
         let mut right = false;
@@ -178,10 +190,15 @@ fn update_edge_tiles(
 
 fn determine_edge_tile_pairs(
     mut removed: RemovedComponents<Tile>,
+    mut successive: Local<bool>,
     query: Query<(&ID), With<EdgeTile>>,
 ) {
-    if removed.is_empty() {
+    if removed.is_empty() && *successive {
         return;
+    }
+
+    if !*successive {
+        *successive = true;
     }
 
     removed.clear();
