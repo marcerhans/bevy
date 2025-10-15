@@ -14,7 +14,12 @@ impl bevy::prelude::Plugin for Plugin {
         app.add_sub_state::<InGame>()
             .insert_resource(PreviouslySelectedTile::default())
             .add_systems(OnEnter(InGame::Root), on_enter)
-            .add_systems(Update, (update, print_edge_pairs).chain().run_if(in_state(InGame::Root)));
+            .add_systems(
+                Update,
+                (update_edge_tiles, determine_edge_tile_pairs)
+                    .chain()
+                    .run_if(in_state(InGame::Root)),
+            );
     }
 }
 
@@ -32,14 +37,6 @@ struct PreviouslySelectedTile(Option<Entity>);
 #[derive(Component, Clone)]
 struct Tile;
 
-#[derive(Component)]
-#[relationship_target(relationship = PairWithTile)]
-struct TilePairs(Vec<Entity>);
-
-#[derive(Component)]
-#[relationship(relationship_target = TilePairs)]
-struct PairWithTile(pub Entity);
-
 #[derive(Component, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct ID(usize);
 
@@ -50,7 +47,9 @@ fn on_enter(
     mut commands: Commands,
     window: Single<&Window>,
 ) {
-    let height = window.height() / 8.0;
+    let rows = Generator::<Turtle>::ROWS as f32;
+    let columns = Generator::<Turtle>::COLUMNS as f32;
+    let height = 1080.0 / rows;
     let width = height * 0.7;
 
     let mut rng = rand::rng();
@@ -62,15 +61,12 @@ fn on_enter(
     // tile_positions.shuffle(&mut rng);
     let tile_positions: Vec<(usize, Vec3)> = tile_positions.into_iter().enumerate().collect();
 
-    let columns = 11.0;
-    let rows = 8.0;
-    let start_x = -width * columns / 2.0;
+    let start_x = -width * columns;
     let start_y = height * rows / 2.0;
 
     let tile_components = (
         Tile,
         DespawnOnExit(InGame::Root),
-        // Sprite::from_color(Color::srgb_u8(255, 0, 0), Vec2::new(width, height)),
         Pickable::default(),
         TextFont::from_font_size(height / 5.0),
         TextColor::BLACK,
@@ -127,13 +123,12 @@ fn on_enter(
                     },
                     Vec2::new(width, height),
                 ),
-                PairWithTile(tile_a),
             ))
             .observe(on_click);
     }
 }
 
-fn update(
+fn update_edge_tiles(
     mut commands: Commands,
     query: Query<(Entity, &Transform, &Sprite), With<Tile>>,
 ) {
@@ -175,7 +170,7 @@ fn update(
     }
 }
 
-fn print_edge_pairs(
+fn determine_edge_tile_pairs(
     mut removed: RemovedComponents<Tile>,
     query: Query<(&ID), With<EdgeTile>>,
 ) {
@@ -199,24 +194,6 @@ fn print_edge_pairs(
     }
 
     info!("Available moves: {:?}", available_moves);
-
-    // info!("No new edge pair available! Game cannot continue without shuffle.");
-
-    // query.filter()
-
-    // for (_edge_tile, id) in query {
-
-    // }
-
-    // for (entity, id, transform, sprite) in query {
-    //     for (entity, id, transform, sprite) in query {
-    //         todo!("Loop through like this or just pair them when spawning them...");
-    //     }
-    // }
-    // for (entity, pair) in query {
-    //     todo!("also loop through EACH OTHER ENTITY and check the rules like on_click.");
-    //     info!("Next solution is {:?}{:?}", entity, pair.0);
-    // }
 }
 
 fn on_click(
@@ -363,6 +340,8 @@ mod generator {
 
     impl Generator<Turtle> {
         pub const TILES: usize = 144;
+        pub const ROWS: usize = 8;
+        pub const COLUMNS: usize = 15;
     }
 
     impl PositionGenerator for Generator<Turtle> {
