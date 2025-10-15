@@ -65,8 +65,9 @@ fn spawn_tiles(
     // tile_positions.shuffle(&mut rng);
     let tile_positions: Vec<(usize, Vec3)> = tile_positions.into_iter().enumerate().collect();
 
-    let start_x = -width * columns / 2.0;
-    let start_y = projection.area.height() / 2.0;
+    let start_x_offset = width * 1.5;
+    let start_x = -width * columns / 2.0 + width / 2.0 + start_x_offset;
+    let start_y = projection.area.height() / 2.0 - height / 2.0;
 
     let tile_components = (
         Tile,
@@ -76,6 +77,23 @@ fn spawn_tiles(
         TextColor::BLACK,
     );
 
+    // for i in 0..4 {
+    //     commands.spawn((
+    //         Transform {
+    //             translation: Vec3 {
+    //                 x: start_x + width * i as f32,
+    //                 y: start_y - height * i as f32,
+    //                 z: 0.0,
+    //             },
+    //             ..default()
+    //         },
+    //         Sprite::from_color(
+    //             Color::srgb_u8(i * 10, i * 10, i * 10),
+    //             Vec2::new(width, height),
+    //         ),
+    //     ));
+    // }
+
     for (tile_pair, position_pair) in tile_pairs.iter().zip(tile_positions.windows(2).step_by(2)) {
         let tile_a = commands
             .spawn((
@@ -84,8 +102,8 @@ fn spawn_tiles(
                 Text2d::new(tile_pair.to_string()),
                 Transform {
                     translation: Vec3 {
-                        x: start_x + position_pair[0].1.x - width / 2.0,
-                        y: start_y - position_pair[0].1.y - height / 2.0,
+                        x: start_x + position_pair[0].1.x,
+                        y: start_y - position_pair[0].1.y,
                         z: position_pair[0].1.z,
                     },
                     ..default()
@@ -111,8 +129,8 @@ fn spawn_tiles(
                 Text2d::new(tile_pair.to_string()),
                 Transform {
                     translation: Vec3 {
-                        x: start_x + position_pair[1].1.x - width / 2.0,
-                        y: start_y - position_pair[1].1.y - height / 2.0,
+                        x: start_x + position_pair[1].1.x,
+                        y: start_y - position_pair[1].1.y,
                         z: position_pair[1].1.z,
                     },
                     ..default()
