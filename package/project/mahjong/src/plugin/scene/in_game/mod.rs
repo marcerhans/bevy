@@ -57,7 +57,8 @@ fn spawn_tiles(
     let width = height * 0.7;
 
     let mut rng = rand::rng();
-    let mut tile_pairs: Vec<usize> = (0..Generator::<Turtle>::TILES / 4).collect();
+    let mut tile_pairs: Vec<usize> =
+        (0..Generator::<Turtle>::TILES / Generator::<Turtle>::TILE_PAIR_SIZE).collect();
     tile_pairs.shuffle(&mut rng);
 
     let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
@@ -77,114 +78,39 @@ fn spawn_tiles(
         TextColor::BLACK,
     );
 
-    for (tile_pair, position_pair) in tile_pairs.iter().zip(tile_positions.windows(4).step_by(4)) {
-        commands
-            .spawn((
-                tile_components.clone(),
-                ID(*tile_pair),
-                Text2d::new(tile_pair.to_string()),
-                Transform {
-                    translation: Vec3 {
-                        x: start_x + position_pair[0].1.x,
-                        y: start_y - position_pair[0].1.y,
-                        z: position_pair[0].1.z,
+    for (tile_pair, position_pair) in tile_pairs.iter().zip(
+        tile_positions
+            .windows(Generator::<Turtle>::TILE_PAIR_SIZE)
+            .step_by(Generator::<Turtle>::TILE_PAIR_SIZE),
+    ) {
+        for i in 0..Generator::<Turtle>::TILE_PAIR_SIZE {
+            commands
+                .spawn((
+                    tile_components.clone(),
+                    ID(*tile_pair),
+                    Text2d::new(tile_pair.to_string()),
+                    Transform {
+                        translation: Vec3 {
+                            x: start_x + position_pair[i].1.x,
+                            y: start_y - position_pair[i].1.y,
+                            z: position_pair[i].1.z,
+                        },
+                        ..default()
                     },
-                    ..default()
-                },
-                Sprite::from_color(
-                    match position_pair[0].1.z {
-                        0.0 => Color::srgb_u8(255, 0, 0),
-                        1.0 => Color::srgb_u8(0, 255, 0),
-                        2.0 => Color::srgb_u8(0, 0, 255),
-                        3.0 => Color::srgb_u8(255, 255, 0),
-                        4.0 => Color::srgb_u8(255, 0, 255),
-                        _ => unreachable!(),
-                    },
-                    Vec2::new(width, height),
-                ),
-            ))
-            .observe(on_click);
-
-        commands
-            .spawn((
-                tile_components.clone(),
-                ID(*tile_pair),
-                Text2d::new(tile_pair.to_string()),
-                Transform {
-                    translation: Vec3 {
-                        x: start_x + position_pair[1].1.x,
-                        y: start_y - position_pair[1].1.y,
-                        z: position_pair[1].1.z,
-                    },
-                    ..default()
-                },
-                Sprite::from_color(
-                    match position_pair[1].1.z {
-                        0.0 => Color::srgb_u8(255, 0, 0),
-                        1.0 => Color::srgb_u8(0, 255, 0),
-                        2.0 => Color::srgb_u8(0, 0, 255),
-                        3.0 => Color::srgb_u8(255, 255, 0),
-                        4.0 => Color::srgb_u8(255, 0, 255),
-                        _ => unreachable!(),
-                    },
-                    Vec2::new(width, height),
-                ),
-            ))
-            .observe(on_click);
-
-        commands
-            .spawn((
-                tile_components.clone(),
-                ID(*tile_pair),
-                Text2d::new(tile_pair.to_string()),
-                Transform {
-                    translation: Vec3 {
-                        x: start_x + position_pair[2].1.x,
-                        y: start_y - position_pair[2].1.y,
-                        z: position_pair[2].1.z,
-                    },
-                    ..default()
-                },
-                Sprite::from_color(
-                    match position_pair[2].1.z {
-                        0.0 => Color::srgb_u8(255, 0, 0),
-                        1.0 => Color::srgb_u8(0, 255, 0),
-                        2.0 => Color::srgb_u8(0, 0, 255),
-                        3.0 => Color::srgb_u8(255, 255, 0),
-                        4.0 => Color::srgb_u8(255, 0, 255),
-                        _ => unreachable!(),
-                    },
-                    Vec2::new(width, height),
-                ),
-            ))
-            .observe(on_click);
-
-        commands
-            .spawn((
-                tile_components.clone(),
-                ID(*tile_pair),
-                Text2d::new(tile_pair.to_string()),
-                Transform {
-                    translation: Vec3 {
-                        x: start_x + position_pair[3].1.x,
-                        y: start_y - position_pair[3].1.y,
-                        z: position_pair[3].1.z,
-                    },
-                    ..default()
-                },
-                Sprite::from_color(
-                    match position_pair[3].1.z {
-                        0.0 => Color::srgb_u8(255, 0, 0),
-                        1.0 => Color::srgb_u8(0, 255, 0),
-                        2.0 => Color::srgb_u8(0, 0, 255),
-                        3.0 => Color::srgb_u8(255, 255, 0),
-                        4.0 => Color::srgb_u8(255, 0, 255),
-                        _ => unreachable!(),
-                    },
-                    Vec2::new(width, height),
-                ),
-            ))
-            .observe(on_click);
+                    Sprite::from_color(
+                        match position_pair[i].1.z {
+                            0.0 => Color::srgb_u8(255, 0, 0),
+                            1.0 => Color::srgb_u8(0, 255, 0),
+                            2.0 => Color::srgb_u8(0, 0, 255),
+                            3.0 => Color::srgb_u8(255, 255, 0),
+                            4.0 => Color::srgb_u8(255, 0, 255),
+                            _ => unreachable!(),
+                        },
+                        Vec2::new(width, height),
+                    ),
+                ))
+                .observe(on_click);
+        }
     }
 }
 
@@ -417,6 +343,7 @@ mod generator {
 
     impl Generator<Turtle> {
         pub const TILES: usize = 144;
+        pub const TILE_PAIR_SIZE: usize = 4;
         pub const ROWS: usize = 8;
         pub const COLUMNS: usize = 15;
     }
