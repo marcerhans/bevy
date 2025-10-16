@@ -96,15 +96,6 @@ fn spawn_tiles(
             .step_by(Generator::<Turtle>::TILE_PAIR_SIZE),
     ) {
         for i in 0..Generator::<Turtle>::TILE_PAIR_SIZE {
-            let mut sprite = Sprite::from_atlas_image(
-                texture.clone(),
-                TextureAtlas {
-                    layout: texture_atlas_layout.clone(),
-                    index: 0,
-                },
-            );
-            sprite.custom_size = Some(Vec2::new(width, height));
-
             commands
                 .spawn((
                     tile_components.clone(),
@@ -129,7 +120,16 @@ fn spawn_tiles(
                     //     },
                     //     Vec2::new(width, height),
                     // ),
-                    sprite,
+                    Sprite {
+                        custom_size: Some(Vec2::new(width, height)),
+                        ..Sprite::from_atlas_image(
+                            texture.clone(),
+                            TextureAtlas {
+                                layout: texture_atlas_layout.clone(),
+                                index: 0,
+                            },
+                        )
+                    },
                 ))
                 .observe(on_click);
         }
