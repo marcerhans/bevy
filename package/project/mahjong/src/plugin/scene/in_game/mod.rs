@@ -46,10 +46,22 @@ struct EdgeTile;
 fn spawn_tiles(
     mut commands: Commands,
     projection: Single<&Projection, With<Camera>>,
+    asset_server: Res<AssetServer>,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let Projection::Orthographic(projection) = *projection else {
         panic!();
     };
+
+    let texture: Handle<Image> = asset_server.load("riichi_mahjong_tiles/ExampleRegular.png");
+    let layout = TextureAtlasLayout::from_grid(
+        UVec2::new(150, 200),
+        10,
+        4,
+        Some(UVec2::new(123, 0)),
+        Some(UVec2::new(60, 8)),
+    );
+    let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
     let rows = Generator::<Turtle>::ROWS as f32;
     let columns = Generator::<Turtle>::COLUMNS as f32;
@@ -84,6 +96,15 @@ fn spawn_tiles(
             .step_by(Generator::<Turtle>::TILE_PAIR_SIZE),
     ) {
         for i in 0..Generator::<Turtle>::TILE_PAIR_SIZE {
+            let mut sprite = Sprite::from_atlas_image(
+                texture.clone(),
+                TextureAtlas {
+                    layout: texture_atlas_layout.clone(),
+                    index: 0,
+                },
+            );
+            sprite.custom_size = Some(Vec2::new(width, height));
+
             commands
                 .spawn((
                     tile_components.clone(),
@@ -97,17 +118,18 @@ fn spawn_tiles(
                         },
                         ..default()
                     },
-                    Sprite::from_color(
-                        match position_pair[i].1.z {
-                            0.0 => Color::srgb_u8(255, 0, 0),
-                            1.0 => Color::srgb_u8(0, 255, 0),
-                            2.0 => Color::srgb_u8(0, 0, 255),
-                            3.0 => Color::srgb_u8(255, 255, 0),
-                            4.0 => Color::srgb_u8(255, 0, 255),
-                            _ => unreachable!(),
-                        },
-                        Vec2::new(width, height),
-                    ),
+                    // Sprite::from_color(
+                    //     match position_pair[i].1.z {
+                    //         0.0 => Color::srgb_u8(255, 0, 0),
+                    //         1.0 => Color::srgb_u8(0, 255, 0),
+                    //         2.0 => Color::srgb_u8(0, 0, 255),
+                    //         3.0 => Color::srgb_u8(255, 255, 0),
+                    //         4.0 => Color::srgb_u8(255, 0, 255),
+                    //         _ => unreachable!(),
+                    //     },
+                    //     Vec2::new(width, height),
+                    // ),
+                    sprite,
                 ))
                 .observe(on_click);
         }
