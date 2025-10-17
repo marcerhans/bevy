@@ -53,14 +53,9 @@ fn spawn_tiles(
         panic!();
     };
 
-    let texture: Handle<Image> = asset_server.load("riichi_mahjong_tiles/ExampleRegular.png");
-    let layout = TextureAtlasLayout::from_grid(
-        UVec2::new(150, 200),
-        10,
-        4,
-        Some(UVec2::new(123, 17)),
-        Some(UVec2::new(60, 8)),
-    );
+    let texture: Handle<Image> =
+        asset_server.load("riichi_mahjong_tiles/generated/Black/character_atlas.png");
+    let layout = TextureAtlasLayout::from_grid(UVec2::new(300, 400), 10, 4, None, None);
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
     let rows = Generator::<Turtle>::ROWS as f32;
