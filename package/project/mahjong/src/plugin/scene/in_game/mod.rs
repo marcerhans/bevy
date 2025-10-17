@@ -58,7 +58,7 @@ fn spawn_tiles(
         UVec2::new(150, 200),
         10,
         4,
-        Some(UVec2::new(123, 0)),
+        Some(UVec2::new(123, 17)),
         Some(UVec2::new(60, 8)),
     );
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
@@ -126,7 +126,7 @@ fn spawn_tiles(
                             texture.clone(),
                             TextureAtlas {
                                 layout: texture_atlas_layout.clone(),
-                                index: 0,
+                                index: *tile_pair,
                             },
                         )
                     },
