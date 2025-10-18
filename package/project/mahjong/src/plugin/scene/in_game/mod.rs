@@ -47,28 +47,33 @@ fn spawn_tiles(
     mut commands: Commands,
     projection: Single<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let Projection::Orthographic(projection) = *projection else {
         panic!();
     };
 
-    let texture: Handle<Image> =
-        asset_server.load("riichi_mahjong_tiles/generated/Black/character_atlas.png");
-    let layout = TextureAtlasLayout::from_grid(UVec2::new(300, 400), 10, 4, None, None);
-    let texture_atlas_layout = texture_atlas_layouts.add(layout);
+    let texture: Handle<Image> = asset_server.load("misc/border.png");
 
     let rows = Generator::<Turtle>::ROWS as f32;
     let columns = Generator::<Turtle>::COLUMNS as f32;
     let height = projection.area.height() as f32 / rows;
     let width = height * 0.7;
+    let border_height = (157.0 / 1000.0) * height;
+    let border_width = (130.0 / 700.0) * width;
+    let width_extra = border_width * 0.7;
 
     let mut rng = rand::rng();
     let mut tile_pairs: Vec<usize> =
         (0..Generator::<Turtle>::TILES / Generator::<Turtle>::TILE_PAIR_SIZE).collect();
     tile_pairs.shuffle(&mut rng);
 
-    let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
+    let placer = Placer::new(
+        Vec2::new(
+            width - border_width + width_extra,
+            height - border_height / 2.0,
+        ),
+        Generator::<Turtle>::new(),
+    );
     let mut tile_positions: Vec<Vec3> = placer.into_iter().collect();
     tile_positions.shuffle(&mut rng);
     let tile_positions: Vec<(usize, Vec3)> = tile_positions.into_iter().enumerate().collect();
@@ -82,7 +87,7 @@ fn spawn_tiles(
         DespawnOnExit(InGame::Root),
         Pickable::default(),
         TextFont::from_font_size(height / 5.0),
-        TextColor::BLACK,
+        TextColor::WHITE,
     );
 
     for (tile_pair, position_pair) in tile_pairs.iter().zip(
@@ -98,32 +103,16 @@ fn spawn_tiles(
                     Text2d::new(tile_pair.to_string()),
                     Transform {
                         translation: Vec3 {
-                            x: start_x + position_pair[i].1.x,
-                            y: start_y - position_pair[i].1.y,
+                            x: start_x + position_pair[i].1.x + border_width * position_pair[i].1.z * 0.7,
+                            y: start_y - position_pair[i].1.y
+                                + border_height * position_pair[i].1.z * 0.7,
                             z: position_pair[i].1.z,
                         },
                         ..default()
                     },
-                    // Sprite::from_color(
-                    //     match position_pair[i].1.z {
-                    //         0.0 => Color::srgb_u8(255, 0, 0),
-                    //         1.0 => Color::srgb_u8(0, 255, 0),
-                    //         2.0 => Color::srgb_u8(0, 0, 255),
-                    //         3.0 => Color::srgb_u8(255, 255, 0),
-                    //         4.0 => Color::srgb_u8(255, 0, 255),
-                    //         _ => unreachable!(),
-                    //     },
-                    //     Vec2::new(width, height),
-                    // ),
                     Sprite {
                         custom_size: Some(Vec2::new(width, height)),
-                        ..Sprite::from_atlas_image(
-                            texture.clone(),
-                            TextureAtlas {
-                                layout: texture_atlas_layout.clone(),
-                                index: *tile_pair,
-                            },
-                        )
+                        ..Sprite::from_image(texture.clone())
                     },
                 ))
                 .observe(on_click);
