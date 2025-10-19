@@ -64,24 +64,31 @@ fn spawn_tiles(
     let height = projection.area.height() as f32 / rows;
     let width = height * 0.7;
 
-    // Variables based on asset dimensions.
-    let border_height = (157.0 / 1000.0) * height;
-    let border_width = (130.0 / 700.0) * width;
-    let width_extra = border_width * 0.7;
-
     let mut rng = rand::rng();
     let mut tile_pairs: Vec<usize> =
         (0..Generator::<Turtle>::TILES / Generator::<Turtle>::TILE_PAIR_SIZE).collect();
     tile_pairs.shuffle(&mut rng);
 
-    let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
-    let mut tile_positions: Vec<Vec3> = placer.into_iter().collect();
-    tile_positions.shuffle(&mut rng);
-    let tile_positions: Vec<(usize, Vec3)> = tile_positions.into_iter().enumerate().collect();
+    let logic_placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
+    let mut logic_tile_positions: Vec<Vec3> = logic_placer.into_iter().collect();
+    logic_tile_positions.shuffle(&mut rng);
+    let logic_tile_positions: Vec<(usize, Vec3)> =
+        logic_tile_positions.into_iter().enumerate().collect();
 
-    let start_x_offset = width * 1.5;
-    let start_x = -width * columns / 2.0 + width / 2.0 + start_x_offset;
-    let start_y = projection.area.height() / 2.0 - height / 2.0;
+    // Variables based on asset dimensions and are purely visual. Offsets are just set to whatever makes it visually correct.
+    let border_height = (157.0 / 1000.0) * height;
+    let border_width = (130.0 / 700.0) * width;
+    let y_offset = border_height * 0.7;
+    let x_offset = border_width * 0.5;
+
+    // let single_height = height - y_offset;
+    // let total_height = single_height * rows;
+    let single_width = width - x_offset;
+    let total_width = single_width * columns;
+
+    let start_x_offset = single_width * 1.5;
+    let start_x = -total_width / 2.0 + (width - x_offset) / 2.0 + start_x_offset;
+    let start_y = projection.area.height() / 2.0 - height / 2.0; // + y_offset;
 
     let tile_components = (
         Tile,
@@ -91,12 +98,16 @@ fn spawn_tiles(
         TextColor::WHITE,
     );
 
-    for (tile_pair, position_pair) in tile_pairs.iter().zip(
-        tile_positions
+    for ((index, tile_pair), logic_position_pair) in tile_pairs.iter().enumerate().zip(
+        logic_tile_positions
             .windows(Generator::<Turtle>::TILE_PAIR_SIZE)
             .step_by(Generator::<Turtle>::TILE_PAIR_SIZE),
     ) {
         for i in 0..Generator::<Turtle>::TILE_PAIR_SIZE {
+            let x_index = logic_position_pair[i].1.x / width;
+            let y_index = logic_position_pair[i].1.y / height;
+            let z_index = logic_position_pair[i].1.z;
+
             commands
                 .spawn((
                     tile_components.clone(),
@@ -104,19 +115,18 @@ fn spawn_tiles(
                     Text2d::new(tile_pair.to_string()),
                     Transform {
                         translation: Vec3 {
-                            x: start_x + position_pair[i].1.x,
-                            // + border_width * position_pair[i].1.z * 0.7,
-                            y: start_y - position_pair[i].1.y,
+                            x: start_x + logic_position_pair[i].1.x - x_index * x_offset,
+                            y: start_y - logic_position_pair[i].1.y,
                             // + border_height * position_pair[i].1.z * 0.85,
-                            z: position_pair[i].1.z,
+                            z: logic_position_pair[i].1.z,
                         },
                         ..default()
                     },
                     Position {
                         pos: Vec3::new(
-                            position_pair[i].1.x,
-                            position_pair[i].1.y,
-                            position_pair[i].1.z,
+                            logic_position_pair[i].1.x,
+                            logic_position_pair[i].1.y,
+                            logic_position_pair[i].1.z,
                         ),
                     },
                     Sprite {
