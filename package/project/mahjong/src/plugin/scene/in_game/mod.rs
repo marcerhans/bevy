@@ -43,6 +43,11 @@ struct ID(usize);
 #[derive(Component)]
 struct EdgeTile;
 
+#[derive(Component, Debug)]
+struct Position {
+    pos: Vec3,
+}
+
 fn spawn_tiles(
     mut commands: Commands,
     projection: Single<&Projection, With<Camera>>,
@@ -58,6 +63,8 @@ fn spawn_tiles(
     let columns = Generator::<Turtle>::COLUMNS as f32;
     let height = projection.area.height() as f32 / rows;
     let width = height * 0.7;
+
+    // Variables based on asset dimensions.
     let border_height = (157.0 / 1000.0) * height;
     let border_width = (130.0 / 700.0) * width;
     let width_extra = border_width * 0.7;
@@ -67,13 +74,7 @@ fn spawn_tiles(
         (0..Generator::<Turtle>::TILES / Generator::<Turtle>::TILE_PAIR_SIZE).collect();
     tile_pairs.shuffle(&mut rng);
 
-    let placer = Placer::new(
-        Vec2::new(
-            width - border_width + width_extra,
-            height - border_height / 2.0,
-        ),
-        Generator::<Turtle>::new(),
-    );
+    let placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
     let mut tile_positions: Vec<Vec3> = placer.into_iter().collect();
     tile_positions.shuffle(&mut rng);
     let tile_positions: Vec<(usize, Vec3)> = tile_positions.into_iter().enumerate().collect();
@@ -103,12 +104,20 @@ fn spawn_tiles(
                     Text2d::new(tile_pair.to_string()),
                     Transform {
                         translation: Vec3 {
-                            x: start_x + position_pair[i].1.x + border_width * position_pair[i].1.z * 0.7,
-                            y: start_y - position_pair[i].1.y
-                                + border_height * position_pair[i].1.z * 0.7,
+                            x: start_x + position_pair[i].1.x,
+                            // + border_width * position_pair[i].1.z * 0.7,
+                            y: start_y - position_pair[i].1.y,
+                            // + border_height * position_pair[i].1.z * 0.85,
                             z: position_pair[i].1.z,
                         },
                         ..default()
+                    },
+                    Position {
+                        pos: Vec3::new(
+                            position_pair[i].1.x,
+                            position_pair[i].1.y,
+                            position_pair[i].1.z,
+                        ),
                     },
                     Sprite {
                         custom_size: Some(Vec2::new(width, height)),
@@ -124,7 +133,7 @@ fn update_edge_tiles(
     mut commands: Commands,
     mut removed: RemovedComponents<Tile>,
     mut successive: Local<bool>,
-    query: Query<(Entity, &Transform, &Sprite), With<Tile>>,
+    query: Query<(Entity, &Position, &Sprite), With<Tile>>,
 ) {
     if removed.is_empty() && *successive {
         return;
@@ -136,20 +145,17 @@ fn update_edge_tiles(
 
     removed.clear();
 
-    for (entity, transform, sprite) in query {
+    for (entity, position, sprite) in query {
         let mut left = false;
         let mut right = false;
         let mut obscured = false;
         let size = sprite.custom_size.unwrap();
-        let pos = transform.translation;
+        let pos = position.pos;
 
-        for (_other_entity, other_transform, other_sprite) in query {
+        for (_other_entity, other_position, other_sprite) in query {
             if let Some(side) = which_side(
                 (size, pos),
-                (
-                    other_sprite.custom_size.unwrap(),
-                    other_transform.translation,
-                ),
+                (other_sprite.custom_size.unwrap(), other_position.pos),
             ) {
                 match side {
                     LR::Left => left = true,
@@ -159,11 +165,8 @@ fn update_edge_tiles(
 
             obscured |= overlapping(
                 (size, pos),
-                (
-                    other_sprite.custom_size.unwrap(),
-                    other_transform.translation,
-                ),
-            ) && pos.z < other_transform.translation.z;
+                (other_sprite.custom_size.unwrap(), other_position.pos),
+            ) && pos.z < other_position.pos.z;
         }
 
         if !((left && right) || obscured) {
@@ -209,7 +212,7 @@ fn on_click(
     click: On<Pointer<Click>>,
     mut commands: Commands,
     mut prev_res: ResMut<PreviouslySelectedTile>,
-    query: Query<(Entity, &ID, &Transform, &Sprite), With<Tile>>,
+    query: Query<(Entity, &ID, &Position, &Sprite), With<Tile>>,
 ) {
     let curr_entity = query.get(click.original_event_target()).unwrap();
 
@@ -244,12 +247,12 @@ fn on_click(
     let mut curr_obscured = false;
     let prev_size = prev_entity.3.custom_size.unwrap();
     let curr_size = curr_entity.3.custom_size.unwrap();
-    let prev_pos = prev_entity.2.translation;
-    let curr_pos = curr_entity.2.translation;
+    let prev_pos = prev_entity.2.pos;
+    let curr_pos = curr_entity.2.pos;
 
     for entity in query {
         let size = entity.3.custom_size.unwrap();
-        let pos = entity.2.translation;
+        let pos = entity.2.pos;
 
         if let Some(side) = which_side((prev_size, prev_pos), (size, pos)) {
             match side {
