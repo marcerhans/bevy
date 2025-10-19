@@ -13,13 +13,13 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_sub_state::<InGame>()
             .insert_resource(PreviouslySelectedTile::default())
-            .add_systems(OnEnter(InGame::Root), spawn_tiles)
-            .add_systems(
-                Update,
-                (update_edge_tiles, determine_edge_tile_pairs)
-                    .chain()
-                    .run_if(in_state(InGame::Root)),
-            );
+            .add_systems(OnEnter(InGame::Root), spawn_tiles);
+            // .add_systems(
+            //     Update,
+            //     (update_edge_tiles, determine_edge_tile_pairs)
+            //         .chain()
+            //         .run_if(in_state(InGame::Root)),
+            // );
     }
 }
 
@@ -48,6 +48,59 @@ struct Position {
     pos: Vec3,
 }
 
+struct TileFactory {
+    texture_tile: Handle<Image>,
+    texture_alliance: Handle<Image>,
+    texture_horde: Handle<Image>,
+    custom_size: Option<Vec2>,
+}
+
+enum TileFactoryVariant {
+    Alliance(usize),
+    Horde(usize),
+}
+
+impl TileFactory {
+    fn new(
+        texture_tile: Handle<Image>,
+        texture_alliance: Handle<Image>,
+        texture_horde: Handle<Image>,
+        custom_size: Option<Vec2>,
+    ) -> Self {
+        Self {
+            texture_tile,
+            texture_alliance,
+            texture_horde,
+            custom_size,
+        }
+    }
+
+    fn get_tile(
+        &self,
+        variant: TileFactoryVariant,
+    ) -> impl Bundle {
+        (
+            Tile,
+            Sprite {
+                custom_size: self.custom_size,
+                ..Sprite::from_image(self.texture_tile.clone())
+            },
+            children![match variant {
+                TileFactoryVariant::Horde(icons) => (
+                    Text2d::new(icons.to_string()),
+                    TextColor::WHITE,
+                    TextFont::from_font_size(self.custom_size.unwrap().y / 5.0)
+                ),
+                TileFactoryVariant::Alliance(icons) => (
+                    Text2d::new(icons.to_string()),
+                    TextColor::WHITE,
+                    TextFont::from_font_size(self.custom_size.unwrap().y / 5.0)
+                ),
+            }],
+        )
+    }
+}
+
 fn spawn_tiles(
     mut commands: Commands,
     projection: Single<&Projection, With<Camera>>,
@@ -57,33 +110,44 @@ fn spawn_tiles(
         panic!();
     };
 
-    let texture: Handle<Image> = asset_server.load("misc/border.png");
+    let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile_897x1237.png");
+    let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
+    let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
 
     let rows = Generator::<Turtle>::ROWS as f32;
     let columns = Generator::<Turtle>::COLUMNS as f32;
-    let height = projection.area.height() as f32 / rows;
-    let width = height * 0.7;
+    let tile_height = projection.area.height() as f32 / rows;
+    let tile_width = tile_height * 0.7;
+    let tile_factory = TileFactory::new(
+        texture_tile,
+        texture_alliance,
+        texture_horde,
+        Some(Vec2::new(tile_width, tile_height)),
+    );
 
     let mut rng = rand::rng();
     let mut tile_pairs: Vec<usize> =
         (0..Generator::<Turtle>::TILES / Generator::<Turtle>::TILE_PAIR_SIZE).collect();
     tile_pairs.shuffle(&mut rng);
 
-    let logic_placer = Placer::new(Vec2::new(width, height), Generator::<Turtle>::new());
+    let logic_placer = Placer::new(
+        Vec2::new(tile_width, tile_height),
+        Generator::<Turtle>::new(),
+    );
     let mut logic_tile_positions: Vec<Vec3> = logic_placer.into_iter().collect();
     logic_tile_positions.shuffle(&mut rng);
     let logic_tile_positions: Vec<(usize, Vec3)> =
         logic_tile_positions.into_iter().enumerate().collect();
 
     // Variables based on asset dimensions and are purely visual. Offsets are just set to whatever makes it visually correct.
-    let border_height = (157.0 / 1000.0) * height;
-    let border_width = (130.0 / 700.0) * width;
+    let border_height = (157.0 / 1000.0) * tile_height;
+    let border_width = (130.0 / 700.0) * tile_width;
     let y_offset = border_height * 0.7;
     let x_offset = border_width * 0.3;
 
-    let single_height = height - y_offset;
+    let single_height = tile_height - y_offset;
     let total_height = single_height * rows;
-    let single_width = width - x_offset;
+    let single_width = tile_width - x_offset;
     let total_width = single_width * columns;
 
     let start_y_offset = single_height * 0.5;
@@ -92,13 +156,7 @@ fn spawn_tiles(
     let start_y = total_height / 2.0 - single_height / 2.0; // + start_y_offset;
     let start_z = 0.0;
 
-    let tile_components = (
-        Tile,
-        DespawnOnExit(InGame::Root),
-        Pickable::default(),
-        TextFont::from_font_size(height / 5.0),
-        TextColor::WHITE,
-    );
+    let tile_components = (DespawnOnExit(InGame::Root), Pickable::default());
 
     for ((index, tile_pair), logic_position_pair) in tile_pairs.iter().enumerate().zip(
         logic_tile_positions
@@ -106,15 +164,15 @@ fn spawn_tiles(
             .step_by(Generator::<Turtle>::TILE_PAIR_SIZE),
     ) {
         for i in 0..Generator::<Turtle>::TILE_PAIR_SIZE {
-            let x_index = logic_position_pair[i].1.x / width;
-            let y_index = logic_position_pair[i].1.y / height;
+            let x_index = logic_position_pair[i].1.x / tile_width;
+            let y_index = logic_position_pair[i].1.y / tile_height;
             let z_index = logic_position_pair[i].1.z;
 
             commands
                 .spawn((
                     tile_components.clone(),
+                    tile_factory.get_tile(TileFactoryVariant::Alliance(*tile_pair)),
                     ID(*tile_pair),
-                    Text2d::new(tile_pair.to_string()),
                     Transform {
                         translation: Vec3 {
                             x: start_x + logic_position_pair[i].1.x - (x_index * x_offset)
@@ -133,14 +191,6 @@ fn spawn_tiles(
                             logic_position_pair[i].1.z,
                         ),
                     },
-                    Sprite {
-                        custom_size: Some(Vec2::new(width, height)),
-                        ..Sprite::from_image(texture.clone())
-                    },
-                    children![Sprite {
-                        custom_size: Some(Vec2::new(width, height)),
-                        ..Sprite::from_image(texture.clone())
-                    }],
                 ))
                 .observe(on_click);
         }
