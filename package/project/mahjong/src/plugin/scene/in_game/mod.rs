@@ -137,6 +137,10 @@ fn spawn_tiles(
                         custom_size: Some(Vec2::new(width, height)),
                         ..Sprite::from_image(texture.clone())
                     },
+                    children![Sprite {
+                        custom_size: Some(Vec2::new(width, height)),
+                        ..Sprite::from_image(texture.clone())
+                    }],
                 ))
                 .observe(on_click);
         }
