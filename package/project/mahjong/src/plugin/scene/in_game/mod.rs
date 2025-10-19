@@ -79,16 +79,18 @@ fn spawn_tiles(
     let border_height = (157.0 / 1000.0) * height;
     let border_width = (130.0 / 700.0) * width;
     let y_offset = border_height * 0.7;
-    let x_offset = border_width * 0.5;
+    let x_offset = border_width * 0.3;
 
-    // let single_height = height - y_offset;
-    // let total_height = single_height * rows;
+    let single_height = height - y_offset;
+    let total_height = single_height * rows;
     let single_width = width - x_offset;
     let total_width = single_width * columns;
 
+    let start_y_offset = single_height * 0.5;
     let start_x_offset = single_width * 1.5;
-    let start_x = -total_width / 2.0 + (width - x_offset) / 2.0 + start_x_offset;
-    let start_y = projection.area.height() / 2.0 - height / 2.0; // + y_offset;
+    let start_x = -total_width / 2.0 + single_width / 2.0 + start_x_offset;
+    let start_y = total_height / 2.0 - single_height / 2.0; // + start_y_offset;
+    let start_z = 0.0;
 
     let tile_components = (
         Tile,
@@ -115,10 +117,12 @@ fn spawn_tiles(
                     Text2d::new(tile_pair.to_string()),
                     Transform {
                         translation: Vec3 {
-                            x: start_x + logic_position_pair[i].1.x - x_index * x_offset,
-                            y: start_y - logic_position_pair[i].1.y,
-                            // + border_height * position_pair[i].1.z * 0.85,
-                            z: logic_position_pair[i].1.z,
+                            x: start_x + logic_position_pair[i].1.x - (x_index * x_offset)
+                                + (z_index * x_offset * 2.0),
+                            y: start_y - logic_position_pair[i].1.y
+                                + (y_index * y_offset)
+                                + (z_index * y_offset * 1.0),
+                            z: start_z + logic_position_pair[i].1.z * 10.0 - x_index + y_index,
                         },
                         ..default()
                     },
