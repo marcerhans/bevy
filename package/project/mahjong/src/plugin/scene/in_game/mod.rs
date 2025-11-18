@@ -30,6 +30,9 @@ mod tile {
     #[derive(Component, Clone)]
     pub struct Marker;
 
+    #[derive(Component, Clone)]
+    pub struct ID(pub usize);
+
     pub struct Factory {
         texture_tile: Handle<Image>,
         texture_alliance: Handle<Image>,
@@ -98,10 +101,12 @@ mod on_enter {
             panic!();
         };
 
+        // Load assets
         let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile_897x1237.png");
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
 
+        // Determine base parameters ("logic" parameters)
         let rows = PositionGenerator::<Turtle>::ROWS as f32;
         let cols = PositionGenerator::<Turtle>::COLUMNS;
 
@@ -113,13 +118,76 @@ mod on_enter {
             texture_horde,
             Some(Vec2::new(tile_width, tile_height)),
         );
-        let tile_positions = PositionGenerator::<Turtle>::new(Vec2::new(tile_height, tile_width));
 
         let mut rng = rand::rng();
+
+        let mut tile_positions: Vec<Vec3> =
+            PositionGenerator::<Turtle>::new(Vec2::new(tile_height, tile_width))
+                .into_iter()
+                .collect();
+        tile_positions.shuffle(&mut rng);
+        let tile_positions: Vec<(usize, Vec3)> = tile_positions.into_iter().enumerate().collect();
+
         let mut tile_pairs: Vec<usize> = (0..PositionGenerator::<Turtle>::TILES
             / PositionGenerator::<Turtle>::TILE_PAIR_SIZE)
             .collect();
         tile_pairs.shuffle(&mut rng);
+
+        // Determine visual parameters. Mostly based on asset dimensions and such
+
+        // Actual spawning
+        let tile_components = (DespawnOnExit(InGame::Root), Pickable::default());
+
+        for ((index, tile_pair), position_pair) in tile_pairs.iter().enumerate().zip(
+            tile_positions
+                .windows(PositionGenerator::<Turtle>::TILE_PAIR_SIZE)
+                .step_by(PositionGenerator::<Turtle>::TILE_PAIR_SIZE),
+        ) {
+            for i in 0..PositionGenerator::<Turtle>::TILE_PAIR_SIZE {
+            //     let x_index = logic_position_pair[i].1.x / tile_width;
+            //     let y_index = logic_position_pair[i].1.y / tile_height;
+            //     let z_index = logic_position_pair[i].1.z;
+            commands.spawn((
+                tile_components.clone(),
+                tile_factory.get_tile(tile::Variant::Alliance(*tile_pair)),
+                tile::ID(*tile_pair),
+                Transform {
+                    translation: Vec3 {
+                        x: position_pair[i].1.x,
+                        y: position_pair[i].1.y,
+                        z: position_pair[i].1.z,
+                    },
+                    ..default()
+                }
+            ));
+
+            //     commands
+            //         .spawn((
+            //             tile_components.clone(),
+            //             tile_factory.get_tile(TileVariant::Alliance(*tile_pair)),
+            //             ID(*tile_pair),
+            //             Transform {
+            //                 translation: Vec3 {
+            //                     x: start_x + logic_position_pair[i].1.x - (x_index * x_offset)
+            //                         + (z_index * x_offset * 2.0),
+            //                     y: start_y - logic_position_pair[i].1.y
+            //                         + (y_index * y_offset)
+            //                         + (z_index * y_offset * 1.0),
+            //                     z: start_z + logic_position_pair[i].1.z * 10.0 - x_index + y_index,
+            //                 },
+            //                 ..default()
+            //             },
+            //             Position {
+            //                 pos: Vec3::new(
+            //                     logic_position_pair[i].1.x,
+            //                     logic_position_pair[i].1.y,
+            //                     logic_position_pair[i].1.z,
+            //                 ),
+            //             },
+            //         ))
+            //         .observe(on_click);
+            }
+        }
     }
 }
 
@@ -253,9 +321,7 @@ mod generator {
     }
 
     impl<G: PositionGeneratorTrait> PositionGeneratorIterator<G> {
-        pub fn new(
-            generator: G,
-        ) -> Self {
+        pub fn new(generator: G) -> Self {
             Self {
                 generator,
                 counter: 0,
@@ -269,9 +335,7 @@ mod generator {
     }
 
     impl<'a, G: PositionGeneratorTrait> PositionGeneratorRefIterator<'a, G> {
-        pub fn new(
-            generator: &'a G,
-        ) -> Self {
+        pub fn new(generator: &'a G) -> Self {
             Self {
                 generator,
                 counter: 0,
@@ -283,7 +347,7 @@ mod generator {
 
     impl<G: PositionGeneratorTrait> Iterator for PositionGeneratorIterator<G> {
         type Item = PositionGeneratorItem;
-    
+
         fn next(&mut self) -> Option<Self::Item> {
             self.counter += 1;
             self.generator.generate(self.counter - 1)
@@ -292,7 +356,7 @@ mod generator {
 
     impl<'a, G: PositionGeneratorTrait> Iterator for PositionGeneratorRefIterator<'a, G> {
         type Item = PositionGeneratorItem;
-    
+
         fn next(&mut self) -> Option<Self::Item> {
             self.counter += 1;
             self.generator.generate(self.counter - 1)
@@ -302,7 +366,7 @@ mod generator {
     impl IntoIterator for PositionGenerator<Turtle> {
         type Item = PositionGeneratorItem;
         type IntoIter = PositionGeneratorIterator<PositionGenerator<Turtle>>;
-    
+
         fn into_iter(self) -> Self::IntoIter {
             PositionGeneratorIterator::new(self)
         }
@@ -311,7 +375,7 @@ mod generator {
     impl<'a> IntoIterator for &'a PositionGenerator<Turtle> {
         type Item = PositionGeneratorItem;
         type IntoIter = PositionGeneratorRefIterator<'a, PositionGenerator<Turtle>>;
-    
+
         fn into_iter(self) -> Self::IntoIter {
             PositionGeneratorRefIterator::new(self)
         }
