@@ -64,9 +64,9 @@ fn on_update(
     mut timer: ResMut<TimerRes>,
     mut next_state: ResMut<NextState<Startup>>,
 ) {
-    // timer.inner.tick(time.delta());
+    timer.inner.tick(time.delta());
 
-    // if timer.inner.just_finished() {
+    if timer.inner.just_finished() {
         next_state.set(Startup::MainMenu);
-    // }
+    }
 }
