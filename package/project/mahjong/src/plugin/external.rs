@@ -8,6 +8,6 @@ impl bevy::prelude::Plugin for Plugin {
         &self,
         app: &mut App,
     ) {
-        // app.add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()));
+        app.add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()));
     }
 }

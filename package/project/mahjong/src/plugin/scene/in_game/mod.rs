@@ -106,7 +106,7 @@ mod on_enter {
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
 
-        // Determine base parameters ("logic" parameters)
+        // Determine size and position(s) for tiles
         let rows = PositionGenerator::<Turtle>::ROWS as f32;
         let cols = PositionGenerator::<Turtle>::COLUMNS;
 
@@ -133,29 +133,29 @@ mod on_enter {
             .collect();
         tile_pairs.shuffle(&mut rng);
 
-        // Determine visual parameters. Mostly based on asset dimensions and such
 
-        // Actual spawning
+        // Offsets
+        let start_x: f32 = (projection.area.width() / 2.0) - (tile_width * PositionGenerator::<Turtle>::COLUMNS as f32);
+        let start_y: f32 = 0.0;
+        let start_z: f32 = 0.0;
+
+        // Spawn loop
         let tile_components = (DespawnOnExit(InGame::Root), Pickable::default());
-
         for ((index, tile_pair), position_pair) in tile_pairs.iter().enumerate().zip(
             tile_positions
                 .windows(PositionGenerator::<Turtle>::TILE_PAIR_SIZE)
                 .step_by(PositionGenerator::<Turtle>::TILE_PAIR_SIZE),
         ) {
             for i in 0..PositionGenerator::<Turtle>::TILE_PAIR_SIZE {
-            //     let x_index = logic_position_pair[i].1.x / tile_width;
-            //     let y_index = logic_position_pair[i].1.y / tile_height;
-            //     let z_index = logic_position_pair[i].1.z;
             commands.spawn((
                 tile_components.clone(),
                 tile_factory.get_tile(tile::Variant::Alliance(*tile_pair)),
                 tile::ID(*tile_pair),
                 Transform {
                     translation: Vec3 {
-                        x: position_pair[i].1.x,
-                        y: position_pair[i].1.y,
-                        z: position_pair[i].1.z,
+                        x: start_x + position_pair[i].1.x,
+                        y: start_y + position_pair[i].1.y,
+                        z: start_z + position_pair[i].1.z,
                     },
                     ..default()
                 }
