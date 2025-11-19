@@ -108,7 +108,7 @@ mod on_enter {
 
         // Determine size and position(s) for tiles
         let rows = PositionGenerator::<Turtle>::ROWS as f32;
-        let cols = PositionGenerator::<Turtle>::COLUMNS;
+        let cols = PositionGenerator::<Turtle>::COLUMNS as f32;
 
         let tile_height = projection.area.height() as f32 / rows;
         let tile_width = tile_height * 0.7;
@@ -122,22 +122,16 @@ mod on_enter {
         let mut rng = rand::rng();
 
         let mut tile_positions: Vec<Vec3> =
-            PositionGenerator::<Turtle>::new(Vec2::new(tile_height, tile_width))
+            PositionGenerator::<Turtle>::new(Vec2::new(tile_width, tile_height), projection.area)
                 .into_iter()
                 .collect();
-        tile_positions.shuffle(&mut rng);
+        // tile_positions.shuffle(&mut rng);
         let tile_positions: Vec<(usize, Vec3)> = tile_positions.into_iter().enumerate().collect();
 
         let mut tile_pairs: Vec<usize> = (0..PositionGenerator::<Turtle>::TILES
             / PositionGenerator::<Turtle>::TILE_PAIR_SIZE)
             .collect();
         tile_pairs.shuffle(&mut rng);
-
-
-        // Offsets
-        let start_x: f32 = (projection.area.width() / 2.0) - (tile_width * PositionGenerator::<Turtle>::COLUMNS as f32);
-        let start_y: f32 = 0.0;
-        let start_z: f32 = 0.0;
 
         // Spawn loop
         let tile_components = (DespawnOnExit(InGame::Root), Pickable::default());
@@ -147,52 +141,52 @@ mod on_enter {
                 .step_by(PositionGenerator::<Turtle>::TILE_PAIR_SIZE),
         ) {
             for i in 0..PositionGenerator::<Turtle>::TILE_PAIR_SIZE {
-            commands.spawn((
-                tile_components.clone(),
-                tile_factory.get_tile(tile::Variant::Alliance(*tile_pair)),
-                tile::ID(*tile_pair),
-                Transform {
-                    translation: Vec3 {
-                        x: start_x + position_pair[i].1.x,
-                        y: start_y + position_pair[i].1.y,
-                        z: start_z + position_pair[i].1.z,
+                commands.spawn((
+                    tile_components.clone(),
+                    tile_factory.get_tile(tile::Variant::Alliance(*tile_pair)),
+                    tile::ID(*tile_pair),
+                    Transform {
+                        translation: Vec3 {
+                            x: position_pair[i].1.x,
+                            y: position_pair[i].1.y,
+                            z: position_pair[i].1.z,
+                        },
+                        ..default()
                     },
-                    ..default()
-                }
-            ));
+                ));
 
-            //     commands
-            //         .spawn((
-            //             tile_components.clone(),
-            //             tile_factory.get_tile(TileVariant::Alliance(*tile_pair)),
-            //             ID(*tile_pair),
-            //             Transform {
-            //                 translation: Vec3 {
-            //                     x: start_x + logic_position_pair[i].1.x - (x_index * x_offset)
-            //                         + (z_index * x_offset * 2.0),
-            //                     y: start_y - logic_position_pair[i].1.y
-            //                         + (y_index * y_offset)
-            //                         + (z_index * y_offset * 1.0),
-            //                     z: start_z + logic_position_pair[i].1.z * 10.0 - x_index + y_index,
-            //                 },
-            //                 ..default()
-            //             },
-            //             Position {
-            //                 pos: Vec3::new(
-            //                     logic_position_pair[i].1.x,
-            //                     logic_position_pair[i].1.y,
-            //                     logic_position_pair[i].1.z,
-            //                 ),
-            //             },
-            //         ))
-            //         .observe(on_click);
+                //     commands
+                //         .spawn((
+                //             tile_components.clone(),
+                //             tile_factory.get_tile(TileVariant::Alliance(*tile_pair)),
+                //             ID(*tile_pair),
+                //             Transform {
+                //                 translation: Vec3 {
+                //                     x: start_x + logic_position_pair[i].1.x - (x_index * x_offset)
+                //                         + (z_index * x_offset * 2.0),
+                //                     y: start_y - logic_position_pair[i].1.y
+                //                         + (y_index * y_offset)
+                //                         + (z_index * y_offset * 1.0),
+                //                     z: start_z + logic_position_pair[i].1.z * 10.0 - x_index + y_index,
+                //                 },
+                //                 ..default()
+                //             },
+                //             Position {
+                //                 pos: Vec3::new(
+                //                     logic_position_pair[i].1.x,
+                //                     logic_position_pair[i].1.y,
+                //                     logic_position_pair[i].1.z,
+                //                 ),
+                //             },
+                //         ))
+                //         .observe(on_click);
             }
         }
     }
 }
 
 mod generator {
-    use bevy::prelude::{Vec2, Vec3};
+    use bevy::prelude::*;
     use std::marker::PhantomData;
 
     pub struct Turtle;
@@ -206,13 +200,15 @@ mod generator {
 
     pub struct PositionGenerator<T> {
         tile_size: Vec2,
+        projection_area: Rect,
         _variant: PhantomData<T>,
     }
 
     impl<T> PositionGenerator<T> {
-        pub fn new(tile_size: Vec2) -> Self {
+        pub fn new(tile_size: Vec2, projection_area: Rect) -> Self {
             Self {
                 tile_size,
+                projection_area,
                 _variant: PhantomData::<T>,
             }
         }
@@ -311,7 +307,20 @@ mod generator {
                 _ => unreachable!(),
             };
 
-            Some(Vec3::new(column as f32, row as f32, layer as f32) * self.tile_size.extend(1.0))
+
+            let local_position = Vec3::new(column as f32, row as f32, layer as f32) * self.tile_size.extend(1.0);
+            info!("{:?}", local_position.x);
+            let offsets = Vec3::new(
+                0.5,
+                0.0,
+                0.0,
+            ) * self.tile_size.extend(1.0);
+            let global_position = Vec3::new(
+                local_position.x - self.projection_area.width() / 2.0,
+                local_position.y,
+                local_position.z,
+            );
+            Some(global_position + offsets)
         }
     }
 
