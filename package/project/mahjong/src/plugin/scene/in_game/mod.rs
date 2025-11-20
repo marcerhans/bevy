@@ -125,63 +125,44 @@ mod on_enter {
             PositionGenerator::<Turtle>::new(Vec2::new(tile_width, tile_height), projection.area)
                 .into_iter()
                 .collect();
-        // tile_positions.shuffle(&mut rng);
-        let tile_positions: Vec<(usize, Vec3)> = tile_positions.into_iter().enumerate().collect();
+        tile_positions.shuffle(&mut rng);
 
-        let mut tile_pairs: Vec<usize> = (0..PositionGenerator::<Turtle>::TILES
-            / PositionGenerator::<Turtle>::TILE_PAIR_SIZE)
+        let mut tile_variants: Vec<usize> = (0..PositionGenerator::<Turtle>::TILES
+            / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE)
             .collect();
-        tile_pairs.shuffle(&mut rng);
+        // tile_pairs.shuffle(&mut rng);
 
         // Spawn loop
         let tile_components = (DespawnOnExit(InGame::Root), Pickable::default());
-        for ((index, tile_pair), position_pair) in tile_pairs.iter().enumerate().zip(
-            tile_positions
-                .windows(PositionGenerator::<Turtle>::TILE_PAIR_SIZE)
-                .step_by(PositionGenerator::<Turtle>::TILE_PAIR_SIZE),
-        ) {
-            for i in 0..PositionGenerator::<Turtle>::TILE_PAIR_SIZE {
-                commands.spawn((
-                    tile_components.clone(),
-                    tile_factory.get_tile(tile::Variant::Alliance(*tile_pair)),
-                    tile::ID(*tile_pair),
-                    Transform {
-                        translation: Vec3 {
-                            x: position_pair[i].1.x,
-                            y: position_pair[i].1.y,
-                            z: position_pair[i].1.z,
-                        },
-                        ..default()
-                    },
-                ));
+        let window_and_step = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE;
 
-                //     commands
-                //         .spawn((
-                //             tile_components.clone(),
-                //             tile_factory.get_tile(TileVariant::Alliance(*tile_pair)),
-                //             ID(*tile_pair),
-                //             Transform {
-                //                 translation: Vec3 {
-                //                     x: start_x + logic_position_pair[i].1.x - (x_index * x_offset)
-                //                         + (z_index * x_offset * 2.0),
-                //                     y: start_y - logic_position_pair[i].1.y
-                //                         + (y_index * y_offset)
-                //                         + (z_index * y_offset * 1.0),
-                //                     z: start_z + logic_position_pair[i].1.z * 10.0 - x_index + y_index,
-                //                 },
-                //                 ..default()
-                //             },
-                //             Position {
-                //                 pos: Vec3::new(
-                //                     logic_position_pair[i].1.x,
-                //                     logic_position_pair[i].1.y,
-                //                     logic_position_pair[i].1.z,
-                //                 ),
-                //             },
-                //         ))
-                //         .observe(on_click);
-            }
-        }
+        for (id, (tile_position, tile_pair_variant)) in tile_positions
+            .windows(window_and_step)
+            .step_by(window_and_step)
+            .zip(tile_variants)
+            .enumerate()
+        {}
+        // for ((index, tile_pair), position_pair) in tile_pairs.iter().enumerate().zip(
+        //     tile_positions
+        //         .windows(PositionGenerator::<Turtle>::TILE_PAIR_SIZE)
+        //         .step_by(PositionGenerator::<Turtle>::TILE_PAIR_SIZE),
+        // ) {
+        //     for i in 0..PositionGenerator::<Turtle>::TILE_PAIR_SIZE {
+        // commands.spawn((
+        //     tile_components.clone(),
+        //     tile_factory.get_tile(tile::Variant::Alliance(*tile_pair)),
+        //     tile::ID(*tile_pair),
+        //     Transform {
+        //         translation: Vec3 {
+        //             x: position_pair[i].1.x,
+        //             y: position_pair[i].1.y,
+        //             z: position_pair[i].1.z,
+        //         },
+        //         ..default()
+        //     },
+        // ));
+        //     }
+        // }
     }
 }
 
@@ -205,7 +186,10 @@ mod generator {
     }
 
     impl<T> PositionGenerator<T> {
-        pub fn new(tile_size: Vec2, projection_area: Rect) -> Self {
+        pub fn new(
+            tile_size: Vec2,
+            projection_area: Rect,
+        ) -> Self {
             Self {
                 tile_size,
                 projection_area,
@@ -216,7 +200,7 @@ mod generator {
 
     impl PositionGenerator<Turtle> {
         pub const TILES: usize = 144;
-        pub const TILE_PAIR_SIZE: usize = 4;
+        pub const TILE_VARIANT_SIZE: usize = 4;
         pub const ROWS: usize = 8;
         pub const COLUMNS: usize = 15;
     }
@@ -307,14 +291,9 @@ mod generator {
                 _ => unreachable!(),
             };
 
-
-            let local_position = Vec3::new(column as f32, row as f32, layer as f32) * self.tile_size.extend(1.0);
-            info!("{:?}", local_position.x);
-            let offsets = Vec3::new(
-                0.5,
-                0.0,
-                0.0,
-            ) * self.tile_size.extend(1.0);
+            let local_position =
+                Vec3::new(column as f32, row as f32, layer as f32) * self.tile_size.extend(1.0);
+            let offsets = Vec3::new(0.5, 0.0, 0.0) * self.tile_size.extend(1.0);
             let global_position = Vec3::new(
                 local_position.x - self.projection_area.width() / 2.0,
                 local_position.y,
