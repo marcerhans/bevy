@@ -138,25 +138,29 @@ mod on_enter {
 
         for (index, tile_position) in tile_positions.windows(tvs).step_by(tvs).enumerate() {
             for variant_index in 0..tvs {
-                commands.spawn((
-                    tile_components.clone(),
-                    tile_factory.get_tile(tile::Variant::Horde(index / tvs)),
-                    tile::Position {
-                        val: Vec3 {
-                            x: tile_position[variant_index].x,
-                            y: tile_position[variant_index].y,
-                            z: tile_position[variant_index].z,
+                commands
+                    .spawn((
+                        tile_components.clone(),
+                        tile_factory.get_tile(tile::Variant::Horde(index / tvs)),
+                        tile::Position {
+                            val: Vec3 {
+                                x: tile_position[variant_index].x,
+                                y: tile_position[variant_index].y,
+                                z: tile_position[variant_index].z,
+                            },
                         },
-                    },
-                    Transform {
-                        translation: Vec3 {
-                            x: tile_position[variant_index].x,
-                            y: tile_position[variant_index].y,
-                            z: tile_position[variant_index].z,
+                        Transform {
+                            translation: Vec3 {
+                                x: tile_position[variant_index].x,
+                                y: tile_position[variant_index].y,
+                                z: tile_position[variant_index].z * 100.0 + index as f32,
+                            },
+                            ..default()
                         },
-                        ..default()
-                    },
-                ));
+                    ))
+                    .observe(|mut event: On<Pointer<Click>>| {
+                        dbg!(event);
+                    });
             }
         }
     }
@@ -205,7 +209,8 @@ mod generator {
             local_position: &Vec3,
         ) -> Vec3 {
             Vec3::new(
-                local_position.x - (Self::COLUMNS as f32 * self.tile_size.x) / 2.0 + 0.5 * self.tile_size.x,
+                local_position.x - (Self::COLUMNS as f32 * self.tile_size.x) / 2.0
+                    + 0.5 * self.tile_size.x,
                 local_position.y - self.projection_area.height() / 2.0,
                 local_position.z,
             )
@@ -282,27 +287,21 @@ mod generator {
                                 let column = -1.0;
                                 let local_position = Vec3::new(column, row, layer as f32)
                                     * self.tile_size.extend(1.0);
-                                return Some(
-                                    self.local2global(&local_position) + offsets,
-                                );
+                                return Some(self.local2global(&local_position) + offsets);
                             },
                             1 => {
                                 let row = 3.5;
                                 let column = 12.0;
                                 let local_position = Vec3::new(column, row, layer as f32)
                                     * self.tile_size.extend(1.0);
-                                return Some(
-                                    self.local2global(&local_position) + offsets,
-                                );
+                                return Some(self.local2global(&local_position) + offsets);
                             },
                             2 => {
                                 let row = 3.5;
                                 let column = 13.0;
                                 let local_position = Vec3::new(column, row, layer as f32)
                                     * self.tile_size.extend(1.0);
-                                return Some(
-                                    self.local2global(&local_position) + offsets,
-                                );
+                                return Some(self.local2global(&local_position) + offsets);
                             },
                             _ => unreachable!(),
                         },
