@@ -199,6 +199,17 @@ mod generator {
         pub const TILE_VARIANT_SIZE: usize = 4;
         pub const ROWS: usize = 8;
         pub const COLUMNS: usize = 15;
+
+        fn local2global(
+            &self,
+            local_position: &Vec3,
+        ) -> Vec3 {
+            Vec3::new(
+                local_position.x - (Self::COLUMNS as f32 * self.tile_size.x) / 2.0 + 0.5 * self.tile_size.x,
+                local_position.y - self.projection_area.height() / 2.0,
+                local_position.z,
+            )
+        }
     }
 
     impl PositionGeneratorTrait for PositionGenerator<Turtle> {
@@ -206,22 +217,11 @@ mod generator {
             &self,
             current: usize,
         ) -> Option<Vec3> {
-            fn local2global(
-                local_position: &Vec3,
-                projection_area: Rect,
-            ) -> Vec3 {
-                Vec3::new(
-                    local_position.x - projection_area.width() / 2.0,
-                    local_position.y - projection_area.height() / 2.0,
-                    local_position.z,
-                )
-            }
-
             if current >= Self::TILES {
                 return None;
             }
 
-            let offsets = Vec3::new(0.5, 0.5, 0.0) * self.tile_size.extend(1.0);
+            let offsets = Vec3::new(1.5, 0.5, 0.0) * self.tile_size.extend(1.0);
 
             let layer;
             let row;
@@ -259,7 +259,7 @@ mod generator {
                     let column = 5.5;
                     let layer = 4.0;
                     let local_position = Vec3::new(column, row, layer) * self.tile_size.extend(1.0);
-                    return Some(local2global(&local_position, self.projection_area) + offsets);
+                    return Some(self.local2global(&local_position) + offsets);
                 },
                 _ => return None,
             }
@@ -283,7 +283,7 @@ mod generator {
                                 let local_position = Vec3::new(column, row, layer as f32)
                                     * self.tile_size.extend(1.0);
                                 return Some(
-                                    local2global(&local_position, self.projection_area) + offsets,
+                                    self.local2global(&local_position) + offsets,
                                 );
                             },
                             1 => {
@@ -292,7 +292,7 @@ mod generator {
                                 let local_position = Vec3::new(column, row, layer as f32)
                                     * self.tile_size.extend(1.0);
                                 return Some(
-                                    local2global(&local_position, self.projection_area) + offsets,
+                                    self.local2global(&local_position) + offsets,
                                 );
                             },
                             2 => {
@@ -301,7 +301,7 @@ mod generator {
                                 let local_position = Vec3::new(column, row, layer as f32)
                                     * self.tile_size.extend(1.0);
                                 return Some(
-                                    local2global(&local_position, self.projection_area) + offsets,
+                                    self.local2global(&local_position) + offsets,
                                 );
                             },
                             _ => unreachable!(),
@@ -317,7 +317,7 @@ mod generator {
 
             let local_position =
                 Vec3::new(column as f32, row as f32, layer as f32) * self.tile_size.extend(1.0);
-            Some(local2global(&local_position, self.projection_area) + offsets)
+            Some(self.local2global(&local_position) + offsets)
         }
     }
 
