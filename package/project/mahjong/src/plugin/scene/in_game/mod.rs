@@ -106,10 +106,12 @@ mod on_enter {
             panic!();
         };
 
-        // Load assets
+        // Load assets and set texture constants
         let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile_897x1237.png");
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
+        const TEXTURE_BORDER_PERCENTAGE_Y: f32 = 138.0 / 1237.0; // (Just "ONE" border)
+        const TEXTURE_BORDER_PERCENTAGE_X: f32 = 144.0 / 897.0; // (Juse "ONE" border)
 
         // Determine size and position(s) for tiles
         let rows = PositionGenerator::<Turtle>::ROWS as f32;
@@ -151,8 +153,8 @@ mod on_enter {
                         },
                         Transform {
                             translation: Vec3 {
-                                x: tile_position[variant_index].x,
-                                y: tile_position[variant_index].y,
+                                x: tile_position[variant_index].x + (tile_position[variant_index].z * TEXTURE_BORDER_PERCENTAGE_X * tile_width),
+                                y: tile_position[variant_index].y + (tile_position[variant_index].z * TEXTURE_BORDER_PERCENTAGE_Y * tile_width),
                                 z: tile_position[variant_index].z * 100.0 + index as f32,
                             },
                             ..default()
