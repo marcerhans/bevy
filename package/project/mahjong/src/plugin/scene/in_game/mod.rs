@@ -112,36 +112,46 @@ mod on_enter {
 
         let tile_height = projection.area.height() as f32 / rows;
         let tile_width = tile_height * 0.7;
+        let tile_size = Vec2::new(tile_width, tile_height);
+        let tile_size = tile_size / 3.0;
         let tile_factory = tile::Factory::new(
             texture_tile,
             texture_alliance,
             texture_horde,
-            Some(Vec2::new(tile_width, tile_height)),
+            Some(tile_size),
         );
 
         let mut rng = rand::rng();
-
         let mut tile_positions: Vec<Vec3> =
-            PositionGenerator::<Turtle>::new(Vec2::new(tile_width, tile_height), projection.area)
+            PositionGenerator::<Turtle>::new(tile_size, projection.area)
                 .into_iter()
                 .collect();
         tile_positions.shuffle(&mut rng);
 
-        let mut tile_variants: Vec<usize> = (0..PositionGenerator::<Turtle>::TILES
-            / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE)
-            .collect();
-        // tile_pairs.shuffle(&mut rng);
-
         // Spawn loop
         let tile_components = (DespawnOnExit(InGame::Root), Pickable::default());
-        let window_and_step = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE;
+        let tvs = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE;
 
-        for (id, (tile_position, tile_pair_variant)) in tile_positions
-            .windows(window_and_step)
-            .step_by(window_and_step)
-            .zip(tile_variants)
+        for (index, tile_position) in tile_positions
+            .windows(tvs)
+            .step_by(tvs)
             .enumerate()
-        {}
+        {
+            for variant_index in 0..tvs {
+                commands.spawn((
+                    tile_components.clone(),
+                    tile_factory.get_tile(tile::Variant::Horde(index / tvs)),
+                    Transform {
+                        translation: Vec3 {
+                            x: tile_position[variant_index].x,
+                            y: tile_position[variant_index].y,
+                            z: tile_position[variant_index].z,
+                        },
+                        ..default()
+                    },
+                ));
+            }
+        }
         // for ((index, tile_pair), position_pair) in tile_pairs.iter().enumerate().zip(
         //     tile_positions
         //         .windows(PositionGenerator::<Turtle>::TILE_PAIR_SIZE)
