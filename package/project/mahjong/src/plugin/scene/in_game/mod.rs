@@ -221,7 +221,7 @@ mod generator {
                 return None;
             }
 
-            let offsets = Vec3::new(0.5, 0.0, 0.0) * self.tile_size.extend(1.0);
+            let offsets = Vec3::new(0.5, 0.5, 0.0) * self.tile_size.extend(1.0);
 
             let layer;
             let row;
