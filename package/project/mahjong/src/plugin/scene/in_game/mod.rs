@@ -33,6 +33,11 @@ mod tile {
     #[derive(Component, Clone)]
     pub struct ID(pub usize);
 
+    #[derive(Component, Clone)]
+    pub struct Position {
+        pub val: Vec3,
+    }
+
     pub struct Factory {
         texture_tile: Handle<Image>,
         texture_alliance: Handle<Image>,
@@ -113,7 +118,6 @@ mod on_enter {
         let tile_height = projection.area.height() as f32 / rows;
         let tile_width = tile_height * 0.7;
         let tile_size = Vec2::new(tile_width, tile_height);
-        let tile_size = tile_size / 3.0;
         let tile_factory = tile::Factory::new(
             texture_tile,
             texture_alliance,
@@ -137,6 +141,13 @@ mod on_enter {
                 commands.spawn((
                     tile_components.clone(),
                     tile_factory.get_tile(tile::Variant::Horde(index / tvs)),
+                    tile::Position {
+                        val: Vec3 {
+                            x: tile_position[variant_index].x,
+                            y: tile_position[variant_index].y,
+                            z: tile_position[variant_index].z,
+                        },
+                    },
                     Transform {
                         translation: Vec3 {
                             x: tile_position[variant_index].x,
@@ -148,27 +159,6 @@ mod on_enter {
                 ));
             }
         }
-        // for ((index, tile_pair), position_pair) in tile_pairs.iter().enumerate().zip(
-        //     tile_positions
-        //         .windows(PositionGenerator::<Turtle>::TILE_PAIR_SIZE)
-        //         .step_by(PositionGenerator::<Turtle>::TILE_PAIR_SIZE),
-        // ) {
-        //     for i in 0..PositionGenerator::<Turtle>::TILE_PAIR_SIZE {
-        // commands.spawn((
-        //     tile_components.clone(),
-        //     tile_factory.get_tile(tile::Variant::Alliance(*tile_pair)),
-        //     tile::ID(*tile_pair),
-        //     Transform {
-        //         translation: Vec3 {
-        //             x: position_pair[i].1.x,
-        //             y: position_pair[i].1.y,
-        //             z: position_pair[i].1.z,
-        //         },
-        //         ..default()
-        //     },
-        // ));
-        //     }
-        // }
     }
 }
 
@@ -216,6 +206,17 @@ mod generator {
             &self,
             current: usize,
         ) -> Option<Vec3> {
+            fn local2global(
+                local_position: &Vec3,
+                projection_area: Rect,
+            ) -> Vec3 {
+                Vec3::new(
+                    local_position.x - projection_area.width() / 2.0,
+                    local_position.y - projection_area.height() / 2.0,
+                    local_position.z,
+                )
+            }
+
             if current >= Self::TILES {
                 return None;
             }
@@ -258,9 +259,7 @@ mod generator {
                     let column = 5.5;
                     let layer = 4.0;
                     let local_position = Vec3::new(column, row, layer) * self.tile_size.extend(1.0);
-                    let global_position =
-                        Vec3::new(local_position.x, local_position.y, local_position.z);
-                    return Some(global_position + offsets);
+                    return Some(local2global(&local_position, self.projection_area) + offsets);
                 },
                 _ => return None,
             }
@@ -283,27 +282,27 @@ mod generator {
                                 let column = -1.0;
                                 let local_position = Vec3::new(column, row, layer as f32)
                                     * self.tile_size.extend(1.0);
-                                let global_position =
-                                    Vec3::new(local_position.x, local_position.y, local_position.z);
-                                return Some(global_position + offsets);
+                                return Some(
+                                    local2global(&local_position, self.projection_area) + offsets,
+                                );
                             },
                             1 => {
                                 let row = 3.5;
                                 let column = 12.0;
                                 let local_position = Vec3::new(column, row, layer as f32)
                                     * self.tile_size.extend(1.0);
-                                let global_position =
-                                    Vec3::new(local_position.x, local_position.y, local_position.z);
-                                return Some(global_position + offsets);
+                                return Some(
+                                    local2global(&local_position, self.projection_area) + offsets,
+                                );
                             },
                             2 => {
                                 let row = 3.5;
                                 let column = 13.0;
                                 let local_position = Vec3::new(column, row, layer as f32)
                                     * self.tile_size.extend(1.0);
-                                let global_position =
-                                    Vec3::new(local_position.x, local_position.y, local_position.z);
-                                return Some(global_position + offsets);
+                                return Some(
+                                    local2global(&local_position, self.projection_area) + offsets,
+                                );
                             },
                             _ => unreachable!(),
                         },
@@ -318,8 +317,7 @@ mod generator {
 
             let local_position =
                 Vec3::new(column as f32, row as f32, layer as f32) * self.tile_size.extend(1.0);
-            let global_position = Vec3::new(local_position.x, local_position.y, local_position.z);
-            Some(global_position + offsets)
+            Some(local2global(&local_position, self.projection_area) + offsets)
         }
     }
 
