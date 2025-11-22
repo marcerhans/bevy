@@ -114,10 +114,8 @@ mod on_enter {
         const TEXTURE_BORDER_PERCENTAGE_X: f32 = 144.0 / 897.0; // (Juse "ONE" border)
 
         // Determine size and position(s) for tiles
-        let rows = PositionGenerator::<Turtle>::ROWS as f32;
-        let cols = PositionGenerator::<Turtle>::COLUMNS as f32;
-
-        let tile_height = projection.area.height() as f32 / rows;
+        let tile_height =
+            projection.area.height() as f32 / PositionGenerator::<Turtle>::ROWS as f32;
         let tile_width = tile_height * 0.7;
         let tile_size = Vec2::new(tile_width, tile_height);
         let tile_factory = tile::Factory::new(
@@ -153,8 +151,14 @@ mod on_enter {
                         },
                         Transform {
                             translation: Vec3 {
-                                x: tile_position[variant_index].x + (tile_position[variant_index].z * TEXTURE_BORDER_PERCENTAGE_X * tile_width),
-                                y: tile_position[variant_index].y + (tile_position[variant_index].z * TEXTURE_BORDER_PERCENTAGE_Y * tile_width),
+                                x: tile_position[variant_index].x
+                                    + (tile_position[variant_index].z
+                                        * TEXTURE_BORDER_PERCENTAGE_X
+                                        * tile_width),
+                                y: tile_position[variant_index].y
+                                    + (tile_position[variant_index].z
+                                        * TEXTURE_BORDER_PERCENTAGE_Y
+                                        * tile_width),
                                 z: tile_position[variant_index].z * 100.0 + index as f32,
                             },
                             ..default()
