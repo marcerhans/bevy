@@ -132,11 +132,7 @@ mod on_enter {
         let tile_components = (DespawnOnExit(InGame::Root), Pickable::default());
         let tvs = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE;
 
-        for (index, tile_position) in tile_positions
-            .windows(tvs)
-            .step_by(tvs)
-            .enumerate()
-        {
+        for (index, tile_position) in tile_positions.windows(tvs).step_by(tvs).enumerate() {
             for variant_index in 0..tvs {
                 commands.spawn((
                     tile_components.clone(),
@@ -224,6 +220,8 @@ mod generator {
                 return None;
             }
 
+            let offsets = Vec3::new(0.5, 0.0, 0.0) * self.tile_size.extend(1.0);
+
             let layer;
             let row;
             match current {
@@ -256,8 +254,13 @@ mod generator {
                 },
                 143 => {
                     // Special case. Just return value immediately.
-                    layer = 4;
-                    return Some(Vec3::new(5.5, 3.5, layer as f32) * self.tile_size.extend(1.0));
+                    let row = 3.5;
+                    let column = 5.5;
+                    let layer = 4.0;
+                    let local_position = Vec3::new(column, row, layer) * self.tile_size.extend(1.0);
+                    let global_position =
+                        Vec3::new(local_position.x, local_position.y, local_position.z);
+                    return Some(global_position + offsets);
                 },
                 _ => return None,
             }
@@ -276,19 +279,31 @@ mod generator {
                         8 => match current - 84 {
                             // Last 3 are special cases. Do not follow a pattern.
                             0 => {
-                                return Some(
-                                    Vec3::new(-1.0, 3.5, layer as f32) * self.tile_size.extend(1.0),
-                                );
+                                let row = 3.5;
+                                let column = -1.0;
+                                let local_position = Vec3::new(column, row, layer as f32)
+                                    * self.tile_size.extend(1.0);
+                                let global_position =
+                                    Vec3::new(local_position.x, local_position.y, local_position.z);
+                                return Some(global_position + offsets);
                             },
                             1 => {
-                                return Some(
-                                    Vec3::new(12.0, 3.5, layer as f32) * self.tile_size.extend(1.0),
-                                );
+                                let row = 3.5;
+                                let column = 12.0;
+                                let local_position = Vec3::new(column, row, layer as f32)
+                                    * self.tile_size.extend(1.0);
+                                let global_position =
+                                    Vec3::new(local_position.x, local_position.y, local_position.z);
+                                return Some(global_position + offsets);
                             },
                             2 => {
-                                return Some(
-                                    Vec3::new(13.0, 3.5, layer as f32) * self.tile_size.extend(1.0),
-                                );
+                                let row = 3.5;
+                                let column = 13.0;
+                                let local_position = Vec3::new(column, row, layer as f32)
+                                    * self.tile_size.extend(1.0);
+                                let global_position =
+                                    Vec3::new(local_position.x, local_position.y, local_position.z);
+                                return Some(global_position + offsets);
                             },
                             _ => unreachable!(),
                         },
@@ -303,12 +318,7 @@ mod generator {
 
             let local_position =
                 Vec3::new(column as f32, row as f32, layer as f32) * self.tile_size.extend(1.0);
-            let offsets = Vec3::new(0.5, 0.0, 0.0) * self.tile_size.extend(1.0);
-            let global_position = Vec3::new(
-                local_position.x - self.projection_area.width() / 2.0,
-                local_position.y,
-                local_position.z,
-            );
+            let global_position = Vec3::new(local_position.x, local_position.y, local_position.z);
             Some(global_position + offsets)
         }
     }
