@@ -161,7 +161,8 @@ mod on_enter {
         let tile_center_offset = Vec2::new(
             TEXTURE_LEFT_BORDER_PERCENTAGE2_X,
             TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y,
-        ) * tile_size / 2.0;
+        ) * tile_size
+            / 2.0;
         let tile_thickness_offset = Vec2::new(
             TEXTURE_LEFT_BORDER_PERCENTAGE2_X,
             TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y,
@@ -194,17 +195,7 @@ mod on_enter {
                 commands
                     .spawn((
                         tile_components.clone(),
-                        tile_factory.get_tile(
-                            tile::Variant::Horde(index / tvs),
-                            None,
-                            // Some(Color::hsl(
-                            //     0.0,
-                            //     0.0,
-                            //     0.8 + 0.4
-                            //         * (tile_position[variant_index].z
-                            //             / PositionGenerator::<Turtle>::LAYERS as f32),
-                            // )),
-                        ),
+                        tile_factory.get_tile(tile::Variant::Horde(index), None),
                         tile::Position {
                             val: Vec3 {
                                 x: tile_position[variant_index].x,
@@ -222,12 +213,14 @@ mod on_enter {
                                 y: tile_position[variant_index].y
                                     - (row_index * tile_thickness_offset.y)
                                     + (tile_position[variant_index].z * tile_thickness_offset.y),
-                                z: tile_position[variant_index].z * 100.0 - column_index - row_index as f32,
+                                z: tile_position[variant_index].z * 100.0
+                                    - column_index
+                                    - row_index as f32,
                             },
                             ..default()
                         },
                     ))
-                    .with_child(( // TODO: Figure out sensible shadows.
+                    .with_child((
                         Sprite {
                             custom_size: Some(tile_size.clone()),
                             color: Color::hsla(0.0, 0.0, 0.0, 0.8),
