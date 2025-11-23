@@ -43,6 +43,7 @@ mod tile {
         texture_alliance: Handle<Image>,
         texture_horde: Handle<Image>,
         custom_size: Option<Vec2>,
+        tile_center_offset: Option<Vec3>,
     }
 
     pub enum Variant {
@@ -56,12 +57,20 @@ mod tile {
             texture_alliance: Handle<Image>,
             texture_horde: Handle<Image>,
             custom_size: Option<Vec2>,
+            tile_center_offset: Option<Vec2>,
         ) -> Self {
+            let tile_center_offset = if let Some(tile_center_offset) = tile_center_offset {
+                Some(tile_center_offset.extend(0.0))
+            } else {
+                None
+            };
+
             Self {
                 texture_tile,
                 texture_alliance,
                 texture_horde,
                 custom_size,
+                tile_center_offset,
             }
         }
 
@@ -69,6 +78,23 @@ mod tile {
             &self,
             variant: Variant,
         ) -> impl Bundle {
+            let offset = Transform {
+                translation: Vec3 {
+                    x: if self.tile_center_offset.is_none() {
+                        0.0
+                    } else {
+                        self.tile_center_offset.unwrap().x
+                    },
+                    y: if self.tile_center_offset.is_none() {
+                        0.0
+                    } else {
+                        self.tile_center_offset.unwrap().y
+                    },
+                    ..default()
+                },
+                ..default()
+            };
+
             (
                 Marker,
                 Sprite {
@@ -79,12 +105,16 @@ mod tile {
                     Variant::Horde(icons) => (
                         Text2d::new(icons.to_string()),
                         TextColor::WHITE,
-                        TextFont::from_font_size(self.custom_size.unwrap().y / 5.0)
+                        TextFont::from_font_size(self.custom_size.unwrap().y / 5.0),
+                        TextBackgroundColor::BLACK,
+                        offset,
                     ),
                     Variant::Alliance(icons) => (
                         Text2d::new(icons.to_string()),
                         TextColor::WHITE,
-                        TextFont::from_font_size(self.custom_size.unwrap().y / 5.0)
+                        TextFont::from_font_size(self.custom_size.unwrap().y / 5.0),
+                        TextBackgroundColor::BLACK,
+                        offset,
                     ),
                 }],
             )
@@ -107,22 +137,28 @@ mod on_enter {
         };
 
         // Load assets and set texture constants
-        let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile_897x1237.png");
+        let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile2_700x1000.png");
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
-        const TEXTURE_BORDER_PERCENTAGE_Y: f32 = 138.0 / 1237.0; // (Just "ONE" border)
-        const TEXTURE_BORDER_PERCENTAGE_X: f32 = 144.0 / 897.0; // (Juse "ONE" border)
+        const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 180.0 / 1000.0; // (Just "ONE" border)
+        const TEXTURE_LEFT_BORDER_PERCENTAGE_X: f32 = 144.0 / 700.0; // (Juse "ONE" border)
 
         // Determine size and position(s) for tiles
         let tile_height =
             projection.area.height() as f32 / PositionGenerator::<Turtle>::ROWS as f32;
         let tile_width = tile_height * 0.7;
         let tile_size = Vec2::new(tile_width, tile_height);
+        let tile_center_offset = Vec2::new(
+            TEXTURE_LEFT_BORDER_PERCENTAGE_X,
+            TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y,
+        ) * tile_size;
         let tile_factory = tile::Factory::new(
             texture_tile,
             texture_alliance,
             texture_horde,
             Some(tile_size),
+            // Some(tile_center_offset),
+            None, // TODO: Offset kinda works? Is it just text that is making it odd?
         );
 
         let mut rng = rand::rng();
@@ -153,11 +189,11 @@ mod on_enter {
                             translation: Vec3 {
                                 x: tile_position[variant_index].x
                                     + (tile_position[variant_index].z
-                                        * TEXTURE_BORDER_PERCENTAGE_X
+                                        * TEXTURE_LEFT_BORDER_PERCENTAGE_X
                                         * tile_width),
                                 y: tile_position[variant_index].y
                                     + (tile_position[variant_index].z
-                                        * TEXTURE_BORDER_PERCENTAGE_Y
+                                        * TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y
                                         * tile_width),
                                 z: tile_position[variant_index].z * 100.0 + index as f32,
                             },
