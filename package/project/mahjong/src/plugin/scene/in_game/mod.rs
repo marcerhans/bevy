@@ -12,6 +12,7 @@ impl bevy::prelude::Plugin for Plugin {
         use on_enter::*;
 
         app.add_sub_state::<InGame>()
+            .insert_resource(PreviouslySelectedTile(None))
             .add_systems(OnEnter(InGame::Root), spawn_tiles);
     }
 }
@@ -24,14 +25,14 @@ enum InGame {
     Root,
 }
 
+#[derive(Resource)]
+struct PreviouslySelectedTile(pub Option<(Entity, tile::Variant)>);
+
 mod tile {
     use bevy::prelude::*;
 
     #[derive(Component, Clone)]
     pub struct Marker;
-
-    #[derive(Component, Clone)]
-    pub struct ID(pub usize);
 
     #[derive(Component, Clone)]
     pub struct Position {
@@ -46,6 +47,7 @@ mod tile {
         tile_center_offset: Option<Vec3>,
     }
 
+    #[derive(Component, Clone, PartialEq, PartialOrd, Ord, Eq, Debug)]
     pub enum Variant {
         Alliance(usize),
         Horde(usize),
@@ -109,18 +111,18 @@ mod tile {
                 },
                 children![match variant {
                     Variant::Horde(icons) => (
-                        // Text2d::new(icons.to_string()),
-                        // TextColor::WHITE,
-                        // TextFont::from_font_size(self.custom_size.unwrap().y / 5.0),
-                        // TextBackgroundColor::BLACK,
+                        Variant::Horde(icons),
+                        Text2d::new(icons.to_string()),
+                        TextColor::WHITE,
+                        TextFont::from_font_size(self.custom_size.unwrap().y / 5.0),
                         Sprite::from_color(Color::BLACK, Vec2::new(50.0, 50.0)),
                         offset,
                     ),
                     Variant::Alliance(icons) => (
-                        // Text2d::new(icons.to_string()),
-                        // TextColor::WHITE,
-                        // TextFont::from_font_size(self.custom_size.unwrap().y / 5.0),
-                        // TextBackgroundColor::BLACK,
+                        Variant::Alliance(icons),
+                        Text2d::new(icons.to_string()),
+                        TextColor::WHITE,
+                        TextFont::from_font_size(self.custom_size.unwrap().y / 5.0),
                         Sprite::from_color(Color::BLACK, Vec2::new(50.0, 50.0)),
                         offset,
                     ),
@@ -148,25 +150,23 @@ mod on_enter {
         let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile3_700x1000.png");
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
-        const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 260.0 / 1000.0; // (Just "ONE" border)
-        const TEXTURE_LEFT_BORDER_PERCENTAGE_X: f32 = 200.0 / 700.0; // (Juse "ONE" border)
-        const TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
-        const TEXTURE_LEFT_BORDER_PERCENTAGE2_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
+        const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
+        const TEXTURE_LEFT_BORDER_PERCENTAGE_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
 
         // Determine size and position(s) for tiles
         let tile_height =
             projection.area.height() as f32 / PositionGenerator::<Turtle>::ROWS as f32;
-        let tile_height = tile_height + TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y * tile_height; // NOTE:1: This is hacky, but allows for tile height to fill height of window.
+        let tile_height = tile_height + TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y * tile_height; // NOTE:1: This is hacky, but allows for tile height to fill height of window.
         let tile_width = tile_height * 0.7;
         let tile_size = Vec2::new(tile_width, tile_height);
         let tile_center_offset = Vec2::new(
-            TEXTURE_LEFT_BORDER_PERCENTAGE2_X,
-            TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y,
+            TEXTURE_LEFT_BORDER_PERCENTAGE_X,
+            TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y,
         ) * tile_size
             / 2.0;
         let tile_thickness_offset = Vec2::new(
-            TEXTURE_LEFT_BORDER_PERCENTAGE2_X,
-            TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y,
+            TEXTURE_LEFT_BORDER_PERCENTAGE_X,
+            TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y,
         ) * tile_size;
         let tile_factory = tile::Factory::new(
             texture_tile.clone(),
@@ -245,11 +245,55 @@ mod on_enter {
                             ..default()
                         },
                     ))
-                    .observe(|mut event: On<Pointer<Click>>| {
-                        dbg!(event);
-                    });
+                    .observe(on_click);
             }
         }
+    }
+}
+
+fn on_click(
+    click: On<Pointer<Click>>,
+    mut commands: Commands,
+    children: Query<&Children>,
+    variants: Query<&tile::Variant>,
+    mut prev_tile: ResMut<PreviouslySelectedTile>,
+) {
+    let Ok(children) = children.get(click.entity) else {
+        info!("Clicked entity is missing children");
+        return;
+    };
+
+    let mut variant = None;
+    for &child in children {
+        if let Ok(variant_) = variants.get(child) {
+            variant = Some(variant_);
+            break;
+        }
+    }
+    let variant = variant.unwrap();
+    // let id = match variant {
+    //     tile::Variant::Horde(id) | tile::Variant::Alliance(id) => id,
+    // };
+    // info!("{}", id);
+
+    let Some((prev_entity, prev_variant)) = &mut prev_tile.0 else {
+        prev_tile.0 = Some((click.entity, variant.clone()));
+        return;
+    };
+
+    info!(
+        "Prev: {:?} | Now: {:?}",
+        prev_variant.clone(),
+        variant.clone()
+    );
+
+    if *prev_entity != click.entity && *prev_variant == *variant {
+        info!("It's a match!");
+        commands.entity(*prev_entity).despawn();
+        commands.entity(click.entity).despawn();
+        prev_tile.0 = None;
+    } else {
+        prev_tile.0 = Some((click.entity, variant.clone()));
     }
 }
 
