@@ -256,6 +256,7 @@ fn on_click(
     mut commands: Commands,
     children: Query<&Children>,
     variants: Query<&tile::Variant>,
+    tile_query: Query<(&tile::Position, &Sprite)>,
     mut prev_tile: ResMut<PreviouslySelectedTile>,
 ) {
     let Ok(children) = children.get(click.entity) else {
@@ -289,12 +290,28 @@ fn on_click(
 
     if *prev_entity != click.entity && *prev_variant == *variant {
         info!("It's a match!");
-        commands.entity(*prev_entity).despawn();
-        commands.entity(click.entity).despawn();
-        prev_tile.0 = None;
+
+        if rule_check(prev_entity, prev_variant, &click.entity, variant, &tile_query) {
+            commands.entity(*prev_entity).despawn();
+            commands.entity(click.entity).despawn();
+            prev_tile.0 = None;
+        } else {
+            info!("Failed rule check!");
+            prev_tile.0 = Some((click.entity, variant.clone()));
+        }
     } else {
         prev_tile.0 = Some((click.entity, variant.clone()));
     }
+}
+
+fn rule_check(
+    prev_entity: &Entity,
+    prev_variant: &tile::Variant,
+    this_entity: &Entity,
+    this_variant: &tile::Variant,
+    tile_query: &Query<(&tile::Position, &Sprite)>,
+) -> bool {
+    false
 }
 
 mod generator {
