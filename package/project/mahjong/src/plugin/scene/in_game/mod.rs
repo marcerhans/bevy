@@ -165,7 +165,7 @@ mod on_enter {
             TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y,
         ) * tile_size;
         let tile_factory = tile::Factory::new(
-            texture_tile,
+            texture_tile.clone(),
             texture_alliance,
             texture_horde,
             Some(tile_size),
@@ -186,18 +186,23 @@ mod on_enter {
 
         for (index, tile_position) in tile_positions.windows(tvs).step_by(tvs).enumerate() {
             for variant_index in 0..tvs {
+                let column_index = tile_position[variant_index].x / tile_size.x;
+                let row_index = tile_position[variant_index].y / tile_size.y;
+                let layout_index = column_index * row_index;
+
                 commands
                     .spawn((
                         tile_components.clone(),
                         tile_factory.get_tile(
                             tile::Variant::Horde(index / tvs),
-                            Some(Color::hsl(
-                                0.0,
-                                0.0,
-                                0.6 + 0.4
-                                    * (tile_position[variant_index].z
-                                        / PositionGenerator::<Turtle>::LAYERS as f32),
-                            )),
+                            None,
+                            // Some(Color::hsl(
+                            //     0.0,
+                            //     0.0,
+                            //     0.8 + 0.4
+                            //         * (tile_position[variant_index].z
+                            //             / PositionGenerator::<Turtle>::LAYERS as f32),
+                            // )),
                         ),
                         tile::Position {
                             val: Vec3 {
@@ -207,12 +212,30 @@ mod on_enter {
                             },
                         },
                         Transform {
+                            // RealPosition(x,y) + Adjustments for "overlaps" + Adustments for layer offsets
                             translation: Vec3 {
                                 x: tile_position[variant_index].x
+                                    - (column_index * tile_thickness_offset.x)
                                     + (tile_position[variant_index].z * tile_thickness_offset.x),
                                 y: tile_position[variant_index].y
+                                    - (row_index * tile_thickness_offset.y)
                                     + (tile_position[variant_index].z * tile_thickness_offset.y),
-                                z: tile_position[variant_index].z * 100.0 + index as f32,
+                                z: tile_position[variant_index].z * 100.0 - column_index - row_index as f32,
+                            },
+                            ..default()
+                        },
+                    ))
+                    .with_child(( // TODO: Figure out sensible shadows.
+                        Sprite {
+                            custom_size: Some(tile_size.clone()),
+                            color: Color::hsla(0.0, 0.0, 0.0, 0.7),
+                            ..Sprite::from_image(texture_tile.clone())
+                        },
+                        Transform {
+                            translation: Vec3 {
+                                x: -tile_thickness_offset.x * 1.5,
+                                y: -tile_thickness_offset.y * 1.5,
+                                z: -1.0,
                             },
                             ..default()
                         },
