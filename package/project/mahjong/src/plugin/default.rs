@@ -1,5 +1,13 @@
+use std::time::Duration;
+
 use bevy::{
-    asset::AssetMetaCheck, camera::ScalingMode, log::LogPlugin, prelude::*, window::PresentMode,
+    asset::AssetMetaCheck,
+    camera::ScalingMode,
+    diagnostic::FrameTimeDiagnosticsPlugin,
+    log::LogPlugin,
+    prelude::*,
+    window::PresentMode,
+    winit::{UpdateMode, WinitSettings},
 };
 
 pub struct Plugin;
@@ -9,6 +17,21 @@ impl bevy::prelude::Plugin for Plugin {
         &self,
         app: &mut App,
     ) {
+        app.insert_resource(WinitSettings {
+            focused_mode: UpdateMode::Reactive {
+                wait: Duration::from_millis((1000.0 / 30.0) as u64),
+                react_to_device_events: true,
+                react_to_user_events: true,
+                react_to_window_events: true,
+            },
+            unfocused_mode: UpdateMode::Reactive {
+                wait: Duration::from_millis(1000),
+                react_to_device_events: false,
+                react_to_user_events: false,
+                react_to_window_events: true,
+            },
+        });
+
         app.add_plugins((
             bevy::DefaultPlugins
                 .set(LogPlugin {
@@ -36,6 +59,7 @@ impl bevy::prelude::Plugin for Plugin {
                     ..default()
                 }),
             MeshPickingPlugin,
+            FrameTimeDiagnosticsPlugin::default(),
         ));
 
         app.world_mut().spawn((
