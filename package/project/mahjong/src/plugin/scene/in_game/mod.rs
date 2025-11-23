@@ -77,6 +77,7 @@ mod tile {
         pub fn get_tile(
             &self,
             variant: Variant,
+            tint: Option<Color>,
         ) -> impl Bundle {
             let offset = Transform {
                 translation: Vec3 {
@@ -99,6 +100,11 @@ mod tile {
                 Marker,
                 Sprite {
                     custom_size: self.custom_size,
+                    color: if tint.is_none() {
+                        Color::default()
+                    } else {
+                        tint.unwrap()
+                    },
                     ..Sprite::from_image(self.texture_tile.clone())
                 },
                 children![match variant {
@@ -183,7 +189,16 @@ mod on_enter {
                 commands
                     .spawn((
                         tile_components.clone(),
-                        tile_factory.get_tile(tile::Variant::Horde(index / tvs)),
+                        tile_factory.get_tile(
+                            tile::Variant::Horde(index / tvs),
+                            Some(Color::hsl(
+                                0.0,
+                                0.0,
+                                0.6 + 0.4
+                                    * (tile_position[variant_index].z
+                                        / PositionGenerator::<Turtle>::LAYERS as f32),
+                            )),
+                        ),
                         tile::Position {
                             val: Vec3 {
                                 x: tile_position[variant_index].x,
@@ -247,6 +262,7 @@ mod generator {
         pub const TILE_VARIANT_SIZE: usize = 4;
         pub const ROWS: usize = 8;
         pub const COLUMNS: usize = 15;
+        pub const LAYERS: usize = 5;
 
         fn local2global(
             &self,
