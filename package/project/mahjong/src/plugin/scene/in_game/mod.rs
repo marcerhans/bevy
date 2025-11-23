@@ -256,7 +256,7 @@ fn on_click(
     mut commands: Commands,
     children: Query<&Children>,
     variants: Query<&tile::Variant>,
-    tile_query: Query<(&tile::Position, &Sprite)>,
+    mut tile_query: Query<(&mut tile::Position, &mut Sprite), With<tile::Marker>>,
     mut prev_tile: ResMut<PreviouslySelectedTile>,
 ) {
     let Ok(children) = children.get(click.entity) else {
@@ -277,6 +277,18 @@ fn on_click(
     // };
     // info!("{}", id);
 
+    // Update appearance of selected tile (and restore previous)
+    let mut e = tile_query.get_mut(click.entity).unwrap();
+    e.1.color = Color::hsl(0.0, 0.0, 1.5);
+
+    if let Some(prev_tile) = &mut prev_tile.0 {
+        if prev_tile.0 != click.entity {
+            // Restore previous tile
+            let mut e = tile_query.get_mut(prev_tile.0).unwrap();
+            e.1.color = Color::hsl(0.0, 0.0, 1.0);
+        }
+    }
+
     let Some((prev_entity, prev_variant)) = &mut prev_tile.0 else {
         prev_tile.0 = Some((click.entity, variant.clone()));
         return;
@@ -291,7 +303,13 @@ fn on_click(
     if *prev_entity != click.entity && *prev_variant == *variant {
         info!("It's a match!");
 
-        if rule_check(prev_entity, prev_variant, &click.entity, variant, &tile_query) {
+        if rule_check(
+            prev_entity,
+            prev_variant,
+            &click.entity,
+            variant,
+            &tile_query,
+        ) {
             commands.entity(*prev_entity).despawn();
             commands.entity(click.entity).despawn();
             prev_tile.0 = None;
@@ -309,7 +327,7 @@ fn rule_check(
     prev_variant: &tile::Variant,
     this_entity: &Entity,
     this_variant: &tile::Variant,
-    tile_query: &Query<(&tile::Position, &Sprite)>,
+    tile_query: &Query<(&mut tile::Position, &mut Sprite), With<tile::Marker>>,
 ) -> bool {
     false
 }
