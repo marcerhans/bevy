@@ -155,7 +155,7 @@ mod on_enter {
 
         // Determine size and position(s) for tiles
         let tile_height =
-            projection.area.height() as f32 / PositionGenerator::<Turtle>::ROWS as f32;
+            projection.area.height() as f32 / PositionGenerator::<Turtle>::ROWS as f32 + TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y * projection.area.height();
         let tile_width = tile_height * 0.7;
         let tile_size = Vec2::new(tile_width, tile_height);
         let tile_center_offset = Vec2::new(
