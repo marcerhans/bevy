@@ -109,17 +109,19 @@ mod tile {
                 },
                 children![match variant {
                     Variant::Horde(icons) => (
-                        Text2d::new(icons.to_string()),
-                        TextColor::WHITE,
-                        TextFont::from_font_size(self.custom_size.unwrap().y / 5.0),
-                        TextBackgroundColor::BLACK,
+                        // Text2d::new(icons.to_string()),
+                        // TextColor::WHITE,
+                        // TextFont::from_font_size(self.custom_size.unwrap().y / 5.0),
+                        // TextBackgroundColor::BLACK,
+                        Sprite::from_color(Color::BLACK, Vec2::new(50.0, 50.0)),
                         offset,
                     ),
                     Variant::Alliance(icons) => (
-                        Text2d::new(icons.to_string()),
-                        TextColor::WHITE,
-                        TextFont::from_font_size(self.custom_size.unwrap().y / 5.0),
-                        TextBackgroundColor::BLACK,
+                        // Text2d::new(icons.to_string()),
+                        // TextColor::WHITE,
+                        // TextFont::from_font_size(self.custom_size.unwrap().y / 5.0),
+                        // TextBackgroundColor::BLACK,
+                        Sprite::from_color(Color::BLACK, Vec2::new(50.0, 50.0)),
                         offset,
                     ),
                 }],
@@ -157,9 +159,9 @@ mod on_enter {
         let tile_width = tile_height * 0.7;
         let tile_size = Vec2::new(tile_width, tile_height);
         let tile_center_offset = Vec2::new(
-            TEXTURE_LEFT_BORDER_PERCENTAGE_X,
-            TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y,
-        ) * tile_size;
+            TEXTURE_LEFT_BORDER_PERCENTAGE2_X,
+            TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y,
+        ) * tile_size / 2.0;
         let tile_thickness_offset = Vec2::new(
             TEXTURE_LEFT_BORDER_PERCENTAGE2_X,
             TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y,
@@ -169,8 +171,7 @@ mod on_enter {
             texture_alliance,
             texture_horde,
             Some(tile_size),
-            // Some(tile_center_offset),
-            None, // TODO: Offset kinda works? Is it just text that is making it odd?
+            Some(tile_center_offset),
         );
 
         let mut rng = rand::rng();
