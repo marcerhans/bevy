@@ -91,7 +91,7 @@ mod tile {
                     } else {
                         self.tile_center_offset.unwrap().y
                     },
-                    ..default()
+                    z: 0.1,
                 },
                 ..default()
             };
@@ -190,7 +190,6 @@ mod on_enter {
             for variant_index in 0..tvs {
                 let column_index = tile_position[variant_index].x / tile_size.x;
                 let row_index = tile_position[variant_index].y / tile_size.y;
-                let layout_index = column_index * row_index;
 
                 commands
                     .spawn((
