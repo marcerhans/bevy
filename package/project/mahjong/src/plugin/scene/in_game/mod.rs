@@ -223,8 +223,17 @@ mod on_enter {
                     ))
                     .with_child((
                         Sprite {
-                            custom_size: Some(tile_size.clone()),
-                            color: Color::hsla(0.0, 0.0, 0.0, 0.8),
+                            custom_size: Some(tile_size.clone().with_y(tile_size.y - 10.0)),
+                            color: Color::hsla(
+                                0.0,
+                                0.0,
+                                0.0,
+                                if tile_position[variant_index].z == 0.0 {
+                                    0.0
+                                } else {
+                                    0.9
+                                },
+                            ),
                             ..Sprite::from_image(texture_tile.clone())
                         },
                         Transform {
