@@ -156,6 +156,7 @@ mod on_enter {
         // Determine size and position(s) for tiles
         let tile_height =
             projection.area.height() as f32 / PositionGenerator::<Turtle>::ROWS as f32;
+        let tile_height = tile_height + TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y * tile_height; // NOTE:1: This is hacky, but allows for tile height to fill height of window.
         let tile_width = tile_height * 0.7;
         let tile_size = Vec2::new(tile_width, tile_height);
         let tile_center_offset = Vec2::new(
@@ -211,7 +212,8 @@ mod on_enter {
                                     + (tile_position[variant_index].z * tile_thickness_offset.x),
                                 y: tile_position[variant_index].y
                                     - (row_index * tile_thickness_offset.y)
-                                    + (tile_position[variant_index].z * tile_thickness_offset.y),
+                                    + (tile_position[variant_index].z * tile_thickness_offset.y)
+                                    - tile_height * 0.5, // NOTE:2: See NOTE:1 - This is simply to adjust the offset
                                 z: tile_position[variant_index].z * 100.0
                                     - column_index
                                     - row_index as f32,
