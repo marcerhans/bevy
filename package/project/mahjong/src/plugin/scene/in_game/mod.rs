@@ -143,13 +143,13 @@ mod on_enter {
         };
 
         // Load assets and set texture constants
-        let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile2_700x1000.png");
+        let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile3_700x1000.png");
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
-        const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 180.0 / 1000.0; // (Just "ONE" border)
-        const TEXTURE_LEFT_BORDER_PERCENTAGE_X: f32 = 144.0 / 700.0; // (Juse "ONE" border)
-        const TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y: f32 = 85.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
-        const TEXTURE_LEFT_BORDER_PERCENTAGE2_X: f32 = 55.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
+        const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 260.0 / 1000.0; // (Just "ONE" border)
+        const TEXTURE_LEFT_BORDER_PERCENTAGE_X: f32 = 200.0 / 700.0; // (Juse "ONE" border)
+        const TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
+        const TEXTURE_LEFT_BORDER_PERCENTAGE2_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
 
         // Determine size and position(s) for tiles
         let tile_height =
@@ -213,6 +213,7 @@ mod on_enter {
                         },
                         Transform {
                             // RealPosition(x,y) + Adjustments for "overlaps" + Adustments for layer offsets
+                            // RealPosition(z) * 100.0 - Adjustments for row and column (such that overlaps are correct)
                             translation: Vec3 {
                                 x: tile_position[variant_index].x
                                     - (column_index * tile_thickness_offset.x)
@@ -233,8 +234,8 @@ mod on_enter {
                         },
                         Transform {
                             translation: Vec3 {
-                                x: -tile_thickness_offset.x * 2.0,
-                                y: -tile_thickness_offset.y * 1.5,
+                                x: -tile_thickness_offset.x * 1.0,
+                                y: -tile_thickness_offset.y * 0.8,
                                 z: -1.0,
                             },
                             ..default()
