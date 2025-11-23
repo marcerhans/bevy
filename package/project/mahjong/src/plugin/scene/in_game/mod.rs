@@ -147,7 +147,7 @@ mod on_enter {
         };
 
         // Load assets and set texture constants
-        let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile3_700x1000.png");
+        let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile4_700x1000.png");
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
         const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
@@ -238,7 +238,7 @@ mod on_enter {
                         },
                         Transform {
                             translation: Vec3 {
-                                x: -tile_thickness_offset.x * 1.0,
+                                x: -tile_thickness_offset.x * 0.8,
                                 y: -tile_thickness_offset.y * 0.8,
                                 z: -1.0,
                             },
