@@ -228,12 +228,12 @@ mod on_enter {
                     .with_child(( // TODO: Figure out sensible shadows.
                         Sprite {
                             custom_size: Some(tile_size.clone()),
-                            color: Color::hsla(0.0, 0.0, 0.0, 0.7),
+                            color: Color::hsla(0.0, 0.0, 0.0, 0.8),
                             ..Sprite::from_image(texture_tile.clone())
                         },
                         Transform {
                             translation: Vec3 {
-                                x: -tile_thickness_offset.x * 1.5,
+                                x: -tile_thickness_offset.x * 2.0,
                                 y: -tile_thickness_offset.y * 1.5,
                                 z: -1.0,
                             },
