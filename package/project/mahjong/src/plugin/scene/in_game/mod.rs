@@ -142,6 +142,8 @@ mod on_enter {
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
         const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 180.0 / 1000.0; // (Just "ONE" border)
         const TEXTURE_LEFT_BORDER_PERCENTAGE_X: f32 = 144.0 / 700.0; // (Juse "ONE" border)
+        const TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y: f32 = 85.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
+        const TEXTURE_LEFT_BORDER_PERCENTAGE2_X: f32 = 55.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
 
         // Determine size and position(s) for tiles
         let tile_height =
@@ -151,6 +153,10 @@ mod on_enter {
         let tile_center_offset = Vec2::new(
             TEXTURE_LEFT_BORDER_PERCENTAGE_X,
             TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y,
+        ) * tile_size;
+        let tile_thickness_offset = Vec2::new(
+            TEXTURE_LEFT_BORDER_PERCENTAGE2_X,
+            TEXTURE_BOTTOM_BORDER_PERCENTAGE2_Y,
         ) * tile_size;
         let tile_factory = tile::Factory::new(
             texture_tile,
@@ -188,13 +194,9 @@ mod on_enter {
                         Transform {
                             translation: Vec3 {
                                 x: tile_position[variant_index].x
-                                    + (tile_position[variant_index].z
-                                        * TEXTURE_LEFT_BORDER_PERCENTAGE_X
-                                        * tile_width),
+                                    + (tile_position[variant_index].z * tile_thickness_offset.x),
                                 y: tile_position[variant_index].y
-                                    + (tile_position[variant_index].z
-                                        * TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y
-                                        * tile_width),
+                                    + (tile_position[variant_index].z * tile_thickness_offset.y),
                                 z: tile_position[variant_index].z * 100.0 + index as f32,
                             },
                             ..default()
