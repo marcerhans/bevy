@@ -161,6 +161,7 @@ mod on_enter {
         let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile4_700x1000.png");
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
+        let texture_button: Handle<Image> = asset_server.load("misc/rev2/button_784x407.png");
         const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
         const TEXTURE_LEFT_BORDER_PERCENTAGE_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
 
@@ -261,6 +262,39 @@ mod on_enter {
                     .observe(on_click);
             }
         }
+
+        // Spawn buttons
+        commands.spawn((
+            Sprite {
+                custom_size: Some(tile_size.yx()),
+                ..Sprite::from_image(texture_button.clone())
+            },
+            Text2d::new("Help (h)"),
+            Transform {
+                translation: Vec3 {
+                    x: -projection.area.width() / 2.0 + tile_size.yx().x * 0.5,
+                    y: -projection.area.height() / 2.0 + tile_size.yx().y * 0.5,
+                    z: 0.0,
+                },
+                ..default()
+            },
+        ));
+
+        commands.spawn((
+            Sprite {
+                custom_size: Some(tile_size.yx()),
+                ..Sprite::from_image(texture_button.clone())
+            },
+            Text2d::new("Rotate (r)"),
+            Transform {
+                translation: Vec3 {
+                    x: -projection.area.width() / 2.0 + tile_size.yx().x * 0.5,
+                    y: -projection.area.height() / 2.0 + tile_size.yx().y * 1.7,
+                    z: 0.0,
+                },
+                ..default()
+            },
+        ));
     }
 }
 
