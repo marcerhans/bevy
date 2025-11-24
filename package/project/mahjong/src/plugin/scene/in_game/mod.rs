@@ -34,7 +34,7 @@ mod tile {
     #[derive(Component, Clone)]
     pub struct Marker;
 
-    #[derive(Component, Clone)]
+    #[derive(Component, Clone, Deref)]
     pub struct Position {
         pub val: Vec3,
     }
@@ -256,7 +256,7 @@ fn on_click(
     mut commands: Commands,
     children: Query<&Children>,
     variants: Query<&tile::Variant>,
-    mut tile_query: Query<(&mut tile::Position, &mut Sprite), With<tile::Marker>>,
+    mut tile_query: Query<(Entity, &mut tile::Position, &mut Sprite), With<tile::Marker>>,
     mut prev_tile: ResMut<PreviouslySelectedTile>,
 ) {
     let Ok(children) = children.get(click.entity) else {
@@ -279,13 +279,13 @@ fn on_click(
 
     // Update appearance of selected tile (and restore previous)
     let mut e = tile_query.get_mut(click.entity).unwrap();
-    e.1.color = Color::hsl(0.0, 0.0, 1.5);
+    e.2.color = Color::hsl(0.0, 0.0, 1.5);
 
     if let Some(prev_tile) = &mut prev_tile.0 {
         if prev_tile.0 != click.entity {
             // Restore previous tile
             let mut e = tile_query.get_mut(prev_tile.0).unwrap();
-            e.1.color = Color::hsl(0.0, 0.0, 1.0);
+            e.2.color = Color::hsl(0.0, 0.0, 1.0);
         }
     }
 
@@ -327,8 +327,48 @@ fn rule_check(
     prev_variant: &tile::Variant,
     this_entity: &Entity,
     this_variant: &tile::Variant,
-    tile_query: &Query<(&mut tile::Position, &mut Sprite), With<tile::Marker>>,
+    tile_query: &Query<(Entity, &mut tile::Position, &mut Sprite), With<tile::Marker>>,
 ) -> bool {
+    fn are_intersecting(
+        a_center: &Vec2,
+        a_size: &Vec2,
+        b_center: &Vec2,
+        b_size: &Vec2,
+    ) -> bool {
+        let a_half = a_size * 0.5;
+        let b_half = b_size * 0.5;
+
+        let d = (b_center - a_center).abs();
+        let allowed = a_half + b_half;
+
+        d.x <= allowed.x && d.y <= allowed.y
+    }
+
+    fn tile_is_obscured(
+        tile_position: &tile::Position,
+        tile_sprite: &Sprite,
+        tile_query: &Query<(Entity, &mut tile::Position, &mut Sprite), With<tile::Marker>>,
+    ) -> bool {
+        tile_query.iter().any(|(_, pos, s)| {
+            are_intersecting(
+                &tile_position.truncate(),
+                &tile_sprite.custom_size.unwrap(),
+                &pos.truncate(),
+                &s.custom_size.unwrap(),
+            ) && tile_position.val.z < pos.val.z
+        })
+    }
+
+    let prev_tile = tile_query.get(*prev_entity).unwrap();
+    let this_tile = tile_query.get(*this_entity).unwrap();
+
+    if tile_is_obscured(prev_tile.1, prev_tile.2, tile_query)
+        || tile_is_obscured(this_tile.1, this_tile.2, tile_query)
+    {
+        info!("One of the tiles is obscured.");
+        return false;
+    }
+
     false
 }
 
