@@ -316,8 +316,7 @@ fn on_click(
         variant.clone()
     );
 
-    // if *prev_entity != click.entity && *prev_variant == *variant {
-    if true {
+    if *prev_entity != click.entity && *prev_variant == *variant {
         info!("It's a match!");
 
         if rule_check(
@@ -382,16 +381,26 @@ fn rule_check(
     fn tile_is_open(
         tile_entity: Entity,
         tile_position: &Vec3,
+        tile_size: &tile::Size,
         tile_query: &Query<(Entity, &mut tile::Position, &mut tile::Size), With<tile::Marker>>,
     ) -> bool {
-        let mut tiles_on_same_row_and_layer = tile_query.iter().filter(|(entity, pos, _)| {
-            tile_entity != *entity && tile_position.y == pos.y && tile_position.z == pos.z
+        // (Same row counts as being within half another block along the y-axis.)
+        let mut tiles_on_same_layer_and_row = tile_query.iter().filter(|(entity, pos, size)| {
+            let not_same_entity = tile_entity != *entity;
+            let same_layer = tile_position.z == pos.z;
+            let same_row = {
+                let a_half = tile_size.y / 2.0;
+                let b_half = size.y / 2.0;
+                let d = (tile_position.y - pos.y).abs();
+                let allowed = a_half + b_half;
+                d < allowed
+            };
+            not_same_entity && same_layer && same_row
         });
-        !tiles_on_same_row_and_layer
+        !tiles_on_same_layer_and_row
             .clone()
             .any(|(_, pos, _)| pos.x < tile_position.x)
-            || !tiles_on_same_row_and_layer
-                .any(|(_, pos, _)| pos.x > tile_position.x)
+            || !tiles_on_same_layer_and_row.any(|(_, pos, _)| pos.x > tile_position.x)
     }
 
     let prev_tile = tile_query.get(*prev_entity).unwrap();
@@ -404,8 +413,8 @@ fn rule_check(
         return false;
     }
 
-    if !tile_is_open(prev_tile.0, &prev_tile.1, tile_query)
-        || !tile_is_open(this_tile.0, &this_tile.1, tile_query)
+    if !tile_is_open(prev_tile.0, &prev_tile.1, &prev_tile.2, tile_query)
+        || !tile_is_open(this_tile.0, &this_tile.1, &this_tile.2, tile_query)
     {
         info!("One of the tiles is not open.");
         return false;
