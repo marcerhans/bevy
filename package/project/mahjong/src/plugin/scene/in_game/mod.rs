@@ -39,6 +39,11 @@ mod tile {
         pub val: Vec2,
     }
 
+    #[derive(Component, Clone, Deref, Debug)]
+    pub struct Position {
+        pub val: Vec3,
+    }
+
     pub struct Factory {
         texture_tile: Handle<Image>,
         texture_alliance: Handle<Image>,
@@ -174,7 +179,7 @@ mod on_enter {
             TEXTURE_LEFT_BORDER_PERCENTAGE_X,
             TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y,
         ) * tile_size;
-        let tile_logical_size = tile_size - tile_thickness_offset;
+        let tile_logical_size = tile_size - tile_thickness_offset * 1.2;
         let tile_factory = tile::Factory::new(
             texture_tile.clone(),
             texture_alliance,
@@ -204,6 +209,13 @@ mod on_enter {
                     .spawn((
                         tile_components.clone(),
                         tile_factory.get_tile(tile::Variant::Horde(index), None),
+                        tile::Position {
+                            val: Vec3 {
+                                x: tile_position[variant_index].x,
+                                y: tile_position[variant_index].y,
+                                z: tile_position[variant_index].z,
+                            },
+                        },
                         Transform {
                             // RealPosition(x,y) + Adjustments for "overlaps" + Adustments for layer offsets
                             // RealPosition(z) * 100.0 - Adjustments for row and column (such that overlaps are correct)
@@ -258,7 +270,7 @@ fn on_click(
     children: Query<&Children>,
     variants: Query<&tile::Variant>,
     mut tile_query: Query<
-        (Entity, &mut Transform, &mut tile::Size, &mut Sprite),
+        (Entity, &mut tile::Position, &mut tile::Size, &mut Sprite),
         With<tile::Marker>,
     >,
     mut prev_tile: ResMut<PreviouslySelectedTile>,
@@ -304,7 +316,8 @@ fn on_click(
         variant.clone()
     );
 
-    if *prev_entity != click.entity && *prev_variant == *variant {
+    // if *prev_entity != click.entity && *prev_variant == *variant {
+    if true {
         info!("It's a match!");
 
         if rule_check(
@@ -313,7 +326,7 @@ fn on_click(
             &click.entity,
             variant,
             &tile_query
-                .transmute_lens_filtered::<(Entity, &mut Transform, &mut tile::Size), With<tile::Marker>>()
+                .transmute_lens_filtered::<(Entity, &mut tile::Position, &mut tile::Size), With<tile::Marker>>()
                 .query(),
         ) {
             commands.entity(*prev_entity).despawn();
@@ -333,7 +346,7 @@ fn rule_check(
     prev_variant: &tile::Variant,
     this_entity: &Entity,
     this_variant: &tile::Variant,
-    tile_query: &Query<(Entity, &mut Transform, &mut tile::Size), With<tile::Marker>>,
+    tile_query: &Query<(Entity, &mut tile::Position, &mut tile::Size), With<tile::Marker>>,
 ) -> bool {
     fn are_intersecting(
         a_center: &Vec2,
@@ -353,25 +366,48 @@ fn rule_check(
     fn tile_is_obscured(
         tile_position: &Vec3,
         tile_size: &tile::Size,
-        tile_query: &Query<(Entity, &mut Transform, &mut tile::Size), With<tile::Marker>>,
+        tile_query: &Query<(Entity, &mut tile::Position, &mut tile::Size), With<tile::Marker>>,
     ) -> bool {
-        tile_query.iter().any(|(_, transform, size)| {
+        tile_query.iter().any(|(_, position, size)| {
             are_intersecting(
                 &tile_position.truncate(),
                 &tile_size,
-                &transform.translation.truncate(),
+                &position.truncate(),
                 &size,
-            ) && tile_position.z < transform.translation.z
+            ) && tile_position.z < position.z
         })
+    }
+
+    /// "Open" being, not a tile to the left AND right of it.
+    fn tile_is_open(
+        tile_entity: Entity,
+        tile_position: &Vec3,
+        tile_query: &Query<(Entity, &mut tile::Position, &mut tile::Size), With<tile::Marker>>,
+    ) -> bool {
+        let mut tiles_on_same_row_and_layer = tile_query.iter().filter(|(entity, pos, _)| {
+            tile_entity != *entity && tile_position.y == pos.y && tile_position.z == pos.z
+        });
+        !tiles_on_same_row_and_layer
+            .clone()
+            .any(|(_, pos, _)| pos.x < tile_position.x)
+            || !tiles_on_same_row_and_layer
+                .any(|(_, pos, _)| pos.x > tile_position.x)
     }
 
     let prev_tile = tile_query.get(*prev_entity).unwrap();
     let this_tile = tile_query.get(*this_entity).unwrap();
 
-    if tile_is_obscured(&prev_tile.1.translation, prev_tile.2, tile_query)
-        || tile_is_obscured(&this_tile.1.translation, this_tile.2, tile_query)
+    if tile_is_obscured(&prev_tile.1, prev_tile.2, tile_query)
+        || tile_is_obscured(&this_tile.1, this_tile.2, tile_query)
     {
         info!("One of the tiles is obscured.");
+        return false;
+    }
+
+    if !tile_is_open(prev_tile.0, &prev_tile.1, tile_query)
+        || !tile_is_open(this_tile.0, &this_tile.1, tile_query)
+    {
+        info!("One of the tiles is not open.");
         return false;
     }
 
