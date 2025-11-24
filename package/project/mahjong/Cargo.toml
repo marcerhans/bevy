@@ -18,10 +18,10 @@ rand = { workspace = true }
 bevy-inspector-egui = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-getrandom = { version = "0.3.3" }
+getrandom = { version = "0.3.4" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-getrandom = { version = "0.3.3", features = ["wasm_js"] }
+getrandom = { version = "0.3.4", features = ["wasm_js"] }
 
 [features]
 debug = ["bevy/dynamic_linking"] # Use for debug/dev builds. Faster compile times.
