@@ -35,14 +35,15 @@ mod tile {
     pub struct Marker;
 
     #[derive(Component, Clone, Deref)]
-    pub struct Position {
-        pub val: Vec3,
+    pub struct Size {
+        pub val: Vec2,
     }
 
     pub struct Factory {
         texture_tile: Handle<Image>,
         texture_alliance: Handle<Image>,
         texture_horde: Handle<Image>,
+        logical_size: Vec2,
         custom_size: Option<Vec2>,
         tile_center_offset: Option<Vec3>,
     }
@@ -58,6 +59,7 @@ mod tile {
             texture_tile: Handle<Image>,
             texture_alliance: Handle<Image>,
             texture_horde: Handle<Image>,
+            logical_size: Vec2,
             custom_size: Option<Vec2>,
             tile_center_offset: Option<Vec2>,
         ) -> Self {
@@ -71,6 +73,7 @@ mod tile {
                 texture_tile,
                 texture_alliance,
                 texture_horde,
+                logical_size,
                 custom_size,
                 tile_center_offset,
             }
@@ -108,6 +111,9 @@ mod tile {
                         tint.unwrap()
                     },
                     ..Sprite::from_image(self.texture_tile.clone())
+                },
+                Size {
+                    val: self.logical_size,
                 },
                 children![match variant {
                     Variant::Horde(icons) => (
@@ -168,10 +174,12 @@ mod on_enter {
             TEXTURE_LEFT_BORDER_PERCENTAGE_X,
             TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y,
         ) * tile_size;
+        let tile_logical_size = tile_size - tile_thickness_offset;
         let tile_factory = tile::Factory::new(
             texture_tile.clone(),
             texture_alliance,
             texture_horde,
+            tile_logical_size,
             Some(tile_size),
             Some(tile_center_offset),
         );
@@ -196,13 +204,6 @@ mod on_enter {
                     .spawn((
                         tile_components.clone(),
                         tile_factory.get_tile(tile::Variant::Horde(index), None),
-                        tile::Position {
-                            val: Vec3 {
-                                x: tile_position[variant_index].x,
-                                y: tile_position[variant_index].y,
-                                z: tile_position[variant_index].z,
-                            },
-                        },
                         Transform {
                             // RealPosition(x,y) + Adjustments for "overlaps" + Adustments for layer offsets
                             // RealPosition(z) * 100.0 - Adjustments for row and column (such that overlaps are correct)
@@ -256,7 +257,10 @@ fn on_click(
     mut commands: Commands,
     children: Query<&Children>,
     variants: Query<&tile::Variant>,
-    mut tile_query: Query<(Entity, &mut tile::Position, &mut Sprite), With<tile::Marker>>,
+    mut tile_query: Query<
+        (Entity, &mut Transform, &mut tile::Size, &mut Sprite),
+        With<tile::Marker>,
+    >,
     mut prev_tile: ResMut<PreviouslySelectedTile>,
 ) {
     let Ok(children) = children.get(click.entity) else {
@@ -279,13 +283,13 @@ fn on_click(
 
     // Update appearance of selected tile (and restore previous)
     let mut e = tile_query.get_mut(click.entity).unwrap();
-    e.2.color = Color::hsl(0.0, 0.0, 1.5);
+    e.3.color = Color::hsl(0.0, 0.0, 1.5);
 
     if let Some(prev_tile) = &mut prev_tile.0 {
         if prev_tile.0 != click.entity {
             // Restore previous tile
             let mut e = tile_query.get_mut(prev_tile.0).unwrap();
-            e.2.color = Color::hsl(0.0, 0.0, 1.0);
+            e.3.color = Color::hsl(0.0, 0.0, 1.0);
         }
     }
 
@@ -308,7 +312,9 @@ fn on_click(
             prev_variant,
             &click.entity,
             variant,
-            &tile_query,
+            &tile_query
+                .transmute_lens_filtered::<(Entity, &mut Transform, &mut tile::Size), With<tile::Marker>>()
+                .query(),
         ) {
             commands.entity(*prev_entity).despawn();
             commands.entity(click.entity).despawn();
@@ -327,7 +333,7 @@ fn rule_check(
     prev_variant: &tile::Variant,
     this_entity: &Entity,
     this_variant: &tile::Variant,
-    tile_query: &Query<(Entity, &mut tile::Position, &mut Sprite), With<tile::Marker>>,
+    tile_query: &Query<(Entity, &mut Transform, &mut tile::Size), With<tile::Marker>>,
 ) -> bool {
     fn are_intersecting(
         a_center: &Vec2,
@@ -341,29 +347,29 @@ fn rule_check(
         let d = (b_center - a_center).abs();
         let allowed = a_half + b_half;
 
-        d.x <= allowed.x && d.y <= allowed.y
+        d.x < allowed.x && d.y < allowed.y
     }
 
     fn tile_is_obscured(
-        tile_position: &tile::Position,
-        tile_sprite: &Sprite,
-        tile_query: &Query<(Entity, &mut tile::Position, &mut Sprite), With<tile::Marker>>,
+        tile_position: &Vec3,
+        tile_size: &tile::Size,
+        tile_query: &Query<(Entity, &mut Transform, &mut tile::Size), With<tile::Marker>>,
     ) -> bool {
-        tile_query.iter().any(|(_, pos, s)| {
+        tile_query.iter().any(|(_, transform, size)| {
             are_intersecting(
                 &tile_position.truncate(),
-                &tile_sprite.custom_size.unwrap(),
-                &pos.truncate(),
-                &s.custom_size.unwrap(),
-            ) && tile_position.val.z < pos.val.z
+                &tile_size,
+                &transform.translation.truncate(),
+                &size,
+            ) && tile_position.z < transform.translation.z
         })
     }
 
     let prev_tile = tile_query.get(*prev_entity).unwrap();
     let this_tile = tile_query.get(*this_entity).unwrap();
 
-    if tile_is_obscured(prev_tile.1, prev_tile.2, tile_query)
-        || tile_is_obscured(this_tile.1, this_tile.2, tile_query)
+    if tile_is_obscured(&prev_tile.1.translation, prev_tile.2, tile_query)
+        || tile_is_obscured(&this_tile.1.translation, this_tile.2, tile_query)
     {
         info!("One of the tiles is obscured.");
         return false;
