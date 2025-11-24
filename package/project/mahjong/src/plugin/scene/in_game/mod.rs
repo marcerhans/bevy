@@ -252,7 +252,7 @@ mod on_enter {
 }
 
 fn on_click(
-    click: On<Pointer<Click>>,
+    click: On<Pointer<Press>>,
     mut commands: Commands,
     children: Query<&Children>,
     variants: Query<&tile::Variant>,
