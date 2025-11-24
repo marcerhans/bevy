@@ -420,7 +420,7 @@ fn rule_check(
         return false;
     }
 
-    false
+    true
 }
 
 mod generator {
