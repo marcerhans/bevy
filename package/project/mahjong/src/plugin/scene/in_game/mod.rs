@@ -144,6 +144,7 @@ mod tile {
 }
 
 mod on_enter {
+    use bevy::camera::visibility::RenderLayers;
     use rand::seq::SliceRandom;
 
     use super::*;
@@ -162,7 +163,7 @@ mod on_enter {
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
         let texture_button: Handle<Image> = asset_server.load("misc/rev2/Tile_897x1237.png");
-        let texture_bg: Handle<Image> = asset_server.load("misc/rev2/original/wc3_human.jpg");
+        let texture_bg: Handle<Image> = asset_server.load("misc/rev2/original/Arthas_LichKing_GPT.png");
         const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
         const TEXTURE_LEFT_BORDER_PERCENTAGE_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
 

@@ -52,6 +52,7 @@ fn on_enter(
             custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
             ..Sprite::from_image(greeter_asset)
         },
+        bevy::camera::visibility::RenderLayers::layer(1),
     ));
 
     // Initialize timer

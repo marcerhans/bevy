@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use bevy::{
     asset::AssetMetaCheck,
-    camera::ScalingMode,
+    camera::{ScalingMode, visibility::RenderLayers},
     diagnostic::FrameTimeDiagnosticsPlugin,
     log::LogPlugin,
     prelude::*,
@@ -62,7 +62,7 @@ impl bevy::prelude::Plugin for Plugin {
             FrameTimeDiagnosticsPlugin::default(),
         ));
 
-        app.world_mut().spawn((
+        let base_cam = (
             Camera2d,
             Projection::Orthographic(OrthographicProjection {
                 scaling_mode: ScalingMode::FixedVertical {
@@ -71,6 +71,18 @@ impl bevy::prelude::Plugin for Plugin {
                 ..OrthographicProjection::default_2d()
             }),
             Msaa::Off,
-        ));
+        );
+
+        for layer in 0..=1 as usize {
+            app.world_mut().spawn((
+                base_cam.clone(),
+                Camera {
+                    clear_color: ClearColorConfig::None,
+                    order: layer as isize,
+                    ..Camera::default()
+                },
+                RenderLayers::layer(layer),
+            ));
+        }
     }
 }
