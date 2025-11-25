@@ -22,7 +22,7 @@ fn main() {
                 app.world_mut().spawn((
                     base_cam.clone(),
                     Camera {
-                        // clear_color: ClearColorConfig::None,
+                        clear_color: ClearColorConfig::None,
                         order: layer as isize,
                         ..Camera::default()
                     },
@@ -30,31 +30,13 @@ fn main() {
                 ));
             }
         })
-        // .add_systems(Startup, |mut commands: Commands| {
-        //     commands.spawn((
-        //         Camera2d,
-        //         Camera {
-        //             order: 0,
-        //             ..default()
-        //         },
-        //         RenderLayers::layer(0),
-        //     ));
-
-        //     commands.spawn((
-        //         Camera2d,
-        //         Camera {
-        //             order: 1,
-        //             ..default()
-        //         },
-        //         RenderLayers::layer(1),
-        //     ));
-        // })
         .add_systems(Startup, |mut commands: Commands| {
             commands.spawn((
-                Sprite::from_color(Color::BLACK, Vec2::new(50.0, 50.0)),
                 RenderLayers::layer(1),
+                Sprite::from_color(Color::BLACK, Vec2::new(50.0, 50.0)),
             ));
             commands.spawn((
+                RenderLayers::layer(0),
                 Sprite::from_color(Color::WHITE, Vec2::new(50.0, 50.0)),
                 Transform {
                     translation: Vec3::splat(25.0).with_z(0.0),
