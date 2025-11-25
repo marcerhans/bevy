@@ -36,10 +36,10 @@ fn on_enter(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut timer: ResMut<TimerRes>,
-    projection: Single<&Projection, With<Camera>>,
+    projection: Query<&Projection, With<Camera>>,
 ) {
     // Spawn title/greeter screen
-    let Projection::Orthographic(projection) = *projection else {
+    let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
     };
 
@@ -52,7 +52,6 @@ fn on_enter(
             custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
             ..Sprite::from_image(greeter_asset)
         },
-        bevy::camera::visibility::RenderLayers::layer(1),
     ));
 
     // Initialize timer
