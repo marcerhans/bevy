@@ -161,7 +161,8 @@ mod on_enter {
         let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile4_700x1000.png");
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
-        let texture_button: Handle<Image> = asset_server.load("misc/rev2/button_784x407.png");
+        let texture_button: Handle<Image> = asset_server.load("misc/rev2/Tile_897x1237.png");
+        let texture_bg: Handle<Image> = asset_server.load("misc/rev2/original/wc3_human.jpg");
         const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
         const TEXTURE_LEFT_BORDER_PERCENTAGE_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
 
@@ -236,6 +237,7 @@ mod on_enter {
                         },
                     ))
                     .with_child((
+                        // Shadow
                         Sprite {
                             custom_size: Some(tile_size.clone().with_y(tile_size.y - 10.0)),
                             color: Color::hsla(
@@ -245,16 +247,21 @@ mod on_enter {
                                 if tile_position[variant_index].z == 0.0 {
                                     0.0
                                 } else {
-                                    0.9
+                                    0.75
                                 },
                             ),
                             ..Sprite::from_image(texture_tile.clone())
                         },
                         Transform {
                             translation: Vec3 {
-                                x: -tile_thickness_offset.x * 0.8,
-                                y: -tile_thickness_offset.y * 0.8,
-                                z: -1.0,
+                                x: tile_thickness_offset.x * 0.4,
+                                y: tile_thickness_offset.y * 0.4,
+                                z: -10.0,
+                            },
+                            scale: Vec3 {
+                                x: 1.2,
+                                y: 1.0,
+                                z: 1.0,
                             },
                             ..default()
                         },
@@ -264,33 +271,68 @@ mod on_enter {
         }
 
         // Spawn buttons
-        commands.spawn((
-            Sprite {
-                custom_size: Some(tile_size.yx()),
-                ..Sprite::from_image(texture_button.clone())
-            },
-            Text2d::new("Help (h)"),
-            Transform {
-                translation: Vec3 {
-                    x: -projection.area.width() / 2.0 + tile_size.yx().x * 0.5,
-                    y: -projection.area.height() / 2.0 + tile_size.yx().y * 0.5,
-                    z: 0.0,
+        commands
+            .spawn((
+                Sprite {
+                    custom_size: Some(tile_size),
+                    ..Sprite::from_image(texture_button.clone())
                 },
-                ..default()
-            },
-        ));
+                Transform {
+                    translation: Vec3 {
+                        x: -projection.area.width() / 2.0 + tile_size.yx().x * 0.5,
+                        y: -projection.area.height() / 2.0 + tile_size.yx().y * 0.5,
+                        z: 0.0,
+                    },
+                    rotation: Quat::from_rotation_z(std::f32::consts::FRAC_PI_2),
+                    ..default()
+                },
+            ))
+            .with_child((
+                Text2d::new("Help (h)"),
+                Transform {
+                    rotation: Quat::from_rotation_z(-std::f32::consts::FRAC_PI_2),
+                    ..default()
+                },
+            ));
+
+        commands
+            .spawn((
+                Sprite {
+                    custom_size: Some(tile_size),
+                    ..Sprite::from_image(texture_button.clone())
+                },
+                Transform {
+                    translation: Vec3 {
+                        x: -projection.area.width() / 2.0 + tile_size.yx().x * 0.5,
+                        y: -projection.area.height() / 2.0 + tile_size.yx().y * 1.7,
+                        z: 0.0,
+                    },
+                    rotation: Quat::from_rotation_z(std::f32::consts::FRAC_PI_2),
+                    ..default()
+                },
+            ))
+            .with_child((
+                Text2d::new("Rotate (r)"),
+                Transform {
+                    rotation: Quat::from_rotation_z(-std::f32::consts::FRAC_PI_2),
+                    ..default()
+                },
+            ));
 
         commands.spawn((
             Sprite {
-                custom_size: Some(tile_size.yx()),
-                ..Sprite::from_image(texture_button.clone())
+                custom_size: Some(Vec2::new(
+                    projection.area.width() + 500.0,
+                    projection.area.height(),
+                )),
+                color: Color::hsl(0.0, 0.0, 0.4),
+                ..Sprite::from_image(texture_bg)
             },
-            Text2d::new("Rotate (r)"),
             Transform {
                 translation: Vec3 {
-                    x: -projection.area.width() / 2.0 + tile_size.yx().x * 0.5,
-                    y: -projection.area.height() / 2.0 + tile_size.yx().y * 1.7,
-                    z: 0.0,
+                    x: 250.0,
+                    z: -10.0,
+                    ..default()
                 },
                 ..default()
             },

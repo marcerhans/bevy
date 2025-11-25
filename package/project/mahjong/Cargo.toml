@@ -13,7 +13,7 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-bevy = { workspace = true }
+bevy = { workspace = true, features = ["jpeg"] }
 rand = { workspace = true }
 bevy-inspector-egui = { workspace = true }
 
