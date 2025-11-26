@@ -56,29 +56,6 @@ fn on_enter(
 
     // Initialize timer
     timer.inner.reset();
-
-    // let font = (
-    //     TextFont { ..default() },
-    //     TextColor(Color::srgb(0.9, 0.9, 0.9)),
-    // );
-
-    // commands.spawn((
-    //     DespawnOnExit(Startup::Greeter),
-    //     Marker,
-    //     Node {
-    //         width: Val::Percent(100.0),
-    //         height: Val::Percent(100.0),
-    //         justify_content: JustifyContent::Center,
-    //         align_items: AlignItems::Center,
-    //         flex_direction: FlexDirection::Column,
-    //         ..default()
-    //     },
-    //     BackgroundColor(Color::srgb(0.2, 0.2, 0.2)),
-    //     children![
-    //         (Text::new("Mah Dong Inc. Presents:"), font.clone()),
-    //         (Text::new("Mah Jong"), font.clone())
-    //     ],
-    // ));
 }
 
 fn on_update(
