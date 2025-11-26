@@ -1,5 +1,5 @@
 use crate::plugin::scene::main_menu::MainMenu;
-use bevy::prelude::*;
+use bevy::{prelude::*, window::WindowResized};
 use generator::*;
 
 pub struct Plugin;
@@ -13,7 +13,11 @@ impl bevy::prelude::Plugin for Plugin {
 
         app.add_sub_state::<InGame>()
             .insert_resource(PreviouslySelectedTile(None))
-            .add_systems(OnEnter(InGame::Root), spawn_tiles);
+            .add_systems(OnEnter(InGame::Root), spawn_tiles)
+            .add_systems(
+                Update,
+                resize_background_sprite.run_if(in_state(InGame::Root)),
+            );
     }
 }
 
@@ -27,6 +31,9 @@ enum InGame {
 
 #[derive(Resource)]
 struct PreviouslySelectedTile(pub Option<(Entity, tile::Variant)>);
+
+#[derive(Component)]
+struct BackgroundSprite;
 
 mod tile {
     use bevy::prelude::*;
@@ -144,17 +151,16 @@ mod tile {
 }
 
 mod on_enter {
-    use bevy::camera::visibility::RenderLayers;
     use rand::seq::SliceRandom;
 
     use super::*;
 
     pub fn spawn_tiles(
         mut commands: Commands,
-        projection: Single<&Projection, With<Camera>>,
+        projection: Query<&Projection, With<Camera>>,
         asset_server: Res<AssetServer>,
     ) {
-        let Projection::Orthographic(projection) = *projection else {
+        let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
             panic!();
         };
 
@@ -163,7 +169,8 @@ mod on_enter {
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
         let texture_button: Handle<Image> = asset_server.load("misc/rev2/Tile_897x1237.png");
-        let texture_bg: Handle<Image> = asset_server.load("misc/rev2/original/Arthas_LichKing_GPT.png");
+        let texture_bg: Handle<Image> =
+            asset_server.load("misc/rev2/original/Arthas_LichKing_GPT2.png");
         const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
         const TEXTURE_LEFT_BORDER_PERCENTAGE_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
 
@@ -271,67 +278,65 @@ mod on_enter {
             }
         }
 
-        // Spawn buttons
-        commands
-            .spawn((
-                Sprite {
-                    custom_size: Some(tile_size),
-                    ..Sprite::from_image(texture_button.clone())
-                },
-                Transform {
-                    translation: Vec3 {
-                        x: -projection.area.width() / 2.0 + tile_size.yx().x * 0.5,
-                        y: -projection.area.height() / 2.0 + tile_size.yx().y * 0.5,
-                        z: 0.0,
-                    },
-                    rotation: Quat::from_rotation_z(std::f32::consts::FRAC_PI_2),
-                    ..default()
-                },
-            ))
-            .with_child((
-                Text2d::new("Help (h)"),
-                Transform {
-                    rotation: Quat::from_rotation_z(-std::f32::consts::FRAC_PI_2),
-                    ..default()
-                },
-            ));
+        // // Spawn buttons
+        // commands
+        //     .spawn((
+        //         Sprite {
+        //             custom_size: Some(tile_size),
+        //             ..Sprite::from_image(texture_button.clone())
+        //         },
+        //         Transform {
+        //             translation: Vec3 {
+        //                 x: -tile_size.yx().x * (PositionGenerator::<Turtle>::ROWS as f32 / 2.0),
+        //                 y: -tile_size.yx().y * (PositionGenerator::<Turtle>::COLUMNS as f32 / 2.0),
+        //                 z: 0.0,
+        //             },
+        //             rotation: Quat::from_rotation_z(std::f32::consts::FRAC_PI_2),
+        //             ..default()
+        //         },
+        //     ))
+        //     .with_child((
+        //         Text2d::new("Help (h)"),
+        //         Transform {
+        //             rotation: Quat::from_rotation_z(-std::f32::consts::FRAC_PI_2),
+        //             ..default()
+        //         },
+        //     ));
 
-        commands
-            .spawn((
-                Sprite {
-                    custom_size: Some(tile_size),
-                    ..Sprite::from_image(texture_button.clone())
-                },
-                Transform {
-                    translation: Vec3 {
-                        x: -projection.area.width() / 2.0 + tile_size.yx().x * 0.5,
-                        y: -projection.area.height() / 2.0 + tile_size.yx().y * 1.7,
-                        z: 0.0,
-                    },
-                    rotation: Quat::from_rotation_z(std::f32::consts::FRAC_PI_2),
-                    ..default()
-                },
-            ))
-            .with_child((
-                Text2d::new("Rotate (r)"),
-                Transform {
-                    rotation: Quat::from_rotation_z(-std::f32::consts::FRAC_PI_2),
-                    ..default()
-                },
-            ));
+        // commands
+        //     .spawn((
+        //         Sprite {
+        //             custom_size: Some(tile_size),
+        //             ..Sprite::from_image(texture_button.clone())
+        //         },
+        //         Transform {
+        //             translation: Vec3 {
+        //                 x: -tile_size.yx().x * (PositionGenerator::<Turtle>::COLUMNS as f32 / 2.0),
+        //                 y: -tile_size.yx().y * (PositionGenerator::<Turtle>::ROWS as f32 / 2.0),
+        //                 z: 0.0,
+        //             },
+        //             rotation: Quat::from_rotation_z(std::f32::consts::FRAC_PI_2),
+        //             ..default()
+        //         },
+        //     ))
+        //     .with_child((
+        //         Text2d::new("Rotate (r)"),
+        //         Transform {
+        //             rotation: Quat::from_rotation_z(-std::f32::consts::FRAC_PI_2),
+        //             ..default()
+        //         },
+        //     ));
 
+        // Spawn background
         commands.spawn((
+            BackgroundSprite,
             Sprite {
-                custom_size: Some(Vec2::new(
-                    projection.area.width() + 500.0,
-                    projection.area.height(),
-                )),
-                color: Color::hsl(0.0, 0.0, 0.4),
+                custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
+                color: Color::srgb(1.0, 1.0, 1.0).with_luminance(0.3),
                 ..Sprite::from_image(texture_bg)
             },
             Transform {
                 translation: Vec3 {
-                    x: 250.0,
                     z: -10.0,
                     ..default()
                 },
@@ -498,6 +503,29 @@ fn rule_check(
     }
 
     true
+}
+
+fn resize_background_sprite(
+    mut msg: MessageReader<WindowResized>,
+    mut transform: Query<(&mut Transform, &mut Sprite), With<BackgroundSprite>>,
+    projection: Query<&Projection, With<Camera>>,
+) {
+    let Some(_) = msg.read().last() else {
+        return;
+    };
+
+    let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
+        panic!();
+    };
+
+    let Some((_, mut sprite)) = transform.iter_mut().next() else {
+        panic!();
+    };
+
+    sprite.custom_size = Some(Vec2 {
+        x: projection.area.width(),
+        y: projection.area.height(),
+    });
 }
 
 mod generator {
