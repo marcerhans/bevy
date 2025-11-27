@@ -506,14 +506,9 @@ fn rule_check(
 }
 
 fn resize_background_sprite(
-    mut msg: MessageReader<WindowResized>,
     mut transform: Query<(&mut Transform, &mut Sprite), With<BackgroundSprite>>,
     projection: Query<&Projection, With<Camera>>,
 ) {
-    let Some(_) = msg.read().last() else {
-        return;
-    };
-
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
     };
@@ -522,10 +517,14 @@ fn resize_background_sprite(
         panic!();
     };
 
-    sprite.custom_size = Some(Vec2 {
-        x: projection.area.width(),
-        y: projection.area.height(),
-    });
+    if sprite.custom_size.unwrap().x != projection.area.width()
+        || sprite.custom_size.unwrap().y != projection.area.height()
+    {
+        sprite.custom_size = Some(Vec2 {
+            x: projection.area.width(),
+            y: projection.area.height(),
+        });
+    }
 }
 
 mod generator {
