@@ -168,7 +168,10 @@ mod on_enter {
         let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile4_700x1000.png");
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
-        let texture_button: Handle<Image> = asset_server.load("misc/rev2/Tile_897x1237.png");
+        let texture_button_inactive: Handle<Image> =
+            asset_server.load("misc/rev2/button-inactive_666x429.png");
+        let texture_button_active: Handle<Image> =
+            asset_server.load("misc/rev2/button-active_666x429.png");
         let texture_bg: Handle<Image> =
             asset_server.load("misc/rev2/original/Arthas_LichKing_GPT2.png");
         const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
@@ -278,54 +281,58 @@ mod on_enter {
             }
         }
 
-        // // Spawn buttons
-        // commands
-        //     .spawn((
-        //         Sprite {
-        //             custom_size: Some(tile_size),
-        //             ..Sprite::from_image(texture_button.clone())
-        //         },
-        //         Transform {
-        //             translation: Vec3 {
-        //                 x: -tile_size.yx().x * (PositionGenerator::<Turtle>::ROWS as f32 / 2.0),
-        //                 y: -tile_size.yx().y * (PositionGenerator::<Turtle>::COLUMNS as f32 / 2.0),
-        //                 z: 0.0,
-        //             },
-        //             rotation: Quat::from_rotation_z(std::f32::consts::FRAC_PI_2),
-        //             ..default()
-        //         },
-        //     ))
-        //     .with_child((
-        //         Text2d::new("Help (h)"),
-        //         Transform {
-        //             rotation: Quat::from_rotation_z(-std::f32::consts::FRAC_PI_2),
-        //             ..default()
-        //         },
-        //     ));
+        // Spawn buttons
+        struct Button {
+            translation: Vec3,
+            text: &'static str,
+        }
+        let button_size = Vec2::new(tile_height * 1.5, tile_height * 0.75);
+        let button_margin = Vec2::new(5.0, 5.0);
+        let button_pos_start = Vec3::new(
+            -(tile_size.x - tile_thickness_offset.x) * PositionGenerator::<Turtle>::COLUMNS as f32
+                / 2.0
+                - tile_size.x / 2.0,
+            -(tile_size.y - tile_thickness_offset.y) * PositionGenerator::<Turtle>::ROWS as f32
+                / 2.0
+                + button_size.y * 0.5,
+            999.0,
+        );
+        let buttons = [
+            Button {
+                translation: button_pos_start,
+                text: "Help (h)",
+            },
+            Button {
+                translation: Vec3 {
+                    x: button_pos_start.x + (button_size.x + button_margin.x) * 0.0,
+                    y: button_pos_start.y + (button_size.y + button_margin.y) * 1.0,
+                    ..button_pos_start
+                },
+                text: "Rotate (r)",
+            },
+        ];
 
-        // commands
-        //     .spawn((
-        //         Sprite {
-        //             custom_size: Some(tile_size),
-        //             ..Sprite::from_image(texture_button.clone())
-        //         },
-        //         Transform {
-        //             translation: Vec3 {
-        //                 x: -tile_size.yx().x * (PositionGenerator::<Turtle>::COLUMNS as f32 / 2.0),
-        //                 y: -tile_size.yx().y * (PositionGenerator::<Turtle>::ROWS as f32 / 2.0),
-        //                 z: 0.0,
-        //             },
-        //             rotation: Quat::from_rotation_z(std::f32::consts::FRAC_PI_2),
-        //             ..default()
-        //         },
-        //     ))
-        //     .with_child((
-        //         Text2d::new("Rotate (r)"),
-        //         Transform {
-        //             rotation: Quat::from_rotation_z(-std::f32::consts::FRAC_PI_2),
-        //             ..default()
-        //         },
-        //     ));
+        for button in buttons {
+            commands
+                .spawn((
+                    Sprite {
+                        custom_size: Some(button_size.clone()),
+                        ..Sprite::from_image(texture_button_inactive.clone())
+                    },
+                    Transform {
+                        translation: button.translation,
+                        ..default()
+                    },
+                ))
+                .with_child((
+                    Text2d::new(button.text),
+                    TextFont {
+                        font_size: button_size.y / 5.0,
+                        ..default()
+                    },
+                    TextColor(Color::srgb_u8(255, 215, 0)),
+                ));
+        }
 
         // Spawn background
         commands.spawn((
