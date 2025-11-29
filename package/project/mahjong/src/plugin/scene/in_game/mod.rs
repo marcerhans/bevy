@@ -17,7 +17,8 @@ impl bevy::prelude::Plugin for Plugin {
             .add_systems(
                 Update,
                 resize_background_sprite.run_if(in_state(InGame::Root)),
-            );
+            )
+            .add_systems(Update, (rotate, help).run_if(in_state(InGame::Root)));
     }
 }
 
@@ -613,6 +614,14 @@ fn resize_background_sprite(
             y: projection.area.height(),
         });
     }
+}
+
+fn rotate(children: Query<&Children>) {
+    info!("todo");
+}
+
+fn help() {
+    info!("todo");
 }
 
 mod generator {
