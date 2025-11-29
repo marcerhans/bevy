@@ -35,6 +35,9 @@ struct PreviouslySelectedTile(pub Option<(Entity, tile::Variant)>);
 #[derive(Component)]
 struct BackgroundSprite;
 
+#[derive(Component, Clone)]
+struct ButtonSprite;
+
 mod tile {
     use bevy::prelude::*;
 
@@ -159,23 +162,29 @@ mod on_enter {
         mut commands: Commands,
         projection: Query<&Projection, With<Camera>>,
         asset_server: Res<AssetServer>,
+        mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     ) {
         let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
             panic!();
         };
 
         // Load assets and set texture constants
+        // Tile
         let texture_tile: Handle<Image> = asset_server.load("misc/rev2/Tile4_700x1000.png");
         let texture_alliance: Handle<Image> = asset_server.load("misc/rev2/Alliance_1104x882.png");
         let texture_horde: Handle<Image> = asset_server.load("misc/rev2/Horde_740x1093.png");
-        let texture_button_inactive: Handle<Image> =
-            asset_server.load("misc/rev2/button-inactive_666x429.png");
-        let texture_button_active: Handle<Image> =
-            asset_server.load("misc/rev2/button-active_666x429.png");
-        let texture_bg: Handle<Image> =
-            asset_server.load("misc/rev2/original/Arthas_LichKing_GPT2.png");
         const TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
         const TEXTURE_LEFT_BORDER_PERCENTAGE_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
+
+        // Button
+        let texture_button_atlas: Handle<Image> =
+            asset_server.load("misc/rev2/button-atlas_1998x429.png");
+        let texture_atlas = TextureAtlasLayout::from_grid(UVec2::new(666, 429), 3, 1, None, None);
+        let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+        // Background
+        let texture_bg: Handle<Image> =
+            asset_server.load("misc/rev2/original/Arthas_LichKing_GPT2.png");
 
         // Determine size and position(s) for tiles
         let tile_height =
@@ -286,6 +295,7 @@ mod on_enter {
             translation: Vec3,
             text: &'static str,
         }
+        let button_base = (ButtonSprite, Pickable::default());
         let button_size = Vec2::new(tile_height * 1.5, tile_height * 0.75);
         let button_margin = Vec2::new(5.0, 5.0);
         let button_pos_start = Vec3::new(
@@ -315,9 +325,16 @@ mod on_enter {
         for button in buttons {
             commands
                 .spawn((
+                    button_base.clone(),
                     Sprite {
                         custom_size: Some(button_size.clone()),
-                        ..Sprite::from_image(texture_button_inactive.clone())
+                        ..Sprite::from_atlas_image(
+                            texture_button_atlas.clone(),
+                            TextureAtlas {
+                                layout: texture_atlas_handle.clone(),
+                                index: 0,
+                            },
+                        )
                     },
                     Transform {
                         translation: button.translation,
@@ -331,7 +348,11 @@ mod on_enter {
                         ..default()
                     },
                     TextColor(Color::srgb_u8(255, 215, 0)),
-                ));
+                ))
+                .observe(button_over)
+                .observe(button_press)
+                .observe(button_release)
+                .observe(button_out);
         }
 
         // Spawn background
@@ -351,6 +372,66 @@ mod on_enter {
             },
         ));
     }
+}
+
+fn button_over(
+    click: On<Pointer<Over>>,
+    mut query: Query<&mut Sprite, With<ButtonSprite>>,
+) {
+    let Ok(mut sprite) = query.get_mut(click.entity) else {
+        panic!();
+    };
+
+    let Some(texture_atlas) = sprite.texture_atlas.as_mut() else {
+        panic!();
+    };
+
+    texture_atlas.index = 1;
+}
+
+fn button_press(
+    click: On<Pointer<Press>>,
+    mut query: Query<&mut Sprite, With<ButtonSprite>>,
+) {
+    let Ok(mut sprite) = query.get_mut(click.entity) else {
+        panic!();
+    };
+
+    let Some(texture_atlas) = sprite.texture_atlas.as_mut() else {
+        panic!();
+    };
+
+    texture_atlas.index = 2;
+}
+
+fn button_release(
+    click: On<Pointer<Release>>,
+    mut query: Query<&mut Sprite, With<ButtonSprite>>,
+) {
+    let Ok(mut sprite) = query.get_mut(click.entity) else {
+        panic!();
+    };
+
+    let Some(texture_atlas) = sprite.texture_atlas.as_mut() else {
+        panic!();
+    };
+
+    texture_atlas.index = 1;
+}
+
+fn button_out(
+    click: On<Pointer<Out>>,
+    mut query: Query<&mut Sprite, With<ButtonSprite>>,
+) {
+    let Ok(mut sprite) = query.get_mut(click.entity) else {
+        panic!();
+    };
+
+    let Some(texture_atlas) = sprite.texture_atlas.as_mut() else {
+        panic!();
+    };
+
+    texture_atlas.index = 0;
 }
 
 fn on_click(
