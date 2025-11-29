@@ -1,5 +1,5 @@
 use crate::plugin::scene::main_menu::MainMenu;
-use bevy::{prelude::*, window::WindowResized};
+use bevy::prelude::*;
 use generator::*;
 
 pub struct Plugin;
@@ -617,11 +617,27 @@ fn resize_background_sprite(
 }
 
 fn rotate(children: Query<&Children>) {
+    return;
     info!("todo");
 }
 
-fn help() {
-    info!("todo");
+fn help(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    tile_query: Query<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>,
+    children: Query<&Children, With<tile::Variant>>,
+) {
+    if !keyboard.just_pressed(KeyCode::KeyH) {
+        return;
+    }
+
+    for (entity, position, size) in tile_query {
+        for (entity_, position_, size_) in tile_query {
+            // rule_check()
+            todo!();
+        }
+    }
+
+    info!("pressed!");
 }
 
 mod generator {
