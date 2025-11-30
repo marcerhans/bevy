@@ -21,7 +21,8 @@ impl bevy::prelude::Plugin for Plugin {
             )
             .add_systems(
                 Update,
-                (shuffle.run_if(shuffle_button), help).run_if(in_state(InGame::Root)),
+                (shuffle.run_if(shuffle_button), help.run_if(help_button))
+                    .run_if(in_state(InGame::Root)),
             );
     }
 }
@@ -345,6 +346,7 @@ mod on_enter {
                     },
                 ))
                 .with_child((
+                    ButtonSprite,
                     Text2d::new(button.text),
                     TextFont {
                         font_size: button_size.y / 5.0,
@@ -395,7 +397,8 @@ fn button_over(
 fn button_press(
     click: On<Pointer<Press>>,
     mut query: Query<&mut Sprite, With<ButtonSprite>>,
-    shuffle_query: Query<(&mut tile::Variant, &mut Text2d)>,
+    children: Query<&Children, With<ButtonSprite>>,
+    text2ds: Query<&Text2d, With<ButtonSprite>>,
 ) {
     let Ok(mut sprite) = query.get_mut(click.entity) else {
         panic!();
@@ -406,7 +409,24 @@ fn button_press(
     };
 
     texture_atlas.index = 2;
-    shuffle(shuffle_query);
+
+    let Ok(children) = children.get(click.entity) else {
+        panic!();
+    };
+
+    let mut text2d = None;
+    for &child in children {
+        if let Ok(text) = text2ds.get(child) {
+            text2d = Some(text);
+            break;
+        }
+    }
+
+    match text2d.unwrap().as_str() {
+        "Shuffle (s)" => info!("shuffle!"),
+        "Help (h)" => info!("help!"),
+        _ => panic!(),
+    }
 }
 
 fn button_release(
@@ -641,21 +661,19 @@ fn shuffle(mut query: Query<(&mut tile::Variant, &mut Text2d)>) {
     }
 }
 
-fn help(
-    keyboard: Res<ButtonInput<KeyCode>>,
-    tile_query: Query<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>,
-    children: Query<&Children, With<tile::Variant>>,
-) {
-    if !keyboard.just_pressed(KeyCode::KeyH) {
-        return;
-    }
+fn help_button(keyboard: Res<ButtonInput<KeyCode>>) -> bool {
+    keyboard.just_pressed(KeyCode::KeyH)
+}
 
-    for (entity, position, size) in tile_query {
-        for (entity_, position_, size_) in tile_query {
-            // rule_check()
-            todo!();
-        }
-    }
+fn help(// tile_query: Query<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>,
+    // children: Query<&Children, With<tile::Variant>>,
+) {
+    // for (entity, position, size) in tile_query {
+    //     for (entity_, position_, size_) in tile_query {
+    //         // rule_check()
+    //         todo!();
+    //     }
+    // }
 
     info!("pressed!");
 }
