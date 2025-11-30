@@ -1,6 +1,7 @@
 use crate::plugin::scene::main_menu::MainMenu;
 use bevy::prelude::*;
 use generator::*;
+use rand::seq::SliceRandom;
 
 pub struct Plugin;
 
@@ -155,8 +156,6 @@ mod tile {
 }
 
 mod on_enter {
-    use rand::seq::SliceRandom;
-
     use super::*;
 
     pub fn spawn_tiles(
@@ -616,9 +615,28 @@ fn resize_background_sprite(
     }
 }
 
-fn rotate(children: Query<&Children>) {
-    return;
-    info!("todo");
+fn rotate(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut query: Query<(&mut tile::Variant, &mut Text2d)>,
+) {
+    if !keyboard.just_pressed(KeyCode::KeyR) {
+        return;
+    }
+
+    let mut rng = rand::rng();
+    let query_len = query.iter().len();
+    let mut variant_text = Vec::with_capacity(query_len);
+
+    for (variant, text2d) in &query {
+        variant_text.push((variant.clone(), text2d.clone()));
+    }
+
+    variant_text.shuffle(&mut rng);
+
+    for (index, (mut variant, mut text2d)) in query.iter_mut().enumerate() {
+        *variant = variant_text[index].0.clone();
+        *text2d = variant_text[index].1.clone();
+    }
 }
 
 fn help(
