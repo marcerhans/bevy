@@ -17,6 +17,7 @@ impl bevy::prelude::Plugin for Plugin {
             .add_message::<msg::Help>()
             .add_message::<msg::Undo>()
             .insert_resource(PreviouslySelectedTile(None))
+            .insert_resource(History::default())
             .add_systems(OnEnter(InGame::Root), spawn_tiles)
             .add_systems(
                 Update,
@@ -47,6 +48,17 @@ enum InGame {
 
 #[derive(Resource)]
 struct PreviouslySelectedTile(pub Option<(Entity, tile::Variant)>);
+
+#[derive(Resource)]
+struct TileCreationAttributes {
+    tile_factory: tile::Factory,
+    tile_size: Vec2,
+    tile_thickness_offset: Vec2,
+    texture: Handle<Image>,
+}
+
+#[derive(Resource, Default)]
+struct History(pub Vec<(usize, tile::Position, Vec3)>);
 
 #[derive(Component)]
 struct BackgroundSprite;
@@ -83,6 +95,7 @@ mod tile {
         pub val: Vec3,
     }
 
+    #[derive(Clone)]
     pub struct Factory {
         texture_tile: Handle<Image>,
         texture_alliance: Handle<Image>,
@@ -294,6 +307,14 @@ mod on_enter {
                 .into_iter()
                 .collect();
         tile_positions.shuffle(&mut rng);
+
+        // Save tile creation attributes (mainly used for history functionality)
+        commands.insert_resource(TileCreationAttributes {
+            tile_factory: tile_factory.clone(),
+            tile_size,
+            tile_thickness_offset,
+            texture: texture_tile.clone(),
+        });
 
         // Spawn loop
         let tvs = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE;
