@@ -15,6 +15,7 @@ impl bevy::prelude::Plugin for Plugin {
         app.add_sub_state::<InGame>()
             .add_message::<msg::Shuffle>()
             .add_message::<msg::Help>()
+            .add_message::<msg::Undo>()
             .insert_resource(PreviouslySelectedTile(None))
             .add_systems(OnEnter(InGame::Root), spawn_tiles)
             .add_systems(
@@ -28,6 +29,8 @@ impl bevy::prelude::Plugin for Plugin {
                     shuffle_button,
                     help.run_if(run_help),
                     help_button,
+                    undo.run_if(run_undo),
+                    undo_button,
                 )
                     .run_if(in_state(InGame::Root)),
             );
@@ -59,6 +62,9 @@ mod msg {
 
     #[derive(Message)]
     pub struct Help;
+
+    #[derive(Message)]
+    pub struct Undo;
 }
 
 mod tile {
@@ -328,6 +334,15 @@ mod on_enter {
                 + button_size.y * 0.5,
             999.0,
         );
+        let button_pos_start_right = Vec3::new(
+            (tile_size.x - tile_thickness_offset.x) * PositionGenerator::<Turtle>::COLUMNS as f32
+                / 2.0
+                + tile_size.x / 2.0,
+            -(tile_size.y - tile_thickness_offset.y) * PositionGenerator::<Turtle>::ROWS as f32
+                / 2.0
+                + button_size.y * 0.5,
+            999.0,
+        );
         let buttons = [
             Button {
                 translation: button_pos_start,
@@ -340,6 +355,10 @@ mod on_enter {
                     ..button_pos_start
                 },
                 text: "Shuffle (s)",
+            },
+            Button {
+                translation: button_pos_start_right,
+                text: "Undo (u)",
             },
         ];
 
@@ -418,6 +437,7 @@ fn button_press(
     text2ds: Query<&Text2d, With<ButtonSprite>>,
     mut msg_shuffle: MessageWriter<msg::Shuffle>,
     mut msg_help: MessageWriter<msg::Help>,
+    mut msg_undo: MessageWriter<msg::Undo>,
 ) {
     let Ok(mut sprite) = query.get_mut(click.entity) else {
         panic!();
@@ -447,6 +467,9 @@ fn button_press(
         },
         "Help (h)" => {
             msg_help.write(msg::Help);
+        },
+        "Undo (u)" => {
+            msg_undo.write(msg::Undo);
         },
         _ => panic!(),
     }
@@ -720,7 +743,35 @@ fn help(// tile_query: Query<(Entity, &tile::Position, &tile::Size), With<tile::
     //     }
     // }
 
-    info!("pressed!");
+    info!("help pressed!");
+}
+
+fn undo_button(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut msg: MessageWriter<msg::Undo>,
+) {
+    if keyboard.just_pressed(KeyCode::KeyU) {
+        msg.write(msg::Undo);
+    }
+}
+
+fn run_undo(mut msg: MessageReader<msg::Undo>) -> bool {
+    let run = msg.read().len() > 0;
+    msg.clear();
+    run
+}
+
+fn undo(// tile_query: Query<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>,
+    // children: Query<&Children, With<tile::Variant>>,
+) {
+    // for (entity, position, size) in tile_query {
+    //     for (entity_, position_, size_) in tile_query {
+    //         // rule_check()
+    //         todo!();
+    //     }
+    // }
+
+    info!("undo pressed!");
 }
 
 mod generator {
