@@ -180,6 +180,56 @@ mod tile {
             )
         }
     }
+
+    pub fn spawn_tile_with_extras(
+        commands: &mut Commands,
+        tile_factory: &Factory,
+        tile_size: &Vec2,
+        tile_thickness_offset: &Vec2,
+        index: usize,
+        position: &Position,
+        translation: Vec3,
+        texture: Handle<Image>,
+    ) {
+        commands
+            .spawn((
+                DespawnOnExit(super::InGame::Root),
+                Pickable::default(),
+                tile_factory.get_tile(Variant::Horde(index), None),
+                position.clone(),
+                Transform {
+                    translation,
+                    ..default()
+                },
+            ))
+            .with_child((
+                // Shadow
+                Sprite {
+                    custom_size: Some(tile_size.clone().with_y(tile_size.y - 10.0)),
+                    color: Color::hsla(
+                        0.0,
+                        0.0,
+                        0.0,
+                        if position.val.z == 0.0 { 0.0 } else { 0.75 },
+                    ),
+                    ..Sprite::from_image(texture)
+                },
+                Transform {
+                    translation: Vec3 {
+                        x: tile_thickness_offset.x * 0.4,
+                        y: tile_thickness_offset.y * 0.4,
+                        z: -10.0,
+                    },
+                    scale: Vec3 {
+                        x: 1.2,
+                        y: 1.0,
+                        z: 1.0,
+                    },
+                    ..default()
+                },
+            ))
+            .observe(super::on_click);
+    }
 }
 
 mod on_enter {
@@ -246,7 +296,6 @@ mod on_enter {
         tile_positions.shuffle(&mut rng);
 
         // Spawn loop
-        let tile_components = (DespawnOnExit(InGame::Root), Pickable::default());
         let tvs = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE;
 
         for (index, tile_position) in tile_positions.windows(tvs).step_by(tvs).enumerate() {
@@ -254,66 +303,30 @@ mod on_enter {
                 let column_index = tile_position[variant_index].x / tile_size.x;
                 let row_index = tile_position[variant_index].y / tile_size.y;
 
-                commands
-                    .spawn((
-                        tile_components.clone(),
-                        tile_factory.get_tile(tile::Variant::Horde(index), None),
-                        tile::Position {
-                            val: Vec3 {
-                                x: tile_position[variant_index].x,
-                                y: tile_position[variant_index].y,
-                                z: tile_position[variant_index].z,
-                            },
+                tile::spawn_tile_with_extras(
+                    &mut commands,
+                    &tile_factory,
+                    &tile_size,
+                    &tile_thickness_offset,
+                    index,
+                    &tile::Position {
+                        val: Vec3 {
+                            x: tile_position[variant_index].x,
+                            y: tile_position[variant_index].y,
+                            z: tile_position[variant_index].z,
                         },
-                        Transform {
-                            // RealPosition(x,y) + Adjustments for "overlaps" + Adustments for layer offsets
-                            // RealPosition(z) * 100.0 - Adjustments for row and column (such that overlaps are correct)
-                            translation: Vec3 {
-                                x: tile_position[variant_index].x
-                                    - (column_index * tile_thickness_offset.x)
-                                    + (tile_position[variant_index].z * tile_thickness_offset.x),
-                                y: tile_position[variant_index].y
-                                    - (row_index * tile_thickness_offset.y)
-                                    + (tile_position[variant_index].z * tile_thickness_offset.y)
-                                    - tile_height * 0.5, // NOTE:2: See NOTE:1 - This is simply to adjust the offset
-                                z: tile_position[variant_index].z * 100.0
-                                    - column_index
-                                    - row_index as f32,
-                            },
-                            ..default()
-                        },
-                    ))
-                    .with_child((
-                        // Shadow
-                        Sprite {
-                            custom_size: Some(tile_size.clone().with_y(tile_size.y - 10.0)),
-                            color: Color::hsla(
-                                0.0,
-                                0.0,
-                                0.0,
-                                if tile_position[variant_index].z == 0.0 {
-                                    0.0
-                                } else {
-                                    0.75
-                                },
-                            ),
-                            ..Sprite::from_image(texture_tile.clone())
-                        },
-                        Transform {
-                            translation: Vec3 {
-                                x: tile_thickness_offset.x * 0.4,
-                                y: tile_thickness_offset.y * 0.4,
-                                z: -10.0,
-                            },
-                            scale: Vec3 {
-                                x: 1.2,
-                                y: 1.0,
-                                z: 1.0,
-                            },
-                            ..default()
-                        },
-                    ))
-                    .observe(on_click);
+                    },
+                    Vec3 {
+                        x: tile_position[variant_index].x
+                            - (column_index * tile_thickness_offset.x)
+                            + (tile_position[variant_index].z * tile_thickness_offset.x),
+                        y: tile_position[variant_index].y - (row_index * tile_thickness_offset.y)
+                            + (tile_position[variant_index].z * tile_thickness_offset.y)
+                            - tile_height * 0.5, // NOTE:2: See NOTE:1 - This is simply to adjust the offset
+                        z: tile_position[variant_index].z * 100.0 - column_index - row_index as f32,
+                    },
+                    texture_tile.clone(),
+                );
             }
         }
 
@@ -575,12 +588,12 @@ fn on_click(
                 .transmute_lens_filtered::<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>()
                 .query(),
         ) {
-            // commands.entity(*prev_entity).despawn();
-            // commands.entity(click.entity).despawn();
-            let mut e = tile_query.get_mut(*prev_entity).unwrap();
-            e.4.translation.z = -1000.0;
-            let mut e = tile_query.get_mut(click.entity).unwrap();
-            e.4.translation.z = -1000.0;
+            commands.entity(*prev_entity).despawn();
+            commands.entity(click.entity).despawn();
+            // let mut e = tile_query.get_mut(*prev_entity).unwrap();
+            // e.4.translation.z = -1000.0;
+            // let mut e = tile_query.get_mut(click.entity).unwrap();
+            // e.4.translation.z = -1000.0;
 
             prev_tile.0 = None;
         } else {
