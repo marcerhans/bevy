@@ -511,7 +511,13 @@ fn on_click(
     children: Query<&Children>,
     variants: Query<&tile::Variant>,
     mut tile_query: Query<
-        (Entity, &mut tile::Position, &mut tile::Size, &mut Sprite),
+        (
+            Entity,
+            &mut tile::Position,
+            &mut tile::Size,
+            &mut Sprite,
+            &mut Transform,
+        ),
         With<tile::Marker>,
     >,
     mut prev_tile: ResMut<PreviouslySelectedTile>,
@@ -566,11 +572,16 @@ fn on_click(
             &click.entity,
             variant,
             &tile_query
-                .transmute_lens_filtered::<(Entity, &mut tile::Position, &mut tile::Size), With<tile::Marker>>()
+                .transmute_lens_filtered::<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>()
                 .query(),
         ) {
-            commands.entity(*prev_entity).despawn();
-            commands.entity(click.entity).despawn();
+            // commands.entity(*prev_entity).despawn();
+            // commands.entity(click.entity).despawn();
+            let mut e = tile_query.get_mut(*prev_entity).unwrap();
+            e.4.translation.z = -1000.0;
+            let mut e = tile_query.get_mut(click.entity).unwrap();
+            e.4.translation.z = -1000.0;
+
             prev_tile.0 = None;
         } else {
             info!("Failed rule check!");
@@ -586,7 +597,7 @@ fn rule_check(
     prev_variant: &tile::Variant,
     this_entity: &Entity,
     this_variant: &tile::Variant,
-    tile_query: &Query<(Entity, &mut tile::Position, &mut tile::Size), With<tile::Marker>>,
+    tile_query: &Query<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>,
 ) -> bool {
     fn are_intersecting(
         a_center: &Vec2,
@@ -606,7 +617,7 @@ fn rule_check(
     fn tile_is_obscured(
         tile_position: &Vec3,
         tile_size: &tile::Size,
-        tile_query: &Query<(Entity, &mut tile::Position, &mut tile::Size), With<tile::Marker>>,
+        tile_query: &Query<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>,
     ) -> bool {
         tile_query.iter().any(|(_, position, size)| {
             are_intersecting(
@@ -623,7 +634,7 @@ fn rule_check(
         tile_entity: Entity,
         tile_position: &Vec3,
         tile_size: &tile::Size,
-        tile_query: &Query<(Entity, &mut tile::Position, &mut tile::Size), With<tile::Marker>>,
+        tile_query: &Query<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>,
     ) -> bool {
         // (Same row counts as being within half another block along the y-axis.)
         let mut tiles_on_same_layer_and_row = tile_query.iter().filter(|(entity, pos, size)| {
