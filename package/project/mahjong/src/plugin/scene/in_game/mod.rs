@@ -19,7 +19,10 @@ impl bevy::prelude::Plugin for Plugin {
                 Update,
                 resize_background_sprite.run_if(in_state(InGame::Root)),
             )
-            .add_systems(Update, (rotate, help).run_if(in_state(InGame::Root)));
+            .add_systems(
+                Update,
+                (shuffle.run_if(shuffle_button), help).run_if(in_state(InGame::Root)),
+            );
     }
 }
 
@@ -318,7 +321,7 @@ mod on_enter {
                     y: button_pos_start.y + (button_size.y + button_margin.y) * 1.0,
                     ..button_pos_start
                 },
-                text: "Rotate (r)",
+                text: "Shuffle (s)",
             },
         ];
 
@@ -392,6 +395,7 @@ fn button_over(
 fn button_press(
     click: On<Pointer<Press>>,
     mut query: Query<&mut Sprite, With<ButtonSprite>>,
+    shuffle_query: Query<(&mut tile::Variant, &mut Text2d)>,
 ) {
     let Ok(mut sprite) = query.get_mut(click.entity) else {
         panic!();
@@ -402,6 +406,7 @@ fn button_press(
     };
 
     texture_atlas.index = 2;
+    shuffle(shuffle_query);
 }
 
 fn button_release(
@@ -615,14 +620,11 @@ fn resize_background_sprite(
     }
 }
 
-fn rotate(
-    keyboard: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&mut tile::Variant, &mut Text2d)>,
-) {
-    if !keyboard.just_pressed(KeyCode::KeyR) {
-        return;
-    }
+fn shuffle_button(keyboard: Res<ButtonInput<KeyCode>>) -> bool {
+    keyboard.just_pressed(KeyCode::KeyS)
+}
 
+fn shuffle(mut query: Query<(&mut tile::Variant, &mut Text2d)>) {
     let mut rng = rand::rng();
     let query_len = query.iter().len();
     let mut variant_text = Vec::with_capacity(query_len);
