@@ -416,6 +416,8 @@ fn button_press(
     mut query: Query<&mut Sprite, With<ButtonSprite>>,
     children: Query<&Children, With<ButtonSprite>>,
     text2ds: Query<&Text2d, With<ButtonSprite>>,
+    mut msg_shuffle: MessageWriter<msg::Shuffle>,
+    mut msg_help: MessageWriter<msg::Help>,
 ) {
     let Ok(mut sprite) = query.get_mut(click.entity) else {
         panic!();
@@ -440,8 +442,12 @@ fn button_press(
     }
 
     match text2d.unwrap().as_str() {
-        "Shuffle (s)" => info!("shuffle!"),
-        "Help (h)" => info!("help!"),
+        "Shuffle (s)" => {
+            msg_shuffle.write(msg::Shuffle);
+        },
+        "Help (h)" => {
+            msg_help.write(msg::Help);
+        },
         _ => panic!(),
     }
 }
