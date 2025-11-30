@@ -13,6 +13,8 @@ impl bevy::prelude::Plugin for Plugin {
         use on_enter::*;
 
         app.add_sub_state::<InGame>()
+            .add_message::<msg::Shuffle>()
+            .add_message::<msg::Help>()
             .insert_resource(PreviouslySelectedTile(None))
             .add_systems(OnEnter(InGame::Root), spawn_tiles)
             .add_systems(
@@ -21,7 +23,12 @@ impl bevy::prelude::Plugin for Plugin {
             )
             .add_systems(
                 Update,
-                (shuffle.run_if(shuffle_button), help.run_if(help_button))
+                (
+                    shuffle.run_if(run_shuffle),
+                    shuffle_button,
+                    help.run_if(run_help),
+                    help_button,
+                )
                     .run_if(in_state(InGame::Root)),
             );
     }
@@ -43,6 +50,16 @@ struct BackgroundSprite;
 
 #[derive(Component, Clone)]
 struct ButtonSprite;
+
+mod msg {
+    use bevy::prelude::*;
+
+    #[derive(Message)]
+    pub struct Shuffle;
+
+    #[derive(Message)]
+    pub struct Help;
+}
 
 mod tile {
     use bevy::prelude::*;
@@ -640,8 +657,19 @@ fn resize_background_sprite(
     }
 }
 
-fn shuffle_button(keyboard: Res<ButtonInput<KeyCode>>) -> bool {
-    keyboard.just_pressed(KeyCode::KeyS)
+fn shuffle_button(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut msg: MessageWriter<msg::Shuffle>,
+) {
+    if keyboard.just_pressed(KeyCode::KeyS) {
+        msg.write(msg::Shuffle);
+    }
+}
+
+fn run_shuffle(mut msg: MessageReader<msg::Shuffle>) -> bool {
+    let run = msg.read().len() > 0;
+    msg.clear();
+    run
 }
 
 fn shuffle(mut query: Query<(&mut tile::Variant, &mut Text2d)>) {
@@ -661,8 +689,19 @@ fn shuffle(mut query: Query<(&mut tile::Variant, &mut Text2d)>) {
     }
 }
 
-fn help_button(keyboard: Res<ButtonInput<KeyCode>>) -> bool {
-    keyboard.just_pressed(KeyCode::KeyH)
+fn help_button(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut msg: MessageWriter<msg::Help>,
+) {
+    if keyboard.just_pressed(KeyCode::KeyH) {
+        msg.write(msg::Help);
+    }
+}
+
+fn run_help(mut msg: MessageReader<msg::Help>) -> bool {
+    let run = msg.read().len() > 0;
+    msg.clear();
+    run
 }
 
 fn help(// tile_query: Query<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>,
