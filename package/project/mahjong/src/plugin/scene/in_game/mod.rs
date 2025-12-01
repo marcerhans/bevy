@@ -558,7 +558,7 @@ fn on_click(
             &mut Sprite,
             &mut Transform,
         ),
-        (Without<tile::Inactive>, With<tile::Marker>),
+        With<tile::Marker>,
     >,
     mut prev_tile: ResMut<PreviouslySelectedTile>,
     mut history: ResMut<History>,
@@ -581,7 +581,7 @@ fn on_click(
     if let Ok(mut e) = tile_query.get_mut(click.entity) {
         e.3.color = Color::hsl(0.0, 0.0, 1.5);
     } else {
-        info!("{:?}", click.entity);
+        panic!() // With the tile_query having the filter "With<tile::Inactive>" it seems like it retreives bad entities?
     }
 
     if let Some(prev_tile) = &mut prev_tile.0 {
