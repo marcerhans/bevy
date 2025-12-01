@@ -395,7 +395,7 @@ mod on_enter {
             },
             Button {
                 translation: button_pos_start_right,
-                text: "Undo (u)",
+                text: "  Undo (u)\n(limit: 32)",
             },
         ];
 
@@ -508,7 +508,7 @@ fn button_press(
         "Help (h)" => {
             msg_help.write(msg::Help);
         },
-        "Undo (u)" => {
+        "Undo (u)\n(limit: 32)" => {
             msg_undo.write(msg::Undo);
         },
         _ => panic!(),
@@ -843,14 +843,10 @@ fn run_undo(mut msg: MessageReader<msg::Undo>) -> bool {
 }
 
 fn undo(
-    // tile_query: Query<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>,
-    // children: Query<&Children, With<tile::Variant>>,
     mut commands: Commands,
     mut history: ResMut<History>,
     mut query_pair: Query<(&mut Transform, &mut Sprite), With<tile::Inactive>>,
-    // mut query_shuffle: Query<(&mut tile::Variant, &mut Text2d)>,
 ) {
-    info!("undo pressed!");
     if let Some(history_item) = history.pop_back() {
         match history_item {
             Undo::Pair((entity1, z1), (entity2, z2)) => {
