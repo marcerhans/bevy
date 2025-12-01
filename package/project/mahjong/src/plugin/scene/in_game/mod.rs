@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::plugin::scene::main_menu::MainMenu;
 use bevy::prelude::*;
 use generator::*;
@@ -55,7 +57,11 @@ enum Undo {
 }
 
 #[derive(Resource, Deref, DerefMut, Default)]
-struct History(Vec<Undo>);
+struct History(VecDeque<Undo>);
+
+impl History {
+    const SIZE: usize = 32;
+}
 
 #[derive(Component)]
 struct BackgroundSprite;
@@ -616,7 +622,11 @@ fn on_click(
             let e1z = tile_query.get_mut(*prev_entity).unwrap().4.translation.z;
             let e2z= tile_query.get_mut(click.entity).unwrap().4.translation.z;
 
-            history.push(Undo::Pair((*prev_entity, e1z), (click.entity, e2z)));
+            history.push_back(Undo::Pair((*prev_entity, e1z), (click.entity, e2z)));
+
+            if history.len() > History::SIZE {
+                history.pop_front();
+            }
 
             let mut e1 = tile_query.get_mut(*prev_entity).unwrap();
             e1.4.translation.z = -1000.0;
@@ -823,17 +833,20 @@ fn undo(
     // children: Query<&Children, With<tile::Variant>>,
     mut commands: Commands,
     mut history: ResMut<History>,
-    mut transforms: Query<&mut Transform, With<tile::Inactive>>,
+    mut query: Query<(&mut Transform, &mut Sprite), With<tile::Inactive>>,
 ) {
     info!("undo pressed!");
-    if let Some(history_item) = history.pop() {
+    if let Some(history_item) = history.pop_back() {
         match history_item {
             Undo::Pair((entity1, z1), (entity2, z2)) => {
                 commands.entity(entity1).remove::<tile::Inactive>();
                 commands.entity(entity2).remove::<tile::Inactive>();
 
-                transforms.get_mut(entity1).unwrap().translation.z = z1;
-                transforms.get_mut(entity2).unwrap().translation.z = z2;
+                query.get_mut(entity1).unwrap().0.translation.z = z1;
+                query.get_mut(entity2).unwrap().0.translation.z = z2;
+
+                query.get_mut(entity1).unwrap().1.color = Color::hsl(0.0, 0.0, 1.0);
+                query.get_mut(entity2).unwrap().1.color = Color::hsl(0.0, 0.0, 1.0);
             },
             Undo::Shuffle(items) => todo!(),
         }
