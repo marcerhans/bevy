@@ -576,14 +576,11 @@ fn on_click(
         }
     }
     let variant = variant.unwrap();
-    // let id = match variant {
-    //     tile::Variant::Horde(id) | tile::Variant::Alliance(id) => id,
-    // };
-    // info!("{}", id);
 
     // Update appearance of selected tile (and restore previous)
-    let mut e = tile_query.get_mut(click.entity).unwrap();
-    e.3.color = Color::hsl(0.0, 0.0, 1.5);
+    if let Ok(mut e) = tile_query.get_mut(click.entity) {
+        e.3.color = Color::hsl(0.0, 0.0, 1.5);
+    }
 
     if let Some(prev_tile) = &mut prev_tile.0 {
         if prev_tile.0 != click.entity {
