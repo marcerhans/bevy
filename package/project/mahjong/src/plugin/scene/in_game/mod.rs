@@ -49,8 +49,13 @@ enum InGame {
 #[derive(Resource)]
 struct PreviouslySelectedTile(pub Option<(Entity, tile::Variant)>);
 
+enum Undo {
+    Pair((Entity, f32), (Entity, f32)),
+    Shuffle(Vec<Entity>),
+}
+
 #[derive(Resource, Deref, DerefMut, Default)]
-struct History(Vec<(Entity, Entity)>);
+struct History(Vec<Undo>);
 
 #[derive(Component)]
 struct BackgroundSprite;
@@ -168,6 +173,7 @@ mod tile {
                 },
                 children![match variant {
                     Variant::Horde(icons) => (
+                        Marker,
                         Variant::Horde(icons),
                         Text2d::new(icons.to_string()),
                         TextColor::WHITE,
@@ -176,6 +182,7 @@ mod tile {
                         offset,
                     ),
                     Variant::Alliance(icons) => (
+                        Marker,
                         Variant::Alliance(icons),
                         Text2d::new(icons.to_string()),
                         TextColor::WHITE,
@@ -606,12 +613,15 @@ fn on_click(
             commands.entity(*prev_entity).insert(tile::Inactive);
             commands.entity(click.entity).insert(tile::Inactive);
 
-            let mut e = tile_query.get_mut(*prev_entity).unwrap();
-            e.4.translation.z = -1000.0;
-            let mut e = tile_query.get_mut(click.entity).unwrap();
-            e.4.translation.z = -1000.0;
+            let e1z = tile_query.get_mut(*prev_entity).unwrap().4.translation.z;
+            let e2z= tile_query.get_mut(click.entity).unwrap().4.translation.z;
 
-            history.push((*prev_entity, click.entity));
+            history.push(Undo::Pair((*prev_entity, e1z), (click.entity, e2z)));
+
+            let mut e1 = tile_query.get_mut(*prev_entity).unwrap();
+            e1.4.translation.z = -1000.0;
+            let mut e2 = tile_query.get_mut(click.entity).unwrap();
+            e2.4.translation.z = -1000.0;
 
             prev_tile.0 = None;
         } else {
@@ -808,17 +818,26 @@ fn run_undo(mut msg: MessageReader<msg::Undo>) -> bool {
     run
 }
 
-fn undo(// tile_query: Query<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>,
+fn undo(
+    // tile_query: Query<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>,
     // children: Query<&Children, With<tile::Variant>>,
+    mut commands: Commands,
+    mut history: ResMut<History>,
+    mut transforms: Query<&mut Transform, With<tile::Inactive>>,
 ) {
-    // for (entity, position, size) in tile_query {
-    //     for (entity_, position_, size_) in tile_query {
-    //         // rule_check()
-    //         todo!();
-    //     }
-    // }
-
     info!("undo pressed!");
+    if let Some(history_item) = history.pop() {
+        match history_item {
+            Undo::Pair((entity1, z1), (entity2, z2)) => {
+                commands.entity(entity1).remove::<tile::Inactive>();
+                commands.entity(entity2).remove::<tile::Inactive>();
+
+                transforms.get_mut(entity1).unwrap().translation.z = z1;
+                transforms.get_mut(entity2).unwrap().translation.z = z2;
+            },
+            Undo::Shuffle(items) => todo!(),
+        }
+    }
 }
 
 mod generator {
