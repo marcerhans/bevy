@@ -580,6 +580,8 @@ fn on_click(
     // Update appearance of selected tile (and restore previous)
     if let Ok(mut e) = tile_query.get_mut(click.entity) {
         e.3.color = Color::hsl(0.0, 0.0, 1.5);
+    } else {
+        info!("{:?}", click.entity);
     }
 
     if let Some(prev_tile) = &mut prev_tile.0 {
