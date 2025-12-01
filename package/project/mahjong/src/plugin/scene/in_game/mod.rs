@@ -389,7 +389,6 @@ mod on_enter {
         for button in buttons {
             commands
                 .spawn((
-                    DespawnOnExit(InGame::Root),
                     button_base.clone(),
                     Sprite {
                         custom_size: Some(button_size.clone()),
@@ -445,7 +444,7 @@ mod on_enter {
 
 fn button_over(
     click: On<Pointer<Over>>,
-    mut query: Query<&mut Sprite, With<ButtonSprite>>,
+    mut query: Query<&mut Sprite, (Without<tile::Marker>, With<ButtonSprite>)>,
 ) {
     let Ok(mut sprite) = query.get_mut(click.entity) else {
         panic!();
@@ -460,9 +459,9 @@ fn button_over(
 
 fn button_press(
     click: On<Pointer<Press>>,
-    mut query: Query<&mut Sprite, With<ButtonSprite>>,
-    children: Query<&Children, With<ButtonSprite>>,
-    text2ds: Query<&Text2d, With<ButtonSprite>>,
+    mut query: Query<&mut Sprite, (Without<tile::Marker>, With<ButtonSprite>)>,
+    children: Query<&Children, (Without<tile::Marker>, With<ButtonSprite>)>,
+    text2ds: Query<&Text2d, (Without<tile::Marker>, With<ButtonSprite>)>,
     mut msg_shuffle: MessageWriter<msg::Shuffle>,
     mut msg_help: MessageWriter<msg::Help>,
     mut msg_undo: MessageWriter<msg::Undo>,
@@ -505,7 +504,7 @@ fn button_press(
 
 fn button_release(
     click: On<Pointer<Release>>,
-    mut query: Query<&mut Sprite, With<ButtonSprite>>,
+    mut query: Query<&mut Sprite, (Without<tile::Marker>, With<ButtonSprite>)>,
 ) {
     let Ok(mut sprite) = query.get_mut(click.entity) else {
         panic!();
@@ -520,7 +519,7 @@ fn button_release(
 
 fn button_out(
     click: On<Pointer<Out>>,
-    mut query: Query<&mut Sprite, With<ButtonSprite>>,
+    mut query: Query<&mut Sprite, (Without<tile::Marker>, With<ButtonSprite>)>,
 ) {
     let Ok(mut sprite) = query.get_mut(click.entity) else {
         panic!();
@@ -546,7 +545,7 @@ fn on_click(
             &mut Sprite,
             &mut Transform,
         ),
-        With<tile::Marker>,
+        (Without<tile::Inactive>, With<tile::Marker>),
     >,
     mut prev_tile: ResMut<PreviouslySelectedTile>,
     mut history: ResMut<History>,
@@ -744,7 +743,12 @@ fn run_shuffle(mut msg: MessageReader<msg::Shuffle>) -> bool {
     run
 }
 
-fn shuffle(mut query: Query<(&mut tile::Variant, &mut Text2d)>) {
+fn shuffle(
+    mut query: Query<
+        (&mut tile::Variant, &mut Text2d),
+        (Without<tile::Inactive>, With<tile::Marker>),
+    >
+) {
     let mut rng = rand::rng();
     let query_len = query.iter().len();
     let mut variant_text = Vec::with_capacity(query_len);
