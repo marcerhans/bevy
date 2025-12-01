@@ -508,7 +508,7 @@ fn button_press(
         "Help (h)" => {
             msg_help.write(msg::Help);
         },
-        "Undo (u)\n(limit: 32)" => {
+        "  Undo (u)\n(limit: 32)" => {
             msg_undo.write(msg::Undo);
         },
         _ => panic!(),
