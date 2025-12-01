@@ -17,6 +17,7 @@ impl bevy::prelude::Plugin for Plugin {
             .add_message::<msg::Help>()
             .add_message::<msg::Undo>()
             .insert_resource(PreviouslySelectedTile(None))
+            .insert_resource(History::default())
             .add_systems(OnEnter(InGame::Root), spawn_tiles)
             .add_systems(
                 Update,
@@ -47,6 +48,9 @@ enum InGame {
 
 #[derive(Resource)]
 struct PreviouslySelectedTile(pub Option<(Entity, tile::Variant)>);
+
+#[derive(Resource, Deref, DerefMut, Default)]
+struct History(Vec<(Entity, Entity)>);
 
 #[derive(Component)]
 struct BackgroundSprite;
@@ -82,6 +86,9 @@ mod tile {
     pub struct Position {
         pub val: Vec3,
     }
+
+    #[derive(Component, Clone)]
+    pub struct Inactive;
 
     pub struct Factory {
         texture_tile: Handle<Image>,
@@ -428,6 +435,8 @@ mod on_enter {
     }
 }
 
+// TODO: FROM HERE
+
 fn button_over(
     click: On<Pointer<Over>>,
     mut query: Query<&mut Sprite, With<ButtonSprite>>,
@@ -534,6 +543,7 @@ fn on_click(
         With<tile::Marker>,
     >,
     mut prev_tile: ResMut<PreviouslySelectedTile>,
+    mut history: ResMut<History>,
 ) {
     let Ok(children) = children.get(click.entity) else {
         info!("Clicked entity is missing children");
@@ -588,12 +598,18 @@ fn on_click(
                 .transmute_lens_filtered::<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>()
                 .query(),
         ) {
-            commands.entity(*prev_entity).despawn();
-            commands.entity(click.entity).despawn();
-            // let mut e = tile_query.get_mut(*prev_entity).unwrap();
-            // e.4.translation.z = -1000.0;
-            // let mut e = tile_query.get_mut(click.entity).unwrap();
-            // e.4.translation.z = -1000.0;
+            // commands.entity(*prev_entity).despawn();
+            // commands.entity(click.entity).despawn();
+
+            commands.entity(*prev_entity).insert(tile::Inactive);
+            commands.entity(click.entity).insert(tile::Inactive);
+
+            let mut e = tile_query.get_mut(*prev_entity).unwrap();
+            e.4.translation.z = -1000.0;
+            let mut e = tile_query.get_mut(click.entity).unwrap();
+            e.4.translation.z = -1000.0;
+
+            history.push((*prev_entity, click.entity));
 
             prev_tile.0 = None;
         } else {
