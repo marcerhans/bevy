@@ -342,7 +342,11 @@ mod on_enter {
             translation: Vec3,
             text: &'static str,
         }
-        let button_base = (ButtonSprite, Pickable::default());
+        let button_base = (
+            DespawnOnExit(InGame::Root),
+            ButtonSprite,
+            Pickable::default(),
+        );
         let button_size = Vec2::new(tile_height * 1.5, tile_height * 0.75);
         let button_margin = Vec2::new(5.0, 5.0);
         let button_pos_start = Vec3::new(
@@ -385,6 +389,7 @@ mod on_enter {
         for button in buttons {
             commands
                 .spawn((
+                    DespawnOnExit(InGame::Root),
                     button_base.clone(),
                     Sprite {
                         custom_size: Some(button_size.clone()),
@@ -418,6 +423,7 @@ mod on_enter {
 
         // Spawn background
         commands.spawn((
+            DespawnOnExit(InGame::Root),
             BackgroundSprite,
             Sprite {
                 custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
@@ -598,9 +604,6 @@ fn on_click(
                 .transmute_lens_filtered::<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>()
                 .query(),
         ) {
-            // commands.entity(*prev_entity).despawn();
-            // commands.entity(click.entity).despawn();
-
             commands.entity(*prev_entity).insert(tile::Inactive);
             commands.entity(click.entity).insert(tile::Inactive);
 
