@@ -53,7 +53,7 @@ struct PreviouslySelectedTile(pub Option<(Entity, tile::Variant)>);
 
 enum Undo {
     Pair((Entity, f32), (Entity, f32)),
-    Shuffle(Vec<Entity>),
+    Shuffle(Vec<(Entity, tile::Variant, Option<Text2d>)>),
 }
 
 #[derive(Resource, Deref, DerefMut, Default)]
@@ -625,6 +625,7 @@ fn on_click(
             history.push_back(Undo::Pair((*prev_entity, e1z), (click.entity, e2z)));
 
             if history.len() > History::SIZE {
+                info!("History limit reached!");
                 history.pop_front();
             }
 
@@ -765,21 +766,34 @@ fn run_shuffle(mut msg: MessageReader<msg::Shuffle>) -> bool {
 
 fn shuffle(
     mut query: Query<
-        (&mut tile::Variant, &mut Text2d),
+        (Entity, &mut tile::Variant, &mut Text2d),
         (Without<tile::Inactive>, With<tile::Marker>),
-    >
+    >,
+    mut history: ResMut<History>,
 ) {
     let mut rng = rand::rng();
     let query_len = query.iter().len();
     let mut variant_text = Vec::with_capacity(query_len);
 
-    for (variant, text2d) in &query {
+    for (_, variant, text2d) in &query {
         variant_text.push((variant.clone(), text2d.clone()));
     }
 
-    variant_text.shuffle(&mut rng);
+    // Save for history
+    let mut history_shuffle_vec = vec![];
+    for (entity, variant, text2d) in query.iter() {
+        history_shuffle_vec.push((entity, variant.clone(), Some(text2d.clone())));
+    }
 
-    for (index, (mut variant, mut text2d)) in query.iter_mut().enumerate() {
+    history.push_back(Undo::Shuffle(history_shuffle_vec));
+    if history.len() > History::SIZE {
+        info!("History limit reached!");
+        history.pop_front();
+    }
+
+    // Apply shuffle
+    variant_text.shuffle(&mut rng);
+    for (index, (_, mut variant, mut text2d)) in query.iter_mut().enumerate() {
         *variant = variant_text[index].0.clone();
         *text2d = variant_text[index].1.clone();
     }
@@ -833,7 +847,8 @@ fn undo(
     // children: Query<&Children, With<tile::Variant>>,
     mut commands: Commands,
     mut history: ResMut<History>,
-    mut query: Query<(&mut Transform, &mut Sprite), With<tile::Inactive>>,
+    mut query_pair: Query<(&mut Transform, &mut Sprite), With<tile::Inactive>>,
+    // mut query_shuffle: Query<(&mut tile::Variant, &mut Text2d)>,
 ) {
     info!("undo pressed!");
     if let Some(history_item) = history.pop_back() {
@@ -842,13 +857,18 @@ fn undo(
                 commands.entity(entity1).remove::<tile::Inactive>();
                 commands.entity(entity2).remove::<tile::Inactive>();
 
-                query.get_mut(entity1).unwrap().0.translation.z = z1;
-                query.get_mut(entity2).unwrap().0.translation.z = z2;
+                query_pair.get_mut(entity1).unwrap().0.translation.z = z1;
+                query_pair.get_mut(entity2).unwrap().0.translation.z = z2;
 
-                query.get_mut(entity1).unwrap().1.color = Color::hsl(0.0, 0.0, 1.0);
-                query.get_mut(entity2).unwrap().1.color = Color::hsl(0.0, 0.0, 1.0);
+                query_pair.get_mut(entity1).unwrap().1.color = Color::hsl(0.0, 0.0, 1.0);
+                query_pair.get_mut(entity2).unwrap().1.color = Color::hsl(0.0, 0.0, 1.0);
             },
-            Undo::Shuffle(items) => todo!(),
+            Undo::Shuffle(items) => {
+                for (entity, variant, text2d) in items {
+                    commands.entity(entity).insert(variant);
+                    commands.entity(entity).insert(text2d.unwrap());
+                }
+            },
         }
     }
 }
