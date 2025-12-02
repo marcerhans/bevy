@@ -35,7 +35,7 @@ fn main() {
         .insert_resource(PreviouslySelectedTile(None))
         .insert_resource(Entities(None))
         .add_systems(Update, stimulator)
-        .add_systems(Update, (system_a, system_b).after(stimulator))
+        .add_systems(Update, (system_a).after(stimulator))
         .run();
 }
 
@@ -63,9 +63,8 @@ fn stimulator(
 
 fn system_a(
     mut msg_onclick: MessageReader<OnClick>,
-    mut commands: Commands,
     mut tile_query: Query<
-        (Entity, &mut tile::Position, &mut Sprite, &mut Transform),
+        (Entity, &mut tile::Position),
         (Without<tile::Inactive>, With<tile::Marker>),
     >,
     mut prev_entity: ResMut<PreviouslySelectedTile>,
@@ -80,15 +79,4 @@ fn system_a(
     };
 
     let mut e = tile_query.get_mut(**origin).unwrap();
-    commands.entity(prev_tile).insert(tile::Inactive);
-    commands.entity(**origin).insert(tile::Inactive);
-}
-
-fn system_b(
-    mut commands: Commands,
-    mut query_pair: Query<(&mut Transform, &mut Sprite), With<tile::Inactive>>,
-    e: Res<Entities>,
-) {
-    commands.entity(e.unwrap().0).remove::<tile::Inactive>();
-    commands.entity(e.unwrap().1).remove::<tile::Inactive>();
 }
