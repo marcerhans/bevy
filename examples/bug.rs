@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 
-#[derive(Message)]
+#[derive(Message, Deref, DerefMut)]
 struct OnClick(Entity);
 
-#[derive(Resource)]
+#[derive(Resource, Deref, DerefMut)]
 struct PreviouslySelectedTile(pub Option<Entity>);
 
 mod tile {
@@ -35,12 +35,15 @@ fn main() {
         .run();
 }
 
-fn init(
-    mut commands: Commands,
-) {
-}
+fn init(mut commands: Commands) {}
 
-fn stimulator(mut not_first: Local<bool>, mut e1: Local<Option<Entity>>, mut e2: Local<Option<Entity>>, mut commands: Commands) {
+fn stimulator(
+    mut not_first: Local<bool>,
+    mut e1: Local<Option<Entity>>,
+    mut e2: Local<Option<Entity>>,
+    mut commands: Commands,
+    mut msg_writer: MessageWriter<OnClick>,
+) {
     if !*not_first {
         let mut e = commands.spawn((
             tile::Marker,
@@ -53,23 +56,32 @@ fn stimulator(mut not_first: Local<bool>, mut e1: Local<Option<Entity>>, mut e2:
         *not_first = true;
     }
 
-    // mut msg_writer: MessageWriter<OnClick>,
+    msg_writer.write(OnClick(e1.unwrap()));
+    msg_writer.write(OnClick(e1.unwrap()));
 }
 
 fn system_a(
     mut msg_onclick: MessageReader<OnClick>,
     mut commands: Commands,
-    children: Query<&Children>,
-    variants: Query<&tile::Variant>,
+    // variants: Query<&tile::Variant>,
     mut tile_query: Query<
         (Entity, &mut tile::Position, &mut Sprite, &mut Transform),
         (Without<tile::Inactive>, With<tile::Marker>),
     >,
-    mut prev_tile: ResMut<PreviouslySelectedTile>,
+    mut prev_entity: ResMut<PreviouslySelectedTile>,
 ) {
     let Some(origin) = msg_onclick.read().next() else {
         return;
     };
+
+    let Some(prev_tile) = **prev_entity else {
+        prev_entity.as_mut().0 = Some(origin.0);
+        return;
+    };
+
+    let mut e = tile_query.get_mut(**origin).unwrap();
+    commands.entity(prev_tile).insert(tile::Inactive);
+    commands.entity(**origin).insert(tile::Inactive);
 }
 
 fn system_b(
