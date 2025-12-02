@@ -6,6 +6,9 @@ struct OnClick(Entity);
 #[derive(Resource, Deref, DerefMut)]
 struct PreviouslySelectedTile(pub Option<Entity>);
 
+#[derive(Resource, Deref, DerefMut)]
+struct Entities(Option<(Entity, Entity)>);
+
 mod tile {
     use super::*;
 
@@ -30,40 +33,37 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_message::<OnClick>()
         .insert_resource(PreviouslySelectedTile(None))
+        .insert_resource(Entities(None))
         .add_systems(Update, stimulator)
-        .add_systems(Update, (system_a, system_b))
+        .add_systems(Update, (system_a, system_b).after(stimulator))
         .run();
 }
 
-fn init(mut commands: Commands) {}
-
 fn stimulator(
     mut not_first: Local<bool>,
-    mut e1: Local<Option<Entity>>,
-    mut e2: Local<Option<Entity>>,
+    mut e: ResMut<Entities>,
     mut commands: Commands,
     mut msg_writer: MessageWriter<OnClick>,
 ) {
     if !*not_first {
-        let mut e = commands.spawn((
+        let mut e_new = commands.spawn((
             tile::Marker,
             tile::Position,
             tile::Inactive,
             tile::Variant::A,
         ));
-        *e1 = Some(e.id());
-        *e2 = Some(e.clone_and_spawn().id());
+
+        e.0 = Some((e_new.id(), e_new.clone_and_spawn().id()));
         *not_first = true;
     }
 
-    msg_writer.write(OnClick(e1.unwrap()));
-    msg_writer.write(OnClick(e1.unwrap()));
+    msg_writer.write(OnClick(e.unwrap().0));
+    msg_writer.write(OnClick(e.unwrap().1));
 }
 
 fn system_a(
     mut msg_onclick: MessageReader<OnClick>,
     mut commands: Commands,
-    // variants: Query<&tile::Variant>,
     mut tile_query: Query<
         (Entity, &mut tile::Position, &mut Sprite, &mut Transform),
         (Without<tile::Inactive>, With<tile::Marker>),
@@ -87,5 +87,8 @@ fn system_a(
 fn system_b(
     mut commands: Commands,
     mut query_pair: Query<(&mut Transform, &mut Sprite), With<tile::Inactive>>,
+    e: Res<Entities>,
 ) {
+    commands.entity(e.unwrap().0).remove::<tile::Inactive>();
+    commands.entity(e.unwrap().1).remove::<tile::Inactive>();
 }
