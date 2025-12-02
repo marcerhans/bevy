@@ -15,6 +15,7 @@ impl bevy::prelude::Plugin for Plugin {
         use on_enter::*;
 
         app.add_sub_state::<InGame>()
+            .add_message::<OnClick>()
             .add_message::<msg::Shuffle>()
             .add_message::<msg::Help>()
             .add_message::<msg::Undo>()
@@ -28,6 +29,7 @@ impl bevy::prelude::Plugin for Plugin {
             .add_systems(
                 Update,
                 (
+                    on_click,
                     shuffle.run_if(run_shuffle),
                     shuffle_button,
                     help.run_if(run_help),
@@ -35,6 +37,7 @@ impl bevy::prelude::Plugin for Plugin {
                     undo.run_if(run_undo),
                     undo_button,
                 )
+                    .chain()
                     .run_if(in_state(InGame::Root)),
             );
     }
@@ -62,6 +65,9 @@ struct History(VecDeque<Undo>);
 impl History {
     const SIZE: usize = 32;
 }
+
+#[derive(Message, Deref, DerefMut)]
+struct OnClick(Entity);
 
 #[derive(Component)]
 struct BackgroundSprite;
@@ -248,7 +254,11 @@ mod tile {
                     ..default()
                 },
             ))
-            .observe(super::on_click);
+            .observe(
+                |on_press: On<Pointer<Press>>, mut msg: MessageWriter<super::OnClick>| {
+                    msg.write(super::OnClick(on_press.entity));
+                },
+            );
     }
 }
 
@@ -546,7 +556,7 @@ fn button_out(
 }
 
 fn on_click(
-    click: On<Pointer<Press>>,
+    mut msg_onclick: MessageReader<OnClick>,
     mut commands: Commands,
     children: Query<&Children>,
     variants: Query<&tile::Variant>,
@@ -558,15 +568,16 @@ fn on_click(
             &mut Sprite,
             &mut Transform,
         ),
-        With<tile::Marker>,
+        (Without<tile::Inactive>, With<tile::Marker>),
     >,
     mut prev_tile: ResMut<PreviouslySelectedTile>,
     mut history: ResMut<History>,
 ) {
-    let Ok(children) = children.get(click.entity) else {
-        info!("Clicked entity is missing children");
+    let Some(origin) = msg_onclick.read().next() else {
         return;
     };
+
+    let children = children.get(**origin).unwrap();
 
     let mut variant = None;
     for &child in children {
@@ -578,14 +589,11 @@ fn on_click(
     let variant = variant.unwrap();
 
     // Update appearance of selected tile (and restore previous)
-    if let Ok(mut e) = tile_query.get_mut(click.entity) {
-        e.3.color = Color::hsl(0.0, 0.0, 1.5);
-    } else {
-        panic!() // With the tile_query having the filter "With<tile::Inactive>" it seems like it retreives bad entities?
-    }
+    let mut e = tile_query.get_mut(**origin).unwrap();
+    e.3.color = Color::hsl(0.0, 0.0, 1.5);
 
     if let Some(prev_tile) = &mut prev_tile.0 {
-        if prev_tile.0 != click.entity {
+        if prev_tile.0 != **origin {
             // Restore previous tile
             let mut e = tile_query.get_mut(prev_tile.0).unwrap();
             e.3.color = Color::hsl(0.0, 0.0, 1.0);
@@ -593,7 +601,7 @@ fn on_click(
     }
 
     let Some((prev_entity, prev_variant)) = &mut prev_tile.0 else {
-        prev_tile.0 = Some((click.entity, variant.clone()));
+        prev_tile.0 = Some((**origin, variant.clone()));
         return;
     };
 
@@ -603,25 +611,25 @@ fn on_click(
         variant.clone()
     );
 
-    if *prev_entity != click.entity && *prev_variant == *variant {
+    if *prev_entity != **origin && *prev_variant == *variant {
         info!("It's a match!");
 
         if rule_check(
             prev_entity,
             prev_variant,
-            &click.entity,
+            &**origin,
             variant,
             &tile_query
                 .transmute_lens_filtered::<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>()
                 .query(),
         ) {
             commands.entity(*prev_entity).insert(tile::Inactive);
-            commands.entity(click.entity).insert(tile::Inactive);
+            commands.entity(**origin).insert(tile::Inactive);
 
             let e1z = tile_query.get_mut(*prev_entity).unwrap().4.translation.z;
-            let e2z= tile_query.get_mut(click.entity).unwrap().4.translation.z;
+            let e2z= tile_query.get_mut(**origin).unwrap().4.translation.z;
 
-            history.push_back(Undo::Pair((*prev_entity, e1z), (click.entity, e2z)));
+            history.push_back(Undo::Pair((*prev_entity, e1z), (**origin, e2z)));
 
             if history.len() > History::SIZE {
                 info!("History limit reached!");
@@ -630,16 +638,16 @@ fn on_click(
 
             let mut e1 = tile_query.get_mut(*prev_entity).unwrap();
             e1.4.translation.z = -1000.0;
-            let mut e2 = tile_query.get_mut(click.entity).unwrap();
+            let mut e2 = tile_query.get_mut(**origin).unwrap();
             e2.4.translation.z = -1000.0;
 
             prev_tile.0 = None;
         } else {
             info!("Failed rule check!");
-            prev_tile.0 = Some((click.entity, variant.clone()));
+            prev_tile.0 = Some((**origin, variant.clone()));
         }
     } else {
-        prev_tile.0 = Some((click.entity, variant.clone()));
+        prev_tile.0 = Some((**origin, variant.clone()));
     }
 }
 
