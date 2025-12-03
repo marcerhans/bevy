@@ -4,9 +4,6 @@ use bevy::prelude::*;
 struct OnClick(Entity);
 
 #[derive(Resource, Deref, DerefMut)]
-struct PreviouslySelectedTile(pub Option<Entity>);
-
-#[derive(Resource, Deref, DerefMut)]
 struct Entities(Option<(Entity, Entity)>);
 
 mod tile {
@@ -32,7 +29,6 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_message::<OnClick>()
-        .insert_resource(PreviouslySelectedTile(None))
         .insert_resource(Entities(None))
         .add_systems(Update, stimulator)
         .add_systems(Update, (system_a, system_b).chain().after(stimulator))
@@ -63,21 +59,20 @@ fn system_a(
         (Entity, &mut tile::Position),
         (Without<tile::Inactive>, With<tile::Marker>),
     >,
-    mut prev_entity: ResMut<PreviouslySelectedTile>,
 ) {
     let Some(origin) = msg_onclick.read().next() else {
-        return;
+        panic!();
     };
+    let origin = **origin;
 
-    let Some(prev_tile) = **prev_entity else {
-        prev_entity.as_mut().0 = Some(origin.0);
-        return;
+    let Some(prev_tile) = msg_onclick.read().next() else {
+        panic!();
     };
+    let prev_tile = **prev_tile;
 
-    let _ = tile_query.get_mut(**origin).unwrap();
+    let _ = tile_query.get_mut(origin).unwrap();
     commands.entity(prev_tile).insert(tile::Inactive);
-    commands.entity(**origin).insert(tile::Inactive);
-    (**prev_entity) = None;
+    commands.entity(origin).insert(tile::Inactive);
 }
 
 fn system_b(
