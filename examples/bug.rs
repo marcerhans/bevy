@@ -46,11 +46,7 @@ fn stimulator(
     mut msg_writer: MessageWriter<OnClick>,
 ) {
     if !*not_first {
-        let mut e_new = commands.spawn((
-            tile::Marker,
-            tile::Position,
-            tile::Variant::A,
-        ));
+        let mut e_new = commands.spawn((tile::Marker, tile::Position, tile::Variant::A));
 
         e.0 = Some((e_new.id(), e_new.clone_and_spawn().id()));
         *not_first = true;
@@ -78,16 +74,7 @@ fn system_a(
         return;
     };
 
-    let mut e = tile_query.get_mut(**origin).unwrap();
+    let _ = tile_query.get_mut(**origin).unwrap();
     commands.entity(prev_tile).insert(tile::Inactive);
     commands.entity(prev_tile).insert(tile::Inactive);
-}
-
-fn system_b(
-    mut commands: Commands,
-    mut query_pair: Query<(Entity, &mut tile::Position), With<tile::Inactive>>,
-    e: Res<Entities>,
-) {
-    commands.entity(e.unwrap().0).remove::<tile::Inactive>();
-    commands.entity(e.unwrap().1).remove::<tile::Inactive>();
 }
