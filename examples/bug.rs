@@ -49,7 +49,6 @@ fn stimulator(
         let mut e_new = commands.spawn((
             tile::Marker,
             tile::Position,
-            tile::Inactive,
             tile::Variant::A,
         ));
 
@@ -62,6 +61,7 @@ fn stimulator(
 }
 
 fn system_a(
+    mut commands: Commands,
     mut msg_onclick: MessageReader<OnClick>,
     mut tile_query: Query<
         (Entity, &mut tile::Position),
@@ -79,4 +79,15 @@ fn system_a(
     };
 
     let mut e = tile_query.get_mut(**origin).unwrap();
+    commands.entity(prev_tile).insert(tile::Inactive);
+    commands.entity(prev_tile).insert(tile::Inactive);
+}
+
+fn system_b(
+    mut commands: Commands,
+    mut query_pair: Query<(Entity, &mut tile::Position), With<tile::Inactive>>,
+    e: Res<Entities>,
+) {
+    commands.entity(e.unwrap().0).remove::<tile::Inactive>();
+    commands.entity(e.unwrap().1).remove::<tile::Inactive>();
 }
