@@ -35,7 +35,7 @@ fn main() {
         .insert_resource(PreviouslySelectedTile(None))
         .insert_resource(Entities(None))
         .add_systems(Update, stimulator)
-        .add_systems(Update, (system_a).after(stimulator))
+        .add_systems(Update, (system_a, system_b).chain().after(stimulator))
         .run();
 }
 
@@ -76,5 +76,14 @@ fn system_a(
 
     let _ = tile_query.get_mut(**origin).unwrap();
     commands.entity(prev_tile).insert(tile::Inactive);
-    commands.entity(prev_tile).insert(tile::Inactive);
+    commands.entity(**origin).insert(tile::Inactive);
+    (**prev_entity) = None;
+}
+
+fn system_b(
+    mut commands: Commands,
+    e: Res<Entities>,
+) {
+    commands.entity(e.unwrap().0).remove::<tile::Inactive>();
+    commands.entity(e.unwrap().1).remove::<tile::Inactive>();
 }
