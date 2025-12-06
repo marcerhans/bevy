@@ -576,8 +576,25 @@ fn on_click(
     let Some(origin) = msg_onclick.read().next() else {
         return;
     };
+    let origin = **origin;
 
-    let children = children.get(**origin).unwrap();
+    // Sanity check.
+    if let Err(err) = commands.get_entity(origin) {
+        warn!("Entity does not exist. Error: {:?}", err);
+        return;
+    }
+
+    // Fetch the entities [tile::Variant] (nested inside a child entity).
+    let children = match children.get(origin) {
+        Ok(children) => children,
+        Err(err) => {
+            warn!(
+                "Could not fetch children of origin entity. Error: {:?}",
+                err
+            );
+            return;
+        },
+    };
 
     let mut variant = None;
     for &child in children {
@@ -586,22 +603,37 @@ fn on_click(
             break;
         }
     }
-    let variant = variant.unwrap();
+    let Some(variant) = variant else {
+        warn!("Could not fetch variant of (origins) child entity.",);
+        return;
+    };
 
-    // Update appearance of selected tile (and restore previous)
-    let mut e = tile_query.get_mut(**origin).unwrap();
-    e.3.color = Color::hsl(0.0, 0.0, 1.5);
+    // Update appearance of selected tile.
+    let mut current_tile = match tile_query.get_mut(origin) {
+        Ok(entity) => entity,
+        Err(err) => {
+            warn!(
+                "Could not fetch tile query entity based on origin entity. Error: {:?}",
+                err
+            );
+            return;
+        },
+    };
+    current_tile.3.color = Color::hsl(0.0, 0.0, 1.5);
 
+    // Restore appearance of previous tile.
     if let Some(prev_tile) = &mut prev_tile.0 {
-        if prev_tile.0 != **origin {
+        if prev_tile.0 != origin {
             // Restore previous tile
             let mut e = tile_query.get_mut(prev_tile.0).unwrap();
             e.3.color = Color::hsl(0.0, 0.0, 1.0);
         }
     }
 
+    // Set previous tile if currently non-existant.
     let Some((prev_entity, prev_variant)) = &mut prev_tile.0 else {
-        prev_tile.0 = Some((**origin, variant.clone()));
+        // (We needed the variant of the entity before we can do this, hence why it is not the first step).
+        prev_tile.0 = Some((origin, variant.clone()));
         return;
     };
 
@@ -611,25 +643,25 @@ fn on_click(
         variant.clone()
     );
 
-    if *prev_entity != **origin && *prev_variant == *variant {
+    if *prev_entity != origin && *prev_variant == *variant {
         info!("It's a match!");
 
         if rule_check(
             prev_entity,
             prev_variant,
-            &**origin,
+            &origin,
             variant,
             &tile_query
                 .transmute_lens_filtered::<(Entity, &tile::Position, &tile::Size), With<tile::Marker>>()
                 .query(),
         ) {
             commands.entity(*prev_entity).insert(tile::Inactive);
-            commands.entity(**origin).insert(tile::Inactive);
+            commands.entity(origin).insert(tile::Inactive);
 
             let e1z = tile_query.get_mut(*prev_entity).unwrap().4.translation.z;
-            let e2z= tile_query.get_mut(**origin).unwrap().4.translation.z;
+            let e2z= tile_query.get_mut(origin).unwrap().4.translation.z;
 
-            history.push_back(Undo::Pair((*prev_entity, e1z), (**origin, e2z)));
+            history.push_back(Undo::Pair((*prev_entity, e1z), (origin, e2z)));
 
             if history.len() > History::SIZE {
                 info!("History limit reached!");
@@ -638,16 +670,16 @@ fn on_click(
 
             let mut e1 = tile_query.get_mut(*prev_entity).unwrap();
             e1.4.translation.z = -1000.0;
-            let mut e2 = tile_query.get_mut(**origin).unwrap();
+            let mut e2 = tile_query.get_mut(origin).unwrap();
             e2.4.translation.z = -1000.0;
 
             prev_tile.0 = None;
         } else {
             info!("Failed rule check!");
-            prev_tile.0 = Some((**origin, variant.clone()));
+            prev_tile.0 = Some((origin, variant.clone()));
         }
     } else {
-        prev_tile.0 = Some((**origin, variant.clone()));
+        prev_tile.0 = Some((origin, variant.clone()));
     }
 }
 
