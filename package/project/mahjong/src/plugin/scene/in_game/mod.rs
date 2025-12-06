@@ -662,9 +662,7 @@ fn on_click(
             let e2z= tile_query.get_mut(origin).unwrap().4.translation.z;
 
             history.push_back(Undo::Pair((*prev_entity, e1z), (origin, e2z)));
-
             if history.len() > History::SIZE {
-                info!("History limit reached!");
                 history.pop_front();
             }
 
@@ -826,7 +824,6 @@ fn shuffle(
 
     history.push_back(Undo::Shuffle(history_shuffle_vec));
     if history.len() > History::SIZE {
-        info!("History limit reached!");
         history.pop_front();
     }
 
