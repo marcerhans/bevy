@@ -1456,7 +1456,7 @@ mod view {
     use super::model::grid::*;
     use bevy::prelude::*;
 
-    pub trait ModelToView<View> {
+    pub trait ModelToViewData<View> {
         type Context;
 
         fn convert(
@@ -1464,13 +1464,13 @@ mod view {
             context: Option<Self::Context>,
         ) -> View;
     }
-    
+
     pub struct TileContext {
         size: Vec2,
     }
 
     type TilePositions<const LAYERS: usize> = Vec<[Vec2; LAYERS]>;
-    impl<const LAYERS: usize, const ROWS: usize, const COLUMNS: usize> ModelToView<TilePositions<LAYERS>>
+    impl<const LAYERS: usize, const ROWS: usize, const COLUMNS: usize> ModelToViewData<TilePositions<LAYERS>>
         for Grid<Entity, LAYERS, ROWS, COLUMNS>
     {
         type Context = TileContext;
