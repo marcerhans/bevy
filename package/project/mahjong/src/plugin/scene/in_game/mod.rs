@@ -463,8 +463,6 @@ mod on_enter {
     }
 }
 
-// TODO: FROM HERE
-
 fn button_over(
     click: On<Pointer<Over>>,
     mut query: Query<&mut Sprite, (Without<tile::Marker>, With<ButtonSprite>)>,
@@ -1123,6 +1121,52 @@ mod generator {
 
         fn into_iter(self) -> Self::IntoIter {
             PositionGeneratorRefIterator::new(self)
+        }
+    }
+}
+
+mod grid {
+    use std::ops::{Index, IndexMut};
+
+    struct LayerOffset {
+        x: usize,
+        y: usize,
+    }
+
+    trait OccupantTrait: Eq {}
+    type Layer<Occupant, const ROWS: usize, const COLUMNS: usize> = [[Occupant; COLUMNS]; ROWS];
+
+    /// A [Grid] where single entities can occupy more than one index.
+    struct Grid<
+        Occupant: OccupantTrait,
+        const LAYERS: usize,
+        const ROWS: usize,
+        const COLUMNS: usize,
+    > {
+        occupied: [(LayerOffset, Layer<Occupant, ROWS, COLUMNS>); LAYERS],
+    }
+
+    impl<Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
+        Index<usize> for Grid<Occupant, LAYERS, ROWS, COLUMNS>
+    {
+        type Output = (LayerOffset, Layer<Occupant, ROWS, COLUMNS>);
+
+        fn index(
+            &self,
+            layer: usize,
+        ) -> &Self::Output {
+            &self.occupied[layer]
+        }
+    }
+
+    impl<Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
+        IndexMut<usize> for Grid<Occupant, LAYERS, ROWS, COLUMNS>
+    {
+        fn index_mut(
+            &mut self,
+            layer: usize,
+        ) -> &mut Self::Output {
+            &mut self.occupied[layer]
         }
     }
 }
