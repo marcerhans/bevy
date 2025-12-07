@@ -1125,7 +1125,7 @@ mod generator {
     }
 }
 
-mod grid {
+mod model {
     use std::ops::{Index, IndexMut};
 
     #[derive(Copy, Clone, Default)]
@@ -1449,4 +1449,10 @@ mod grid {
     }
 }
 
-mod tile_grid_logic {}
+mod controller {
+
+}
+
+mod view {
+
+}
