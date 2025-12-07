@@ -1168,7 +1168,7 @@ mod grid {
             Self { occupied }
         }
 
-        pub fn insert(
+        pub fn set(
             &mut self,
             layer: usize,
             row: usize,
@@ -1181,7 +1181,7 @@ mod grid {
             *old_occupant = Some(occupant);
         }
 
-        pub fn try_insert(
+        pub fn try_set(
             &mut self,
             layer: usize,
             row: usize,
@@ -1191,15 +1191,15 @@ mod grid {
             if layer >= LAYERS || row >= ROWS || column >= COLUMNS {
                 return None;
             }
-            self.insert(layer, row, column, occupant);
+            self.set(layer, row, column, occupant);
             Some(())
         }
 
-        pub fn insert_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+        pub fn set_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
             &mut self,
             occupant: Occupant,
         ) {
-            self.insert(LAYER, ROW, COLUMN, occupant);
+            self.set(LAYER, ROW, COLUMN, occupant);
         }
     }
 
@@ -1239,30 +1239,30 @@ mod grid {
             let mut rng = rand::rng();
 
             // Insert const
-            grid.insert_const::<0, 0, 0>(false);
+            grid.set_const::<0, 0, 0>(false);
 
             // Insert
             let row: u32 = rng.random_range(0..2);
             let col: u32 = rng.random_range(0..2);
             let row = row as usize;
             let col = col as usize;
-            grid.insert(0, row, col, false);
+            grid.set(0, row, col, false);
 
             // Try Insert
-            assert_eq!(grid.try_insert(0, 0, 0, false), Some(()));
-            assert_eq!(grid.try_insert(0, 1, 0, false), Some(()));
-            assert_eq!(grid.try_insert(0, 0, 1, false), Some(()));
-            assert_eq!(grid.try_insert(0, 1, 1, false), Some(()));
-            assert_eq!(grid.try_insert(1, 0, 0, false), None);
-            assert_eq!(grid.try_insert(0, 2, 0, false), None);
-            assert_eq!(grid.try_insert(0, 0, 2, false), None);
+            assert_eq!(grid.try_set(0, 0, 0, false), Some(()));
+            assert_eq!(grid.try_set(0, 1, 0, false), Some(()));
+            assert_eq!(grid.try_set(0, 0, 1, false), Some(()));
+            assert_eq!(grid.try_set(0, 1, 1, false), Some(()));
+            assert_eq!(grid.try_set(1, 0, 0, false), None);
+            assert_eq!(grid.try_set(0, 2, 0, false), None);
+            assert_eq!(grid.try_set(0, 0, 2, false), None);
         }
 
         #[test]
         #[should_panic]
         fn should_panic() {
             let mut grid = Grid::<bool, 1, 2, 2>::new(None);
-            grid.insert(1, 0, 0, false);
+            grid.set(1, 0, 0, false);
         }
     }
 }
