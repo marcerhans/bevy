@@ -1129,8 +1129,8 @@ mod grid {
     use std::ops::{Index, IndexMut};
 
     struct LayerOffset {
-        x: usize,
-        y: usize,
+        x: f32,
+        y: f32,
     }
 
     trait OccupantTrait: Eq {}
