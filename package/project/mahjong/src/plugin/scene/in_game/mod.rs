@@ -1188,7 +1188,7 @@ mod grid {
             column: usize,
             occupant: Occupant,
         ) -> Option<()> {
-            if layer >= LAYERS || row >= ROWS || column >= COLUMNS {
+            if !Self::is_within_bounds(layer, row, column) {
                 return None;
             }
             self.set(layer, row, column, occupant);
@@ -1200,6 +1200,105 @@ mod grid {
             occupant: Occupant,
         ) {
             self.set(LAYER, ROW, COLUMN, occupant);
+        }
+
+        pub fn try_set_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+            &mut self,
+            occupant: Occupant,
+        ) -> Option<()> {
+            if !Self::is_within_bounds_const::<LAYER, ROW, COLUMN>() {
+                return None;
+            }
+            self.set(LAYER, ROW, COLUMN, occupant);
+            Some(())
+        }
+
+        pub fn get(
+            &self,
+            layer: usize,
+            row: usize,
+            column: usize,
+        ) -> Option<&Occupant> {
+            self[layer].1[row][column].as_ref()
+        }
+
+        pub fn try_get(
+            &self,
+            layer: usize,
+            row: usize,
+            column: usize,
+        ) -> Option<&Occupant> {
+            if !Self::is_within_bounds(layer, row, column) {
+                return None;
+            }
+            self[layer].1[row][column].as_ref()
+        }
+
+        pub fn get_mut(
+            &mut self,
+            layer: usize,
+            row: usize,
+            column: usize,
+        ) -> Option<&mut Occupant> {
+            self[layer].1[row][column].as_mut()
+        }
+
+        pub fn try_get_mut(
+            &mut self,
+            layer: usize,
+            row: usize,
+            column: usize,
+        ) -> Option<&mut Occupant> {
+            if !Self::is_within_bounds(layer, row, column) {
+                return None;
+            }
+            self[layer].1[row][column].as_mut()
+        }
+
+        pub fn get_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+            &self
+        ) -> Option<&Occupant> {
+            self[LAYER].1[ROW][COLUMN].as_ref()
+        }
+
+        pub fn try_get_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+            &self
+        ) -> Option<&Occupant> {
+            if !Self::is_within_bounds_const::<LAYER, ROW, COLUMN>() {
+                return None;
+            }
+            self[LAYER].1[ROW][COLUMN].as_ref()
+        }
+
+        pub fn get_mut_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+            &mut self
+        ) -> Option<&mut Occupant> {
+            self[LAYER].1[ROW][COLUMN].as_mut()
+        }
+
+        pub fn try_get_mut_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+            &mut self
+        ) -> Option<&mut Occupant> {
+            if !Self::is_within_bounds_const::<LAYER, ROW, COLUMN>() {
+                return None;
+            }
+            self[LAYER].1[ROW][COLUMN].as_mut()
+        }
+
+        fn is_within_bounds(
+            layer: usize,
+            row: usize,
+            column: usize,
+        ) -> bool {
+            layer < LAYERS && row < ROWS && column < COLUMNS
+        }
+
+        const fn is_within_bounds_const<
+            const LAYER: usize,
+            const ROW: usize,
+            const COLUMN: usize,
+        >() -> bool {
+            LAYER < LAYERS && ROW < ROWS && COLUMN < COLUMNS
         }
     }
 
@@ -1229,40 +1328,123 @@ mod grid {
 
     #[cfg(test)]
     mod tests {
+        use super::*;
         use rand::Rng;
 
-        use super::*;
+        mod set {
+            use super::*;
 
-        #[test]
-        fn test() {
-            let mut grid = Grid::<bool, 1, 2, 2>::new(None);
-            let mut rng = rand::rng();
+            #[test]
+            fn test() {
+                let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                let mut rng = rand::rng();
 
-            // Insert const
-            grid.set_const::<0, 0, 0>(false);
+                // Set
+                let row: u32 = rng.random_range(0..2);
+                let col: u32 = rng.random_range(0..2);
+                let row = row as usize;
+                let col = col as usize;
+                grid.set(0, row, col, true);
 
-            // Insert
-            let row: u32 = rng.random_range(0..2);
-            let col: u32 = rng.random_range(0..2);
-            let row = row as usize;
-            let col = col as usize;
-            grid.set(0, row, col, false);
+                // Set const
+                grid.set_const::<0, 0, 0>(true);
 
-            // Try Insert
-            assert_eq!(grid.try_set(0, 0, 0, false), Some(()));
-            assert_eq!(grid.try_set(0, 1, 0, false), Some(()));
-            assert_eq!(grid.try_set(0, 0, 1, false), Some(()));
-            assert_eq!(grid.try_set(0, 1, 1, false), Some(()));
-            assert_eq!(grid.try_set(1, 0, 0, false), None);
-            assert_eq!(grid.try_set(0, 2, 0, false), None);
-            assert_eq!(grid.try_set(0, 0, 2, false), None);
+                // Try set
+                assert_eq!(grid.try_set(0, 0, 0, true), Some(()));
+                assert_eq!(grid.try_set(0, 1, 0, true), Some(()));
+                assert_eq!(grid.try_set(0, 0, 1, true), Some(()));
+                assert_eq!(grid.try_set(0, 1, 1, true), Some(()));
+                assert_eq!(grid.try_set(1, 0, 0, true), None);
+                assert_eq!(grid.try_set(0, 2, 0, true), None);
+                assert_eq!(grid.try_set(0, 0, 2, true), None);
+
+                // Try set const
+                assert_eq!(grid.try_set_const::<0, 0, 0>(true), Some(()));
+                assert_eq!(grid.try_set_const::<0, 1, 0>(true), Some(()));
+                assert_eq!(grid.try_set_const::<0, 0, 1>(true), Some(()));
+                assert_eq!(grid.try_set_const::<0, 1, 1>(true), Some(()));
+                assert_eq!(grid.try_set_const::<1, 0, 0>(true), None);
+                assert_eq!(grid.try_set_const::<0, 2, 0>(true), None);
+                assert_eq!(grid.try_set_const::<0, 0, 2>(true), None);
+            }
+
+            #[test]
+            #[should_panic]
+            fn should_panic0() {
+                let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                grid.set(1, 0, 0, true);
+            }
+
+            #[test]
+            #[should_panic]
+            fn should_panic1() {
+                let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                grid.set_const::<1, 0, 0>(true);
+            }
         }
 
-        #[test]
-        #[should_panic]
-        fn should_panic() {
-            let mut grid = Grid::<bool, 1, 2, 2>::new(None);
-            grid.set(1, 0, 0, false);
+        mod get {
+            use super::*;
+
+            #[test]
+            fn test() {
+                let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                grid.set_const::<0, 0, 0>(true);
+
+                // Get
+                assert_eq!(*grid.get(0, 0, 0).unwrap(), true);
+                assert_eq!(grid.get(0, 0, 1), None);
+
+                // Get const
+                assert_eq!(*grid.get_const::<0, 0, 0>().unwrap(), true);
+                assert_eq!(grid.get_const::<0, 0, 1>(), None);
+
+                // Try get
+                assert_eq!(*grid.try_get(0, 0, 0).unwrap(), true);
+                assert_eq!(grid.try_get(0, 1, 0), None);
+                assert_eq!(grid.try_get(0, 0, 1), None);
+                assert_eq!(grid.try_get(0, 1, 1), None);
+                assert_eq!(grid.try_get(1, 0, 0), None);
+                assert_eq!(grid.try_get(0, 2, 0), None);
+                assert_eq!(grid.try_get(0, 0, 2), None);
+
+                // Try get const
+                assert_eq!(*grid.try_get_const::<0, 0, 0>().unwrap(), true);
+                assert_eq!(grid.try_get_const::<0, 1, 0>(), None);
+                assert_eq!(grid.try_get_const::<0, 0, 1>(), None);
+                assert_eq!(grid.try_get_const::<0, 1, 1>(), None);
+                assert_eq!(grid.try_get_const::<1, 0, 0>(), None);
+                assert_eq!(grid.try_get_const::<0, 2, 0>(), None);
+                assert_eq!(grid.try_get_const::<0, 0, 2>(), None);
+            }
+
+            #[test]
+            #[should_panic]
+            fn should_panic0() {
+                let grid = Grid::<bool, 1, 2, 2>::new(None);
+                grid.get(1, 0, 0);
+            }
+
+            #[test]
+            #[should_panic]
+            fn should_panic1() {
+                let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                grid.get_mut(1, 0, 0);
+            }
+
+            #[test]
+            #[should_panic]
+            fn should_panic2() {
+                let grid = Grid::<bool, 1, 2, 2>::new(None);
+                grid.get_const::<1, 0, 0>();
+            }
+
+            #[test]
+            #[should_panic]
+            fn should_panic3() {
+                let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                grid.get_mut_const::<1, 0, 0>();
+            }
         }
     }
 }
