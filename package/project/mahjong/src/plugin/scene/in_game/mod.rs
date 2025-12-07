@@ -1452,8 +1452,6 @@ mod model {
     }
 }
 
-mod controller {}
-
 mod view {
     use super::model::grid::*;
     use bevy::prelude::*;
@@ -1470,8 +1468,8 @@ mod view {
         size: Vec2,
     }
 
-    type TilePositions = Vec<Vec3>;
-    impl<const LAYERS: usize, const ROWS: usize, const COLUMNS: usize> ModelToView<TilePositions>
+    type TilePositions<const LAYERS: usize> = Vec<[Vec2; LAYERS]>;
+    impl<const LAYERS: usize, const ROWS: usize, const COLUMNS: usize> ModelToView<TilePositions<LAYERS>>
         for Grid<Entity, LAYERS, ROWS, COLUMNS>
     {
         type Context = TileContext;
@@ -1479,59 +1477,10 @@ mod view {
         fn convert(
             &self,
             context: Option<Self::Context>,
-        ) -> TilePositions {
+        ) -> TilePositions<LAYERS> {
             todo!()
         }
     }
-
-    // pub struct ModelToView<'a, Model, View> {
-    //     model: &'a Model,
-    //     view: View,
-    // }
-
-    // struct GridToTilePositions {
-    //     tile_size: Vec2,
-    // }
-
-    // impl GridToTilePositions {
-    //     pub fn new(tile_size: Vec2) -> Self {
-    //         Self { tile_size }
-    //     }
-    // }
-
-    // impl<'a, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
-    //     ModelToViewTrait<Grid<Entity, LAYERS, ROWS, COLUMNS>, Vec<Vec3>>
-    //     for ModelToView<'a, Grid<Entity, LAYERS, ROWS, COLUMNS>, GridToTilePositions>
-    // {
-    //     fn convert(
-    //         &self,
-    //         model: Grid<Entity, LAYERS, ROWS, COLUMNS>,
-    //     ) -> Vec<Vec3> {
-    //         todo!()
-    //     }
-    // }
-
-    // pub struct TileAttributes {
-    //     size: Vec2,
-    // }
-
-    // pub struct GridToTilePositions {
-    //     tile: TileAttributes,
-    // }
-
-    // impl<const LAYERS: usize, const ROWS: usize, const COLUMNS: usize> ModelToViewTrait
-    //     for Grid<Entity, LAYERS, ROWS, COLUMNS>
-    // {
-    //     type ViewType = Vec<Vec3>;
-
-    //     fn convert() -> Self::ViewType {
-    //         todo!()
-    //     }
-
-    //     fn update_view(mut view: &mut Self::ViewType) {
-    //         todo!()
-    //     }
-    // }
-
-    // pub fn to_vec3
 }
+
+mod controller {}
