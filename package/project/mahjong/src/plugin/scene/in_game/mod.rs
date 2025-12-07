@@ -1126,333 +1126,412 @@ mod generator {
 }
 
 mod model {
-    use std::ops::{Index, IndexMut};
+    pub mod grid {
+        use std::ops::{Index, IndexMut};
 
-    #[derive(Copy, Clone, Default)]
-    pub struct LayerOffset {
-        x: f32,
-        y: f32,
-    }
-
-    pub trait OccupantTrait: Eq {}
-    impl<T: Eq> OccupantTrait for T {}
-
-    pub type Layer<Occupant, const ROWS: usize, const COLUMNS: usize> =
-        [[Option<Occupant>; COLUMNS]; ROWS];
-
-    /// A [Grid] where single entities can occupy more than one index.
-    pub struct Grid<
-        Occupant: OccupantTrait,
-        const LAYERS: usize,
-        const ROWS: usize,
-        const COLUMNS: usize,
-    > {
-        occupied: [(LayerOffset, Layer<Occupant, ROWS, COLUMNS>); LAYERS],
-    }
-
-    impl<Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
-        Grid<Occupant, LAYERS, ROWS, COLUMNS>
-    {
-        pub fn new(layer_offsets: Option<[LayerOffset; LAYERS]>) -> Self {
-            let layer_offsets = match layer_offsets {
-                Some(layer_offsets) => layer_offsets,
-                None => [LayerOffset::default(); LAYERS],
-            };
-
-            let occupied: [(LayerOffset, Layer<Occupant, ROWS, COLUMNS>); LAYERS] =
-                std::array::from_fn(|index| {
-                    let layer = std::array::from_fn(|_| std::array::from_fn(|_| None::<Occupant>));
-                    (layer_offsets[index], layer)
-                });
-
-            Self { occupied }
+        #[derive(Copy, Clone, Default)]
+        pub struct LayerOffset {
+            x: f32,
+            y: f32,
         }
 
-        pub fn set(
-            &mut self,
-            layer: usize,
-            row: usize,
-            column: usize,
-            occupant: Occupant,
-        ) {
-            let layer = &mut self[layer];
-            let row = &mut (*layer).1[row];
-            let old_occupant = &mut (*row)[column];
-            *old_occupant = Some(occupant);
+        pub trait OccupantTrait: Eq {}
+        impl<T: Eq> OccupantTrait for T {}
+
+        pub type Layer<Occupant, const ROWS: usize, const COLUMNS: usize> =
+            [[Option<Occupant>; COLUMNS]; ROWS];
+
+        /// A [Grid] where single entities can occupy more than one index.
+        pub struct Grid<
+            Occupant: OccupantTrait,
+            const LAYERS: usize,
+            const ROWS: usize,
+            const COLUMNS: usize,
+        > {
+            occupied: [(LayerOffset, Layer<Occupant, ROWS, COLUMNS>); LAYERS],
         }
 
-        pub fn try_set(
-            &mut self,
-            layer: usize,
-            row: usize,
-            column: usize,
-            occupant: Occupant,
-        ) -> Option<()> {
-            if !Self::is_within_bounds(layer, row, column) {
-                return None;
+        impl<Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
+            Grid<Occupant, LAYERS, ROWS, COLUMNS>
+        {
+            pub fn new(layer_offsets: Option<[LayerOffset; LAYERS]>) -> Self {
+                let layer_offsets = match layer_offsets {
+                    Some(layer_offsets) => layer_offsets,
+                    None => [LayerOffset::default(); LAYERS],
+                };
+
+                let occupied: [(LayerOffset, Layer<Occupant, ROWS, COLUMNS>); LAYERS] =
+                    std::array::from_fn(|index| {
+                        let layer =
+                            std::array::from_fn(|_| std::array::from_fn(|_| None::<Occupant>));
+                        (layer_offsets[index], layer)
+                    });
+
+                Self { occupied }
             }
-            self.set(layer, row, column, occupant);
-            Some(())
-        }
 
-        pub fn set_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
-            &mut self,
-            occupant: Occupant,
-        ) {
-            self.set(LAYER, ROW, COLUMN, occupant);
-        }
-
-        pub fn try_set_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
-            &mut self,
-            occupant: Occupant,
-        ) -> Option<()> {
-            if !Self::is_within_bounds_const::<LAYER, ROW, COLUMN>() {
-                return None;
+            pub fn set(
+                &mut self,
+                layer: usize,
+                row: usize,
+                column: usize,
+                occupant: Occupant,
+            ) {
+                let layer = &mut self[layer];
+                let row = &mut (*layer).1[row];
+                let old_occupant = &mut (*row)[column];
+                *old_occupant = Some(occupant);
             }
-            self.set(LAYER, ROW, COLUMN, occupant);
-            Some(())
-        }
 
-        pub fn get(
-            &self,
-            layer: usize,
-            row: usize,
-            column: usize,
-        ) -> Option<&Occupant> {
-            self[layer].1[row][column].as_ref()
-        }
-
-        pub fn try_get(
-            &self,
-            layer: usize,
-            row: usize,
-            column: usize,
-        ) -> Option<&Occupant> {
-            if !Self::is_within_bounds(layer, row, column) {
-                return None;
+            pub fn try_set(
+                &mut self,
+                layer: usize,
+                row: usize,
+                column: usize,
+                occupant: Occupant,
+            ) -> Option<()> {
+                if !Self::is_within_bounds(layer, row, column) {
+                    return None;
+                }
+                self.set(layer, row, column, occupant);
+                Some(())
             }
-            self[layer].1[row][column].as_ref()
-        }
 
-        pub fn get_mut(
-            &mut self,
-            layer: usize,
-            row: usize,
-            column: usize,
-        ) -> Option<&mut Occupant> {
-            self[layer].1[row][column].as_mut()
-        }
-
-        pub fn try_get_mut(
-            &mut self,
-            layer: usize,
-            row: usize,
-            column: usize,
-        ) -> Option<&mut Occupant> {
-            if !Self::is_within_bounds(layer, row, column) {
-                return None;
+            pub fn set_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+                &mut self,
+                occupant: Occupant,
+            ) {
+                self.set(LAYER, ROW, COLUMN, occupant);
             }
-            self[layer].1[row][column].as_mut()
-        }
 
-        pub fn get_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
-            &self
-        ) -> Option<&Occupant> {
-            self[LAYER].1[ROW][COLUMN].as_ref()
-        }
-
-        pub fn try_get_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
-            &self
-        ) -> Option<&Occupant> {
-            if !Self::is_within_bounds_const::<LAYER, ROW, COLUMN>() {
-                return None;
+            pub fn try_set_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+                &mut self,
+                occupant: Occupant,
+            ) -> Option<()> {
+                if !Self::is_within_bounds_const::<LAYER, ROW, COLUMN>() {
+                    return None;
+                }
+                self.set(LAYER, ROW, COLUMN, occupant);
+                Some(())
             }
-            self[LAYER].1[ROW][COLUMN].as_ref()
-        }
 
-        pub fn get_mut_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
-            &mut self
-        ) -> Option<&mut Occupant> {
-            self[LAYER].1[ROW][COLUMN].as_mut()
-        }
-
-        pub fn try_get_mut_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
-            &mut self
-        ) -> Option<&mut Occupant> {
-            if !Self::is_within_bounds_const::<LAYER, ROW, COLUMN>() {
-                return None;
+            pub fn get(
+                &self,
+                layer: usize,
+                row: usize,
+                column: usize,
+            ) -> Option<&Occupant> {
+                self[layer].1[row][column].as_ref()
             }
-            self[LAYER].1[ROW][COLUMN].as_mut()
+
+            pub fn try_get(
+                &self,
+                layer: usize,
+                row: usize,
+                column: usize,
+            ) -> Option<&Occupant> {
+                if !Self::is_within_bounds(layer, row, column) {
+                    return None;
+                }
+                self[layer].1[row][column].as_ref()
+            }
+
+            pub fn get_mut(
+                &mut self,
+                layer: usize,
+                row: usize,
+                column: usize,
+            ) -> Option<&mut Occupant> {
+                self[layer].1[row][column].as_mut()
+            }
+
+            pub fn try_get_mut(
+                &mut self,
+                layer: usize,
+                row: usize,
+                column: usize,
+            ) -> Option<&mut Occupant> {
+                if !Self::is_within_bounds(layer, row, column) {
+                    return None;
+                }
+                self[layer].1[row][column].as_mut()
+            }
+
+            pub fn get_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+                &self
+            ) -> Option<&Occupant> {
+                self[LAYER].1[ROW][COLUMN].as_ref()
+            }
+
+            pub fn try_get_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+                &self
+            ) -> Option<&Occupant> {
+                if !Self::is_within_bounds_const::<LAYER, ROW, COLUMN>() {
+                    return None;
+                }
+                self[LAYER].1[ROW][COLUMN].as_ref()
+            }
+
+            pub fn get_mut_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+                &mut self
+            ) -> Option<&mut Occupant> {
+                self[LAYER].1[ROW][COLUMN].as_mut()
+            }
+
+            pub fn try_get_mut_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+                &mut self
+            ) -> Option<&mut Occupant> {
+                if !Self::is_within_bounds_const::<LAYER, ROW, COLUMN>() {
+                    return None;
+                }
+                self[LAYER].1[ROW][COLUMN].as_mut()
+            }
+
+            fn is_within_bounds(
+                layer: usize,
+                row: usize,
+                column: usize,
+            ) -> bool {
+                layer < LAYERS && row < ROWS && column < COLUMNS
+            }
+
+            const fn is_within_bounds_const<
+                const LAYER: usize,
+                const ROW: usize,
+                const COLUMN: usize,
+            >() -> bool {
+                LAYER < LAYERS && ROW < ROWS && COLUMN < COLUMNS
+            }
         }
 
-        fn is_within_bounds(
-            layer: usize,
-            row: usize,
-            column: usize,
-        ) -> bool {
-            layer < LAYERS && row < ROWS && column < COLUMNS
+        impl<Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
+            Index<usize> for Grid<Occupant, LAYERS, ROWS, COLUMNS>
+        {
+            type Output = (LayerOffset, Layer<Occupant, ROWS, COLUMNS>);
+
+            fn index(
+                &self,
+                layer: usize,
+            ) -> &Self::Output {
+                &self.occupied[layer]
+            }
         }
 
-        const fn is_within_bounds_const<
-            const LAYER: usize,
-            const ROW: usize,
-            const COLUMN: usize,
-        >() -> bool {
-            LAYER < LAYERS && ROW < ROWS && COLUMN < COLUMNS
+        impl<Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
+            IndexMut<usize> for Grid<Occupant, LAYERS, ROWS, COLUMNS>
+        {
+            fn index_mut(
+                &mut self,
+                layer: usize,
+            ) -> &mut Self::Output {
+                &mut self.occupied[layer]
+            }
         }
-    }
 
-    impl<Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
-        Index<usize> for Grid<Occupant, LAYERS, ROWS, COLUMNS>
-    {
-        type Output = (LayerOffset, Layer<Occupant, ROWS, COLUMNS>);
-
-        fn index(
-            &self,
-            layer: usize,
-        ) -> &Self::Output {
-            &self.occupied[layer]
-        }
-    }
-
-    impl<Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
-        IndexMut<usize> for Grid<Occupant, LAYERS, ROWS, COLUMNS>
-    {
-        fn index_mut(
-            &mut self,
-            layer: usize,
-        ) -> &mut Self::Output {
-            &mut self.occupied[layer]
-        }
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-        use rand::Rng;
-
-        mod set {
+        #[cfg(test)]
+        mod tests {
             use super::*;
+            use rand::Rng;
 
-            #[test]
-            fn test() {
-                let mut grid = Grid::<bool, 1, 2, 2>::new(None);
-                let mut rng = rand::rng();
+            mod set {
+                use super::*;
 
-                // Set
-                let row: u32 = rng.random_range(0..2);
-                let col: u32 = rng.random_range(0..2);
-                let row = row as usize;
-                let col = col as usize;
-                grid.set(0, row, col, true);
+                #[test]
+                fn test() {
+                    let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                    let mut rng = rand::rng();
 
-                // Set const
-                grid.set_const::<0, 0, 0>(true);
+                    // Set
+                    let row: u32 = rng.random_range(0..2);
+                    let col: u32 = rng.random_range(0..2);
+                    let row = row as usize;
+                    let col = col as usize;
+                    grid.set(0, row, col, true);
 
-                // Try set
-                assert_eq!(grid.try_set(0, 0, 0, true), Some(()));
-                assert_eq!(grid.try_set(0, 1, 0, true), Some(()));
-                assert_eq!(grid.try_set(0, 0, 1, true), Some(()));
-                assert_eq!(grid.try_set(0, 1, 1, true), Some(()));
-                assert_eq!(grid.try_set(1, 0, 0, true), None);
-                assert_eq!(grid.try_set(0, 2, 0, true), None);
-                assert_eq!(grid.try_set(0, 0, 2, true), None);
+                    // Set const
+                    grid.set_const::<0, 0, 0>(true);
 
-                // Try set const
-                assert_eq!(grid.try_set_const::<0, 0, 0>(true), Some(()));
-                assert_eq!(grid.try_set_const::<0, 1, 0>(true), Some(()));
-                assert_eq!(grid.try_set_const::<0, 0, 1>(true), Some(()));
-                assert_eq!(grid.try_set_const::<0, 1, 1>(true), Some(()));
-                assert_eq!(grid.try_set_const::<1, 0, 0>(true), None);
-                assert_eq!(grid.try_set_const::<0, 2, 0>(true), None);
-                assert_eq!(grid.try_set_const::<0, 0, 2>(true), None);
+                    // Try set
+                    assert_eq!(grid.try_set(0, 0, 0, true), Some(()));
+                    assert_eq!(grid.try_set(0, 1, 0, true), Some(()));
+                    assert_eq!(grid.try_set(0, 0, 1, true), Some(()));
+                    assert_eq!(grid.try_set(0, 1, 1, true), Some(()));
+                    assert_eq!(grid.try_set(1, 0, 0, true), None);
+                    assert_eq!(grid.try_set(0, 2, 0, true), None);
+                    assert_eq!(grid.try_set(0, 0, 2, true), None);
+
+                    // Try set const
+                    assert_eq!(grid.try_set_const::<0, 0, 0>(true), Some(()));
+                    assert_eq!(grid.try_set_const::<0, 1, 0>(true), Some(()));
+                    assert_eq!(grid.try_set_const::<0, 0, 1>(true), Some(()));
+                    assert_eq!(grid.try_set_const::<0, 1, 1>(true), Some(()));
+                    assert_eq!(grid.try_set_const::<1, 0, 0>(true), None);
+                    assert_eq!(grid.try_set_const::<0, 2, 0>(true), None);
+                    assert_eq!(grid.try_set_const::<0, 0, 2>(true), None);
+                }
+
+                #[test]
+                #[should_panic]
+                fn should_panic0() {
+                    let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                    grid.set(1, 0, 0, true);
+                }
+
+                #[test]
+                #[should_panic]
+                fn should_panic1() {
+                    let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                    grid.set_const::<1, 0, 0>(true);
+                }
             }
 
-            #[test]
-            #[should_panic]
-            fn should_panic0() {
-                let mut grid = Grid::<bool, 1, 2, 2>::new(None);
-                grid.set(1, 0, 0, true);
-            }
+            mod get {
+                use super::*;
 
-            #[test]
-            #[should_panic]
-            fn should_panic1() {
-                let mut grid = Grid::<bool, 1, 2, 2>::new(None);
-                grid.set_const::<1, 0, 0>(true);
-            }
-        }
+                #[test]
+                fn test() {
+                    let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                    grid.set_const::<0, 0, 0>(true);
 
-        mod get {
-            use super::*;
+                    // Get
+                    assert_eq!(*grid.get(0, 0, 0).unwrap(), true);
+                    assert_eq!(grid.get(0, 0, 1), None);
 
-            #[test]
-            fn test() {
-                let mut grid = Grid::<bool, 1, 2, 2>::new(None);
-                grid.set_const::<0, 0, 0>(true);
+                    // Get const
+                    assert_eq!(*grid.get_const::<0, 0, 0>().unwrap(), true);
+                    assert_eq!(grid.get_const::<0, 0, 1>(), None);
 
-                // Get
-                assert_eq!(*grid.get(0, 0, 0).unwrap(), true);
-                assert_eq!(grid.get(0, 0, 1), None);
+                    // Try get
+                    assert_eq!(*grid.try_get(0, 0, 0).unwrap(), true);
+                    assert_eq!(grid.try_get(0, 1, 0), None);
+                    assert_eq!(grid.try_get(0, 0, 1), None);
+                    assert_eq!(grid.try_get(0, 1, 1), None);
+                    assert_eq!(grid.try_get(1, 0, 0), None);
+                    assert_eq!(grid.try_get(0, 2, 0), None);
+                    assert_eq!(grid.try_get(0, 0, 2), None);
 
-                // Get const
-                assert_eq!(*grid.get_const::<0, 0, 0>().unwrap(), true);
-                assert_eq!(grid.get_const::<0, 0, 1>(), None);
+                    // Try get const
+                    assert_eq!(*grid.try_get_const::<0, 0, 0>().unwrap(), true);
+                    assert_eq!(grid.try_get_const::<0, 1, 0>(), None);
+                    assert_eq!(grid.try_get_const::<0, 0, 1>(), None);
+                    assert_eq!(grid.try_get_const::<0, 1, 1>(), None);
+                    assert_eq!(grid.try_get_const::<1, 0, 0>(), None);
+                    assert_eq!(grid.try_get_const::<0, 2, 0>(), None);
+                    assert_eq!(grid.try_get_const::<0, 0, 2>(), None);
+                }
 
-                // Try get
-                assert_eq!(*grid.try_get(0, 0, 0).unwrap(), true);
-                assert_eq!(grid.try_get(0, 1, 0), None);
-                assert_eq!(grid.try_get(0, 0, 1), None);
-                assert_eq!(grid.try_get(0, 1, 1), None);
-                assert_eq!(grid.try_get(1, 0, 0), None);
-                assert_eq!(grid.try_get(0, 2, 0), None);
-                assert_eq!(grid.try_get(0, 0, 2), None);
+                #[test]
+                #[should_panic]
+                fn should_panic0() {
+                    let grid = Grid::<bool, 1, 2, 2>::new(None);
+                    grid.get(1, 0, 0);
+                }
 
-                // Try get const
-                assert_eq!(*grid.try_get_const::<0, 0, 0>().unwrap(), true);
-                assert_eq!(grid.try_get_const::<0, 1, 0>(), None);
-                assert_eq!(grid.try_get_const::<0, 0, 1>(), None);
-                assert_eq!(grid.try_get_const::<0, 1, 1>(), None);
-                assert_eq!(grid.try_get_const::<1, 0, 0>(), None);
-                assert_eq!(grid.try_get_const::<0, 2, 0>(), None);
-                assert_eq!(grid.try_get_const::<0, 0, 2>(), None);
-            }
+                #[test]
+                #[should_panic]
+                fn should_panic1() {
+                    let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                    grid.get_mut(1, 0, 0);
+                }
 
-            #[test]
-            #[should_panic]
-            fn should_panic0() {
-                let grid = Grid::<bool, 1, 2, 2>::new(None);
-                grid.get(1, 0, 0);
-            }
+                #[test]
+                #[should_panic]
+                fn should_panic2() {
+                    let grid = Grid::<bool, 1, 2, 2>::new(None);
+                    grid.get_const::<1, 0, 0>();
+                }
 
-            #[test]
-            #[should_panic]
-            fn should_panic1() {
-                let mut grid = Grid::<bool, 1, 2, 2>::new(None);
-                grid.get_mut(1, 0, 0);
-            }
-
-            #[test]
-            #[should_panic]
-            fn should_panic2() {
-                let grid = Grid::<bool, 1, 2, 2>::new(None);
-                grid.get_const::<1, 0, 0>();
-            }
-
-            #[test]
-            #[should_panic]
-            fn should_panic3() {
-                let mut grid = Grid::<bool, 1, 2, 2>::new(None);
-                grid.get_mut_const::<1, 0, 0>();
+                #[test]
+                #[should_panic]
+                fn should_panic3() {
+                    let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                    grid.get_mut_const::<1, 0, 0>();
+                }
             }
         }
     }
 }
 
-mod controller {
-
-}
+mod controller {}
 
 mod view {
+    use super::model::grid::*;
+    use bevy::prelude::*;
 
+    pub trait ModelToView<View> {
+        type Context;
+
+        fn convert(
+            &self,
+            context: Option<Self::Context>,
+        ) -> View;
+    }
+    pub struct TileContext {
+        size: Vec2,
+    }
+
+    type TilePositions = Vec<Vec3>;
+    impl<const LAYERS: usize, const ROWS: usize, const COLUMNS: usize> ModelToView<TilePositions>
+        for Grid<Entity, LAYERS, ROWS, COLUMNS>
+    {
+        type Context = TileContext;
+
+        fn convert(
+            &self,
+            context: Option<Self::Context>,
+        ) -> TilePositions {
+            todo!()
+        }
+    }
+
+    // pub struct ModelToView<'a, Model, View> {
+    //     model: &'a Model,
+    //     view: View,
+    // }
+
+    // struct GridToTilePositions {
+    //     tile_size: Vec2,
+    // }
+
+    // impl GridToTilePositions {
+    //     pub fn new(tile_size: Vec2) -> Self {
+    //         Self { tile_size }
+    //     }
+    // }
+
+    // impl<'a, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
+    //     ModelToViewTrait<Grid<Entity, LAYERS, ROWS, COLUMNS>, Vec<Vec3>>
+    //     for ModelToView<'a, Grid<Entity, LAYERS, ROWS, COLUMNS>, GridToTilePositions>
+    // {
+    //     fn convert(
+    //         &self,
+    //         model: Grid<Entity, LAYERS, ROWS, COLUMNS>,
+    //     ) -> Vec<Vec3> {
+    //         todo!()
+    //     }
+    // }
+
+    // pub struct TileAttributes {
+    //     size: Vec2,
+    // }
+
+    // pub struct GridToTilePositions {
+    //     tile: TileAttributes,
+    // }
+
+    // impl<const LAYERS: usize, const ROWS: usize, const COLUMNS: usize> ModelToViewTrait
+    //     for Grid<Entity, LAYERS, ROWS, COLUMNS>
+    // {
+    //     type ViewType = Vec<Vec3>;
+
+    //     fn convert() -> Self::ViewType {
+    //         todo!()
+    //     }
+
+    //     fn update_view(mut view: &mut Self::ViewType) {
+    //         todo!()
+    //     }
+    // }
+
+    // pub fn to_vec3
 }
