@@ -1128,22 +1128,79 @@ mod generator {
 mod grid {
     use std::ops::{Index, IndexMut};
 
-    struct LayerOffset {
+    #[derive(Copy, Clone, Default)]
+    pub struct LayerOffset {
         x: f32,
         y: f32,
     }
 
-    trait OccupantTrait: Eq {}
-    type Layer<Occupant, const ROWS: usize, const COLUMNS: usize> = [[Occupant; COLUMNS]; ROWS];
+    pub trait OccupantTrait: Eq {}
+    impl<T: Eq> OccupantTrait for T {}
+
+    pub type Layer<Occupant, const ROWS: usize, const COLUMNS: usize> =
+        [[Option<Occupant>; COLUMNS]; ROWS];
 
     /// A [Grid] where single entities can occupy more than one index.
-    struct Grid<
+    pub struct Grid<
         Occupant: OccupantTrait,
         const LAYERS: usize,
         const ROWS: usize,
         const COLUMNS: usize,
     > {
         occupied: [(LayerOffset, Layer<Occupant, ROWS, COLUMNS>); LAYERS],
+    }
+
+    impl<Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
+        Grid<Occupant, LAYERS, ROWS, COLUMNS>
+    {
+        pub fn new(layer_offsets: Option<[LayerOffset; LAYERS]>) -> Self {
+            let layer_offsets = match layer_offsets {
+                Some(layer_offsets) => layer_offsets,
+                None => [LayerOffset::default(); LAYERS],
+            };
+
+            let occupied: [(LayerOffset, Layer<Occupant, ROWS, COLUMNS>); LAYERS] =
+                std::array::from_fn(|index| {
+                    let layer = std::array::from_fn(|_| std::array::from_fn(|_| None::<Occupant>));
+                    (layer_offsets[index], layer)
+                });
+
+            Self { occupied }
+        }
+
+        pub fn insert(
+            &mut self,
+            layer: usize,
+            row: usize,
+            column: usize,
+            occupant: Occupant,
+        ) {
+            let layer = &mut self[layer];
+            let row = &mut (*layer).1[row];
+            let old_occupant = &mut (*row)[column];
+            *old_occupant = Some(occupant);
+        }
+
+        pub fn try_insert(
+            &mut self,
+            layer: usize,
+            row: usize,
+            column: usize,
+            occupant: Occupant,
+        ) -> Option<()> {
+            if layer >= LAYERS || row >= ROWS || column >= COLUMNS {
+                return None;
+            }
+            self.insert(layer, row, column, occupant);
+            Some(())
+        }
+
+        pub fn insert_const<const LAYER: usize, const ROW: usize, const COLUMN: usize>(
+            &mut self,
+            occupant: Occupant,
+        ) {
+            self.insert(LAYER, ROW, COLUMN, occupant);
+        }
     }
 
     impl<Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
@@ -1169,4 +1226,45 @@ mod grid {
             &mut self.occupied[layer]
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use rand::Rng;
+
+        use super::*;
+
+        #[test]
+        fn test() {
+            let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+            let mut rng = rand::rng();
+
+            // Insert const
+            grid.insert_const::<0, 0, 0>(false);
+
+            // Insert
+            let row: u32 = rng.random_range(0..2);
+            let col: u32 = rng.random_range(0..2);
+            let row = row as usize;
+            let col = col as usize;
+            grid.insert(0, row, col, false);
+
+            // Try Insert
+            assert_eq!(grid.try_insert(0, 0, 0, false), Some(()));
+            assert_eq!(grid.try_insert(0, 1, 0, false), Some(()));
+            assert_eq!(grid.try_insert(0, 0, 1, false), Some(()));
+            assert_eq!(grid.try_insert(0, 1, 1, false), Some(()));
+            assert_eq!(grid.try_insert(1, 0, 0, false), None);
+            assert_eq!(grid.try_insert(0, 2, 0, false), None);
+            assert_eq!(grid.try_insert(0, 0, 2, false), None);
+        }
+
+        #[test]
+        #[should_panic]
+        fn should_panic() {
+            let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+            grid.insert(1, 0, 0, false);
+        }
+    }
 }
+
+mod tile_grid_logic {}
