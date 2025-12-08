@@ -1456,13 +1456,13 @@ mod view {
     use super::model::grid::*;
     use bevy::prelude::*;
 
-    pub trait ModelToViewData<View> {
+    pub trait ModelToViewData<ViewData> {
         type Context;
 
         fn convert(
             &self,
             context: Option<Self::Context>,
-        ) -> View;
+        ) -> ViewData;
     }
 
     pub struct TileContext {
