@@ -1241,9 +1241,9 @@ mod model {
             }
 
             /// Set the value a [Cell].
-            /// If outside bounds -> [Result::Err] with [None].
-            /// If a single or multiple tiles already exist in the bounds of the new tile -> [Result::Err] with a list of the [Cell]s that are already occupying the space.
-            /// Else [Result::Ok].
+            /// If outside bounds -> [Result::Err].
+            /// If a single or multiple tiles already exist in the bounds of the new tile -> [Result::Ok] with a list of the removed/replaced tiles.
+            /// Else [Result::Ok] None.
             pub fn set(
                 &mut self,
                 layer: usize,
@@ -1251,19 +1251,20 @@ mod model {
                 column: usize,
                 occupant: Occupant,
                 size: UVec2,
-            ) -> Result<(), Option<Vec<Rc<RefCell<OccupantWrapper<Occupant>>>>>> {
+            ) -> Result<Option<Vec<Rc<RefCell<OccupantWrapper<Occupant>>>>>, ()> {
                 for row in row..row + size.y as usize {
                     for column in column..column + size.x as usize {
                         if !Self::is_within_bounds(layer, row, column) {
-                            return Err(None);
+                            return Err(());
                         }
                     }
                 }
 
                 let current_occupants = self.get_list_of_occupants(layer, row, column, size);
-                if current_occupants.len() > 0 {
-                    return Err(Some(current_occupants));
+                for occupant in &current_occupants {
+                    self.remove_cell(layer, &*occupant.borrow());
                 }
+                let removed_occupants = current_occupants;
 
                 let layer_ = &mut self[layer];
                 let row_ = &mut (*layer_).1[row];
@@ -1278,7 +1279,11 @@ mod model {
                     occupant,
                 })));
 
-                Ok(())
+                if removed_occupants.len() > 0 {
+                    return Ok(Some(removed_occupants));
+                }
+
+                Ok(None)
             }
 
             pub fn get(
