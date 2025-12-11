@@ -1129,10 +1129,10 @@ mod model {
     pub mod grid {
         use std::ops::{Index, IndexMut};
 
-        #[derive(Copy, Clone, Default)]
+        #[derive(Copy, Clone, Default, PartialEq, Debug)]
         pub struct LayerOffset {
-            x: f32,
-            y: f32,
+            pub x: f32,
+            pub y: f32,
         }
 
         pub trait OccupantTrait: Eq {}
@@ -1168,6 +1168,17 @@ mod model {
                     });
 
                 Self { occupied }
+            }
+
+            pub fn get_layer_offset(
+                &self,
+                layer: usize,
+            ) -> LayerOffset {
+                self[layer].0
+            }
+
+            pub const fn get_layer_offset_const<const LAYER: usize>(&self) -> LayerOffset {
+                self.occupied[LAYER].0
             }
 
             pub fn set(
@@ -1448,6 +1459,31 @@ mod model {
                     grid.get_mut_const::<1, 0, 0>();
                 }
             }
+
+            mod layer {
+                use super::*;
+
+                #[test]
+                fn test() {
+                    const LAYERS: usize = 3;
+                    const ROWS: usize = 1;
+                    const COLUMNS: usize = 1;
+
+                    let offsets = [
+                        LayerOffset { x: 0.0, y: 0.0 },
+                        LayerOffset { x: 1.0, y: 1.0 },
+                        LayerOffset { x: 1.5, y: 1.5 },
+                    ];
+
+                    let grid = Grid::<(), LAYERS, ROWS, COLUMNS>::new(Some([
+                        offsets[0], offsets[1], offsets[2],
+                    ]));
+
+                    for i in 0..LAYERS {
+                        assert_eq!(grid.get_layer_offset(i), offsets[i]);
+                    }
+                }
+            }
         }
     }
 }
@@ -1456,8 +1492,8 @@ mod view {
     use super::model::grid::*;
     use bevy::prelude::*;
 
-    pub trait ModelToViewData<ViewData> {
-        type Context;
+    pub trait ModelToViewData<'a, ViewData> {
+        type Context: 'a;
 
         fn convert(
             &self,
@@ -1469,17 +1505,110 @@ mod view {
         size: Vec2,
     }
 
-    type TilePositions<const LAYERS: usize> = Vec<[Vec2; LAYERS]>;
-    impl<const LAYERS: usize, const ROWS: usize, const COLUMNS: usize> ModelToViewData<TilePositions<LAYERS>>
-        for Grid<Entity, LAYERS, ROWS, COLUMNS>
+    type TilePositions<const LAYERS: usize, const ROWS: usize, const COLUMNS: usize> =
+        [[[Option<Vec2>; COLUMNS]; ROWS]; LAYERS];
+
+    impl<'a, Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
+        ModelToViewData<'a, TilePositions<LAYERS, ROWS, COLUMNS>>
+        for Grid<Occupant, LAYERS, ROWS, COLUMNS>
     {
-        type Context = TileContext;
+        type Context = &'a TileContext;
 
         fn convert(
             &self,
             context: Option<Self::Context>,
-        ) -> TilePositions<LAYERS> {
-            todo!()
+        ) -> TilePositions<LAYERS, ROWS, COLUMNS> {
+            let Some(context) = context else {
+                panic!("This conversion demands a Self::Context!")
+            };
+
+            let mut tile_positions = [[[None; COLUMNS]; ROWS]; LAYERS];
+
+            for layer in 0..LAYERS {
+                for row in 0..ROWS {
+                    for column in 0..COLUMNS {
+                        if let Some(_) = self.get(layer, row, column) {
+                            tile_positions[layer][row][column] = Some(Vec2 {
+                                x: context.size.x * column as f32 + self.get_layer_offset(layer).x,
+                                y: context.size.y * row as f32 + self.get_layer_offset(layer).y,
+                            });
+                        }
+                    }
+                }
+            }
+
+            tile_positions
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn test() {
+            const LAYERS: usize = 4;
+            const ROWS: usize = 1;
+            const COLUMNS: usize = 2;
+
+            let offsets = [
+                LayerOffset { x: 0.0, y: 0.0 },
+                LayerOffset { x: 1.5, y: 1.5 },
+                LayerOffset { x: 2.0, y: 2.0 },
+                LayerOffset { x: 2.5, y: 2.5 },
+            ];
+
+            let mut grid = Grid::<(), LAYERS, ROWS, COLUMNS>::new(Some([
+                offsets[0], offsets[1], offsets[2], offsets[3],
+            ]));
+
+            for layer in 0..LAYERS {
+                for row in 0..ROWS {
+                    for column in 0..COLUMNS {
+                        if layer == 2 {
+                            // Skip third layer! Let it be None.
+                            continue;
+                        }
+                        grid.set(layer, row, column, ());
+                    }
+                }
+            }
+
+            let context = TileContext {
+                size: Vec2 { x: 2.0, y: 3.0 },
+            };
+
+            let tile_positions: TilePositions<LAYERS, ROWS, COLUMNS> = grid.convert(Some(&context));
+
+            for layer in 0..LAYERS {
+                for row in 0..ROWS {
+                    for column in 0..COLUMNS {
+                        match layer {
+                            0 | 1 | 3 => {
+                                let Some(position) = tile_positions[layer][row][column] else {
+                                    assert!(false, "Position was empty");
+                                    continue;
+                                };
+
+                                assert_eq!(
+                                    position.x,
+                                    column as f32 * context.size.x + offsets[layer].x,
+                                    "{:?}",
+                                    layer
+                                );
+                                assert_eq!(
+                                    position.y,
+                                    row as f32 * context.size.y + offsets[layer].y,
+                                    "{:?}",
+                                    layer
+                                );
+                            },
+                            2 => assert_eq!(tile_positions[layer][row][column], None),
+                            4.. => unreachable!(),
+                        }
+                    }
+                }
+            }
         }
     }
 }
