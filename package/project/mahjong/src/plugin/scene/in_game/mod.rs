@@ -1249,15 +1249,18 @@ mod model {
             ) -> Vec<Rc<RefCell<OccupantWrapper<Occupant>>>> {
                 let mut list = vec![];
 
-                for row in row..row + size.y as usize {
-                    for column in column..column + size.x as usize {
+                let row_end = row + size.y as usize;
+                let column_end = column + size.x as usize;
+
+                for row in row..=row_end {
+                    for column in column..=column_end {
                         if let Some(occupant_wrapper) =
                             &self.occupied[layer].1[row][column].occupant_wrapper
                         {
                             if !list
                                 .iter()
                                 .any(|item: &Rc<RefCell<OccupantWrapper<Occupant>>>| {
-                                    item.borrow().occupant == occupant_wrapper.borrow().occupant
+                                    Rc::ptr_eq(item, occupant_wrapper)
                                 })
                             {
                                 list.push(Rc::clone(occupant_wrapper));
