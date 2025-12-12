@@ -1429,26 +1429,43 @@ mod model {
                     }
                 }
 
-                // #[test]
-                // fn set_and_replace() {
-                //     let mut grid = Grid::<bool, 1, 16, 16>::new(None);
+                #[test]
+                fn set_and_replace() {
+                    let mut grid = Grid::<bool, 1, 16, 16>::new(None);
 
-                //     // Set
-                //     let to_set = [
+                    // Set
+                    let to_set = [
+                        (UVec2::new(0, 0), UVec2::new(6, 6)),
+                        (UVec2::new(7, 7), UVec2::new(7, 7)),
+                        (UVec2::new(7, 15), UVec2::new(7, 0)),
+                        (UVec2::new(6, 7), UVec2::new(0, 7)),
+                        (UVec2::new(7, 6), UVec2::new(7, 0)),
+                    ];
 
-                //     ];
-                //     let row = 1;
-                //     let col = 2;
-                //     let size = UVec2::new(1, 1);
-                //     assert_eq!(grid.set(1, row, col, true, size), Ok(None));
+                    for (rowcol, size) in &to_set {
+                        let row = rowcol.y as usize;
+                        let col = rowcol.x as usize;
+                        assert_eq!(grid.set(0, row, col, true, *size), Ok(None));
+                    }
 
-                //     let to_be_checked = [
-                //         UVec2::new(2, 1),
-                //         UVec2::new(2, 2),
-                //         UVec2::new(3, 1),
-                //         UVec2::new(3, 2),
-                //     ];
-                // }
+                    let to_replace_with = [
+                        (UVec2::new(1, 1), UVec2::new(6, 6)),
+                        (UVec2::new(7, 7), UVec2::new(6, 6)),
+                    ];
+
+                    for (index, (rowcol, size)) in to_replace_with.iter().enumerate() {
+                        let row = rowcol.y as usize;
+                        let col = rowcol.x as usize;
+                        let set_result = grid.set(0, row, col, true, *size);
+                        let set_removed_cells = set_result.unwrap().unwrap();
+
+                        for cell in set_removed_cells {
+                            assert_eq!(cell.borrow().occupant, true);
+                            assert_eq!(cell.borrow().origin, to_set[index].0);
+                            assert_eq!(cell.borrow().size, to_set[index].1);
+                        }
+                    }
+                }
             }
 
             // mod get {
