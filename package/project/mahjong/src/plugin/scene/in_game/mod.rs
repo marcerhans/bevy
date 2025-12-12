@@ -1485,8 +1485,14 @@ mod model {
                     }
 
                     let to_replace_with = [
-                        (UVec2::new(1, 1), UVec2::new(5, 5)),
-                        (UVec2::new(7, 7), UVec2::new(7, 6)),
+                        (UVec2::new(1, 1), UVec2::new(3, 3)),
+                        (UVec2::new(8, 6), UVec2::new(4, 6)),
+                    ];
+
+                    let expected_removed_occupants = [
+                        (UVec2::new(0, 0), UVec2::new(6, 6)),
+                        (UVec2::new(7, 7), UVec2::new(7, 7)),
+                        (UVec2::new(7, 6), UVec2::new(8, 0)),
                     ];
 
                     for (index, (rowcol, size)) in to_replace_with.iter().enumerate() {
@@ -1495,10 +1501,31 @@ mod model {
                         let set_result = grid.set(0, row, col, true, *size);
                         let set_removed_cells = set_result.unwrap().unwrap();
 
-                        for cell in set_removed_cells {
-                            assert_eq!(cell.borrow().occupant, true);
-                            assert_eq!(cell.borrow().origin, to_set[index].0);
-                            assert_eq!(cell.borrow().size, to_set[index].1);
+                        // This is ugly T.T
+                        if index == 0 {
+                            for cell in set_removed_cells {
+                                assert_eq!(cell.borrow().occupant, true);
+                                assert_eq!(cell.borrow().origin, expected_removed_occupants[0].0);
+                                assert_eq!(cell.borrow().size, expected_removed_occupants[0].1);
+                            }
+                        } else {
+                            for (index, cell) in set_removed_cells.iter().enumerate() {
+                                if index == 0 {
+                                    assert_eq!(cell.borrow().occupant, true);
+                                    assert_eq!(
+                                        cell.borrow().origin,
+                                        expected_removed_occupants[2].0
+                                    );
+                                    assert_eq!(cell.borrow().size, expected_removed_occupants[2].1);
+                                } else {
+                                    assert_eq!(cell.borrow().occupant, true);
+                                    assert_eq!(
+                                        cell.borrow().origin,
+                                        expected_removed_occupants[1].0
+                                    );
+                                    assert_eq!(cell.borrow().size, expected_removed_occupants[1].1);
+                                }
+                            }
                         }
 
                         println!("{:?}", grid);
