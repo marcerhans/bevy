@@ -1436,7 +1436,7 @@ mod model {
                     // Set
                     let to_set = [
                         (UVec2::new(0, 0), UVec2::new(6, 6)),
-                        (UVec2::new(7, 7), UVec2::new(7, 7)),
+                        (UVec2::new(7, 7), UVec2::new(7, 6)),
                         (UVec2::new(7, 15), UVec2::new(7, 0)),
                         (UVec2::new(6, 7), UVec2::new(0, 7)),
                         (UVec2::new(7, 6), UVec2::new(7, 0)),
@@ -1449,8 +1449,8 @@ mod model {
                     }
 
                     let to_replace_with = [
-                        (UVec2::new(1, 1), UVec2::new(6, 6)),
-                        (UVec2::new(7, 7), UVec2::new(6, 6)),
+                        (UVec2::new(1, 1), UVec2::new(5, 5)),
+                        (UVec2::new(7, 7), UVec2::new(7, 6)),
                     ];
 
                     for (index, (rowcol, size)) in to_replace_with.iter().enumerate() {
