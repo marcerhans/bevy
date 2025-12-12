@@ -1164,6 +1164,34 @@ mod model {
         }
 
         impl<Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
+            std::fmt::Debug for Grid<Occupant, LAYERS, ROWS, COLUMNS>
+        {
+            fn fmt(
+                &self,
+                f: &mut std::fmt::Formatter<'_>,
+            ) -> std::fmt::Result {
+                writeln!(f, "GRID:{LAYERS}x{ROWS}x{COLUMNS}")?;
+
+                for layer in 0..LAYERS {
+                    writeln!(f, "Layer {}", &layer)?;
+
+                    for row in (0..ROWS).rev() {
+                        for column in 0..COLUMNS {
+                            if let Some(_) = self.occupied[layer].1[row][column].occupant_wrapper {
+                                write!(f, "[x]")?;
+                            } else {
+                                write!(f, "[ ]")?;
+                            }
+                        }
+                        writeln!(f, "")?;
+                    }
+                }
+
+                Ok(())
+            }
+        }
+
+        impl<Occupant: OccupantTrait, const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>
             Grid<Occupant, LAYERS, ROWS, COLUMNS>
         {
             pub fn new(layer_offsets: Option<[LayerOffset; LAYERS]>) -> Self {
@@ -1398,6 +1426,8 @@ mod model {
                     assert_eq!(occupant_wrapper.origin, UVec2::new(col as u32, row as u32));
                     assert_eq!(occupant_wrapper.size, size);
                     assert_eq!(occupant_wrapper.occupant, true);
+
+                    println!("{:?}", grid);
                 }
 
                 #[test]
@@ -1427,6 +1457,8 @@ mod model {
                         assert_eq!(occupant_wrapper.size, size);
                         assert_eq!(occupant_wrapper.occupant, true);
                     }
+
+                    println!("{:?}", grid);
                 }
 
                 #[test]
@@ -1436,16 +1468,17 @@ mod model {
                     // Set
                     let to_set = [
                         (UVec2::new(0, 0), UVec2::new(6, 6)),
-                        (UVec2::new(7, 7), UVec2::new(7, 6)),
-                        (UVec2::new(7, 15), UVec2::new(7, 0)),
-                        (UVec2::new(6, 7), UVec2::new(0, 7)),
-                        (UVec2::new(7, 6), UVec2::new(7, 0)),
+                        (UVec2::new(7, 7), UVec2::new(7, 7)),
+                        (UVec2::new(7, 15), UVec2::new(8, 0)),
+                        (UVec2::new(6, 7), UVec2::new(0, 8)),
+                        (UVec2::new(7, 6), UVec2::new(8, 0)),
                     ];
 
                     for (rowcol, size) in &to_set {
                         let row = rowcol.y as usize;
                         let col = rowcol.x as usize;
                         assert_eq!(grid.set(0, row, col, true, *size), Ok(None));
+                        println!("{:?}", grid);
                     }
 
                     let to_replace_with = [
@@ -1464,6 +1497,8 @@ mod model {
                             assert_eq!(cell.borrow().origin, to_set[index].0);
                             assert_eq!(cell.borrow().size, to_set[index].1);
                         }
+
+                        println!("{:?}", grid);
                     }
                 }
             }
