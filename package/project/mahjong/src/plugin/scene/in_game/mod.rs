@@ -1202,8 +1202,8 @@ mod model {
                 let row_end = row + occupant_wrapper.size.y as usize;
                 let column_end = column + occupant_wrapper.size.x as usize;
 
-                for row in row..row_end {
-                    for column in column..column_end {
+                for row in row..=row_end {
+                    for column in column..=column_end {
                         if !Self::is_within_bounds(layer, row, column) {
                             panic!();
                         }
@@ -1337,8 +1337,8 @@ mod model {
                 let row_end = row + occupant_wrapper_.size.y as usize;
                 let column_end = column + occupant_wrapper_.size.x as usize;
 
-                for row in row..row_end {
-                    for column in column..column_end {
+                for row in row..=row_end {
+                    for column in column..=column_end {
                         if !Self::is_within_bounds(layer, row, column) {
                             panic!();
                         }
@@ -1418,7 +1418,6 @@ mod model {
                     ];
 
                     for pos in to_be_checked {
-                        println!("{:?}", pos);
                         let occupant_wrapper = grid.occupied[1].1[pos.y as usize][pos.x as usize]
                             .occupant_wrapper
                             .as_ref()
@@ -1431,17 +1430,24 @@ mod model {
                 }
 
                 // #[test]
-                // #[should_panic]
-                // fn should_panic0() {
-                //     let mut grid = Grid::<bool, 1, 2, 2>::new(None);
-                //     grid.set(1, 0, 0, true);
-                // }
+                // fn set_and_replace() {
+                //     let mut grid = Grid::<bool, 1, 16, 16>::new(None);
 
-                // #[test]
-                // #[should_panic]
-                // fn should_panic1() {
-                //     let mut grid = Grid::<bool, 1, 2, 2>::new(None);
-                //     grid.set_const::<1, 0, 0>(true);
+                //     // Set
+                //     let to_set = [
+
+                //     ];
+                //     let row = 1;
+                //     let col = 2;
+                //     let size = UVec2::new(1, 1);
+                //     assert_eq!(grid.set(1, row, col, true, size), Ok(None));
+
+                //     let to_be_checked = [
+                //         UVec2::new(2, 1),
+                //         UVec2::new(2, 2),
+                //         UVec2::new(3, 1),
+                //         UVec2::new(3, 2),
+                //     ];
                 // }
             }
 
