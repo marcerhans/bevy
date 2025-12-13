@@ -1219,6 +1219,10 @@ mod model {
                 Self { occupied }
             }
 
+            pub fn get_dimensions() -> (usize, usize, usize) {
+                (LAYERS, ROWS, COLUMNS)
+            }
+
             pub fn get_layer_offset(
                 &self,
                 layer: usize,
