@@ -1126,6 +1126,12 @@ mod generator {
 }
 
 mod model {
+    pub mod bevy {
+        pub mod tile {
+            use bevy::prelude::*;
+        }
+    }
+
     pub mod grid {
         use bevy::math::{UVec2, Vec2};
         use std::{
@@ -1780,6 +1786,43 @@ mod view {
     }
 }
 
-mod controller {
-    use super::*;
+mod logic {
+    pub mod grid_factory {
+        use super::super::model::grid::Grid;
+        use bevy::prelude::*;
+
+        pub trait GridFactoryTrait<
+            Occupant,
+            const LAYERS: usize,
+            const ROWS: usize,
+            const COLUMNS: usize,
+        >
+        {
+            fn get() -> Grid<Occupant, LAYERS, ROWS, COLUMNS>;
+        }
+
+        pub mod turtle {
+            use super::*;
+
+            const LAYERS: usize = 5;
+            const ROWS: usize = 8 * 2;
+            const COLUMNS: usize = 15 * 2;
+
+            pub struct Turtle;
+
+            impl Turtle {
+                fn populate_grid(
+                    mut grid: Grid<Entity, LAYERS, ROWS, COLUMNS>
+                ) -> Grid<Entity, LAYERS, ROWS, COLUMNS> {
+                    todo!()
+                }
+            }
+
+            impl GridFactoryTrait<Entity, LAYERS, ROWS, COLUMNS> for Turtle {
+                fn get() -> Grid<Entity, LAYERS, ROWS, COLUMNS> {
+                    Turtle::populate_grid(Grid::<Entity, LAYERS, ROWS, COLUMNS>::new(None))
+                }
+            }
+        }
+    }
 }
