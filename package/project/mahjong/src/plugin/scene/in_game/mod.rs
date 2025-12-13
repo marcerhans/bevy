@@ -1435,10 +1435,12 @@ mod model {
                 self.column += 1;
 
                 if self.column >= COLUMNS {
+                    self.column = 0;
                     self.row += 1;
                 }
 
                 if self.row >= ROWS {
+                    self.row = 0;
                     self.layer += 1;
                 }
 
