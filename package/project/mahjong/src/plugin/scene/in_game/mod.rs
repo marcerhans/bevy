@@ -393,7 +393,7 @@ mod on_enter {
         let buttons = [
             Button {
                 translation: button_pos_start,
-                text: "Help (h)",
+                text: "[H]elp",
             },
             Button {
                 translation: Vec3 {
@@ -401,11 +401,11 @@ mod on_enter {
                     y: button_pos_start.y + (button_size.y + button_margin.y) * 1.0,
                     ..button_pos_start
                 },
-                text: "Shuffle (s)",
+                text: "[S]huffle",
             },
             Button {
                 translation: button_pos_start_right,
-                text: "  Undo (u)\n(limit: 32)",
+                text: "  [U]ndo\n(limit: 32)",
             },
         ];
 
@@ -510,13 +510,13 @@ fn button_press(
     }
 
     match text2d.unwrap().as_str() {
-        "Shuffle (s)" => {
+        "[S]huffle" => {
             msg_shuffle.write(msg::Shuffle);
         },
-        "Help (h)" => {
+        "[H]elp" => {
             msg_help.write(msg::Help);
         },
-        "  Undo (u)\n(limit: 32)" => {
+        "  [U]ndo\n(limit: 32)" => {
             msg_undo.write(msg::Undo);
         },
         _ => panic!(),
