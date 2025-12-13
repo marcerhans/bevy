@@ -1136,8 +1136,8 @@ mod model {
 
         pub type LayerOffset = Vec2;
 
-        pub trait OccupantTrait: Eq {}
-        impl<T: Eq> OccupantTrait for T {}
+        pub trait OccupantTrait {}
+        impl<T> OccupantTrait for T {}
 
         #[derive(PartialEq, Debug)]
         pub struct OccupantWrapper<Occupant: OccupantTrait> {
@@ -1405,6 +1405,66 @@ mod model {
                 layer: usize,
             ) -> &mut Self::Output {
                 &mut self.occupied[layer]
+            }
+        }
+
+        pub struct GridIteratorRef<
+            'a,
+            Occupant: OccupantTrait,
+            const LAYERS: usize,
+            const ROWS: usize,
+            const COLUMNS: usize,
+        > {
+            grid: &'a Grid<Occupant, LAYERS, ROWS, COLUMNS>,
+            layer: usize,
+            row: usize,
+            column: usize,
+        }
+
+        impl<
+            'a,
+            Occupant: OccupantTrait,
+            const LAYERS: usize,
+            const ROWS: usize,
+            const COLUMNS: usize,
+        > Iterator for GridIteratorRef<'a, Occupant, LAYERS, ROWS, COLUMNS>
+        {
+            type Item = Ref<'a, Occupant>;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                self.column += 1;
+
+                if self.column >= COLUMNS {
+                    self.row += 1;
+                }
+
+                if self.row >= ROWS {
+                    self.layer += 1;
+                }
+
+                self.grid.get(self.layer, self.row, self.column)
+            }
+        }
+
+        impl<
+            'a,
+            Occupant: OccupantTrait,
+            const LAYERS: usize,
+            const ROWS: usize,
+            const COLUMNS: usize,
+        > IntoIterator for &'a Grid<Occupant, LAYERS, ROWS, COLUMNS>
+        {
+            type Item = Ref<'a, Occupant>;
+
+            type IntoIter = GridIteratorRef<'a, Occupant, LAYERS, ROWS, COLUMNS>;
+
+            fn into_iter(self) -> Self::IntoIter {
+                Self::IntoIter {
+                    grid: self,
+                    layer: 0,
+                    row: 0,
+                    column: 0,
+                }
             }
         }
 
@@ -1718,4 +1778,6 @@ mod view {
     }
 }
 
-mod controller {}
+mod controller {
+    use super::*;
+}
