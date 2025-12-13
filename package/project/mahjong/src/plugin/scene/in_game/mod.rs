@@ -1149,7 +1149,7 @@ mod model {
         pub struct OccupantWrapper<Occupant: OccupantTrait> {
             pub origin: UVec2,
             pub size: UVec2,
-            pub occupant: Occupant,
+            pub occupant: Option<Occupant>,
         }
 
         pub struct Cell<Occupant: OccupantTrait> {
@@ -1226,26 +1226,6 @@ mod model {
                 self[layer].0
             }
 
-            pub fn remove_cells(
-                &mut self,
-                layer: usize,
-                occupant_wrapper: &OccupantWrapper<Occupant>,
-            ) {
-                let row = occupant_wrapper.origin.y as usize;
-                let column = occupant_wrapper.origin.x as usize;
-                let row_end = row + occupant_wrapper.size.y as usize;
-                let column_end = column + occupant_wrapper.size.x as usize;
-
-                for row in row..=row_end {
-                    for column in column..=column_end {
-                        if !Self::is_within_bounds(layer, row, column) {
-                            panic!();
-                        }
-                        self.occupied[layer].1[row][column].occupant_wrapper = None;
-                    }
-                }
-            }
-
             pub fn get_list_of_occupants(
                 &self,
                 layer: usize,
@@ -1300,7 +1280,7 @@ mod model {
 
                 let current_occupants = self.get_list_of_occupants(layer, row, column, size);
                 for occupant in &current_occupants {
-                    self.remove_cells(layer, &*occupant.borrow());
+                    self.remove_cells(layer, Rc::clone(occupant));
                 }
                 let removed_occupants = current_occupants;
 
@@ -1310,7 +1290,7 @@ mod model {
                         y: row as u32,
                     },
                     size,
-                    occupant,
+                    occupant: Some(occupant),
                 }));
                 self.set_cells(layer, occupant_wrapper);
 
@@ -1333,7 +1313,9 @@ mod model {
 
                 if let Some(occupant_wrapper) = &self[layer].1[row][column].occupant_wrapper {
                     let occupant_wrapper = occupant_wrapper.borrow();
-                    return Some(Ref::map(occupant_wrapper, |occupant| &occupant.occupant));
+                    return Some(Ref::map(occupant_wrapper, |occupant_wrapper| {
+                        occupant_wrapper.occupant.as_ref().unwrap()
+                    }));
                 }
 
                 None
@@ -1351,12 +1333,31 @@ mod model {
 
                 if let Some(occupant_wrapper) = &self[layer].1[row][column].occupant_wrapper {
                     let occupant_wrapper = occupant_wrapper.borrow_mut();
-                    return Some(RefMut::map(occupant_wrapper, |occupant| {
-                        &mut occupant.occupant
+                    return Some(RefMut::map(occupant_wrapper, |occupant_wrapper| {
+                        occupant_wrapper.occupant.as_mut().unwrap()
                     }));
                 }
 
                 None
+            }
+
+            pub fn remove(
+                &mut self,
+                layer: usize,
+                row: usize,
+                column: usize,
+            ) -> Option<Occupant> {
+                if !Self::is_within_bounds(layer, row, column) {
+                    return None;
+                }
+
+                let Some(occupant_wrapper) = &self[layer].1[row][column].occupant_wrapper else {
+                    return None;
+                };
+
+                let occupant = occupant_wrapper.borrow_mut().occupant.take();
+                self.remove_cells(layer, Rc::clone(occupant_wrapper));
+                occupant
             }
 
             pub fn is_within_bounds(
@@ -1385,6 +1386,27 @@ mod model {
                         }
                         self.occupied[layer].1[row][column].occupant_wrapper =
                             Some(Rc::clone(&occupant_wrapper));
+                    }
+                }
+            }
+
+            fn remove_cells(
+                &mut self,
+                layer: usize,
+                occupant_wrapper: Rc<RefCell<OccupantWrapper<Occupant>>>,
+            ) {
+                let occupant_wrapper = occupant_wrapper.borrow();
+                let row = occupant_wrapper.origin.y as usize;
+                let column = occupant_wrapper.origin.x as usize;
+                let row_end = row + occupant_wrapper.size.y as usize;
+                let column_end = column + occupant_wrapper.size.x as usize;
+
+                for row in row..=row_end {
+                    for column in column..=column_end {
+                        if !Self::is_within_bounds(layer, row, column) {
+                            panic!();
+                        }
+                        self.occupied[layer].1[row][column].occupant_wrapper = None;
                     }
                 }
             }
@@ -1485,13 +1507,13 @@ mod model {
 
                 #[test]
                 fn set_single() {
-                    let mut grid = Grid::<bool, 1, 2, 2>::new(None);
+                    let mut grid = Grid::<usize, 1, 2, 2>::new(None);
 
                     // Set
                     let row = 0;
                     let col = 0;
                     let size = UVec2::new(0, 0);
-                    assert_eq!(grid.set(0, row, col, true, size), Ok(None));
+                    assert_eq!(grid.set(0, row, col, 1, size), Ok(None));
 
                     let occupant_wrapper = grid.occupied[0].1[row][col]
                         .occupant_wrapper
@@ -1500,7 +1522,7 @@ mod model {
                         .borrow();
                     assert_eq!(occupant_wrapper.origin, UVec2::new(col as u32, row as u32));
                     assert_eq!(occupant_wrapper.size, size);
-                    assert_eq!(occupant_wrapper.occupant, true);
+                    assert_eq!(occupant_wrapper.occupant, Some(1));
 
                     println!("{:?}", grid);
                 }
@@ -1530,7 +1552,7 @@ mod model {
                             .borrow();
                         assert_eq!(occupant_wrapper.origin, UVec2::new(col as u32, row as u32));
                         assert_eq!(occupant_wrapper.size, size);
-                        assert_eq!(occupant_wrapper.occupant, true);
+                        assert_eq!(occupant_wrapper.occupant, Some(true));
                     }
 
                     println!("{:?}", grid);
@@ -1538,21 +1560,21 @@ mod model {
 
                 #[test]
                 fn set_and_replace() {
-                    let mut grid = Grid::<bool, 1, 16, 16>::new(None);
+                    let mut grid = Grid::<usize, 1, 16, 16>::new(None);
 
                     // Set
                     let to_set = [
-                        (UVec2::new(0, 0), UVec2::new(6, 6)),
-                        (UVec2::new(7, 7), UVec2::new(7, 7)),
-                        (UVec2::new(7, 15), UVec2::new(8, 0)),
-                        (UVec2::new(6, 7), UVec2::new(0, 8)),
-                        (UVec2::new(7, 6), UVec2::new(8, 0)),
+                        (0, UVec2::new(0, 0), UVec2::new(6, 6)),
+                        (1, UVec2::new(7, 7), UVec2::new(7, 7)),
+                        (2, UVec2::new(7, 15), UVec2::new(8, 0)),
+                        (3, UVec2::new(6, 7), UVec2::new(0, 8)),
+                        (4, UVec2::new(7, 6), UVec2::new(8, 0)),
                     ];
 
-                    for (rowcol, size) in &to_set {
+                    for (index, rowcol, size) in &to_set {
                         let row = rowcol.y as usize;
                         let col = rowcol.x as usize;
-                        assert_eq!(grid.set(0, row, col, true, *size), Ok(None));
+                        assert_eq!(grid.set(0, row, col, *index, *size), Ok(None));
                         println!("{:?}", grid);
                     }
 
@@ -1561,41 +1583,46 @@ mod model {
                         (UVec2::new(8, 6), UVec2::new(4, 6)),
                     ];
 
-                    let expected_removed_occupants = [
-                        (UVec2::new(0, 0), UVec2::new(6, 6)),
-                        (UVec2::new(7, 7), UVec2::new(7, 7)),
-                        (UVec2::new(7, 6), UVec2::new(8, 0)),
-                    ];
+                    let expected_removed_occupants = [to_set[0], to_set[1], to_set[4]];
 
                     for (index, (rowcol, size)) in to_replace_with.iter().enumerate() {
                         let row = rowcol.y as usize;
                         let col = rowcol.x as usize;
-                        let set_result = grid.set(0, row, col, true, *size);
+                        let set_result = grid.set(0, row, col, 10, *size);
                         let set_removed_cells = set_result.unwrap().unwrap();
 
                         // This is ugly T.T
                         if index == 0 {
                             for cell in set_removed_cells {
-                                assert_eq!(cell.borrow().occupant, true);
-                                assert_eq!(cell.borrow().origin, expected_removed_occupants[0].0);
-                                assert_eq!(cell.borrow().size, expected_removed_occupants[0].1);
+                                assert_eq!(
+                                    cell.borrow().occupant,
+                                    Some(expected_removed_occupants[0].0)
+                                );
+                                assert_eq!(cell.borrow().origin, expected_removed_occupants[0].1);
+                                assert_eq!(cell.borrow().size, expected_removed_occupants[0].2);
                             }
                         } else {
                             for (index, cell) in set_removed_cells.iter().enumerate() {
                                 if index == 0 {
-                                    assert_eq!(cell.borrow().occupant, true);
+                                    assert_eq!(
+                                        cell.borrow().occupant,
+                                        Some(expected_removed_occupants[2].0)
+                                    );
                                     assert_eq!(
                                         cell.borrow().origin,
-                                        expected_removed_occupants[2].0
+                                        expected_removed_occupants[2].1
                                     );
-                                    assert_eq!(cell.borrow().size, expected_removed_occupants[2].1);
+                                    assert_eq!(cell.borrow().size, expected_removed_occupants[2].2);
                                 } else {
-                                    assert_eq!(cell.borrow().occupant, true);
+                                    assert_eq!(
+                                        cell.borrow().occupant,
+                                        Some(expected_removed_occupants[1].0)
+                                    );
                                     assert_eq!(
                                         cell.borrow().origin,
-                                        expected_removed_occupants[1].0
+                                        expected_removed_occupants[1].1
                                     );
-                                    assert_eq!(cell.borrow().size, expected_removed_occupants[1].1);
+                                    assert_eq!(cell.borrow().size, expected_removed_occupants[1].2);
                                 }
                             }
                         }
@@ -1626,6 +1653,20 @@ mod model {
                 fn bounds_check0() {
                     let grid = Grid::<bool, 1, 2, 2>::new(None);
                     assert!(grid.get(2, 0, 0).is_none());
+                }
+            }
+
+            mod remove {
+                use super::*;
+
+                #[test]
+                fn test() {
+                    let mut grid = Grid::<usize, 1, 3, 3>::new(None);
+                    assert_eq!(grid.set(0, 0, 0, 42, UVec2::splat(1)), Ok(None));
+                    assert_eq!(grid.set(0, 2, 2, 1, UVec2::splat(0)), Ok(None));
+                    println!("{:?}", grid);
+                    assert_eq!(grid.remove(0, 0, 0), Some(42));
+                    println!("{:?}", grid);
                 }
             }
 
