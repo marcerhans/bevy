@@ -1853,15 +1853,17 @@ mod logic {
 
         pub mod turtle {
             use super::*;
-            use rand::Rng;
+            use rand::{Rng, rngs::ThreadRng};
 
             pub const LAYERS: usize = 5;
             pub const ROWS: usize = 8 * 2;
             pub const COLUMNS: usize = 15 * 2;
-            pub const TILE_PAIRS: usize = 36;
+            pub const TILE_VARIANTS: usize = 36;
+            // pub const TILE_PAIRS: usize = TILE_VARIANTS * 2; // TODO: Not needed?
 
             pub struct Turtle {
                 grid: Option<Grid<Entity, LAYERS, ROWS, COLUMNS>>,
+                rng: ThreadRng,
                 tile_pairs_to_be_placed: Vec<usize>,
             }
 
@@ -1872,12 +1874,14 @@ mod logic {
                 }
 
                 fn spawn_seed_tiles(&mut self) {
-                    let mut rng = rand::rng();
-                    let tile_pair_count = rng.random_range(4..=4); // Just use 4 for now.
+                    let tile_pair_count = self.rng.random_range(4..=4); // Just use 4 for now.
 
                     for _ in 0..tile_pair_count {
-                        let tile_pair = rng.random_range(0..TILE_PAIRS);
-                        todo!()
+                        let tile_pair = self.tile_pairs_to_be_placed.swap_remove(
+                            self.rng.random_range(0..self.tile_pairs_to_be_placed.len()),
+                        );
+
+                        // Spawn 2 tiles (hence tile pair)
                     }
                 }
             }
@@ -1888,7 +1892,10 @@ mod logic {
                 fn new() -> Self {
                     Self {
                         grid: Some(Grid::<Entity, LAYERS, ROWS, COLUMNS>::new(None)),
-                        tile_pairs_to_be_placed: (0..TILE_PAIRS).collect(),
+                        rng: rand::rng(),
+                        tile_pairs_to_be_placed: (0..TILE_VARIANTS)
+                            .collect::<Vec<usize>>()
+                            .repeat(1),
                     }
                 }
 
