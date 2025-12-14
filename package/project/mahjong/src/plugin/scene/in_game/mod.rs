@@ -1859,7 +1859,7 @@ mod logic {
 
         /// Finds and returns a random valid "reverse free" position in the given layer based on current state of a [Grid].
         ///
-        /// "Reverse free" (for given layer) as in any of these being true in order of priority for any given cell:
+        /// "Reverse free" (for given layer) as in - any of these points being true (in order of priority for any given cell):
         /// - If row is occupied already, the returned position must be placed to either free side of it.
         /// - The whole row is empty
         fn reverse_free_position_in_layer<
@@ -1877,7 +1877,7 @@ mod logic {
 
         /// Finds and returns a random valid "reverse free" position based on current state of a [Grid].
         ///
-        /// "Reverse free" as in any of these being true in order of priority for any given cell:
+        /// "Reverse free" as in - any of these being true (in order of priority for any given cell):
         /// - Not blocked by other cells in the above layers.
         /// - If row is occupied already, the returned position must be placed to either free side of it.
         /// - The whole row is empty
