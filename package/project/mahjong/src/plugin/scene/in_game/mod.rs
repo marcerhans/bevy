@@ -1851,6 +1851,20 @@ mod logic {
             fn get(self) -> Self::Grid;
         }
 
+        pub type Occupant = (usize, Option<Entity>);
+
+        /// Finds and returns a random valid "reverse free" position based on current state of a [Grid].
+        ///
+        /// "Reverse free" as in any of these being true in order of priority for any given cell:
+        /// - Not blocked by other cells in the above layers.
+        /// - If row is occupied already, the returned position must be placed to either free side of it.
+        /// - The whole row is empty
+        fn reverse_free_position<const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>(
+            grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>
+        ) -> UVec3 {
+            todo!()
+        }
+
         pub mod turtle {
             use super::*;
             use rand::{Rng, rngs::ThreadRng};
@@ -1862,36 +1876,60 @@ mod logic {
             // pub const TILE_PAIRS: usize = TILE_VARIANTS * 2; // TODO: Not needed?
 
             pub struct Turtle {
-                grid: Option<Grid<Entity, LAYERS, ROWS, COLUMNS>>,
+                grid: Option<Grid<Occupant, LAYERS, ROWS, COLUMNS>>,
                 rng: ThreadRng,
                 tile_pairs_to_be_placed: Vec<usize>,
             }
 
             impl Turtle {
-                fn populate_grid(&mut self) -> Grid<Entity, LAYERS, ROWS, COLUMNS> {
+                fn populate_grid(&mut self) -> Grid<Occupant, LAYERS, ROWS, COLUMNS> {
                     self.spawn_seed_tiles();
+                    self.fill_remaining_cells();
                     self.grid.take().unwrap()
                 }
 
-                fn spawn_seed_tiles(&mut self) {
-                    let tile_pair_count = self.rng.random_range(4..=4); // Just use 4 for now.
-
+                fn fill_grid_with_n_tile_pairs(&mut self, tile_pair_count: usize) {
                     for _ in 0..tile_pair_count {
                         let tile_pair = self.tile_pairs_to_be_placed.swap_remove(
                             self.rng.random_range(0..self.tile_pairs_to_be_placed.len()),
                         );
 
-                        // Spawn 2 tiles (hence tile pair)
+                        // Spawn 2 tiles (hence tile PAIR)
+                        for _ in 0..2 {
+                            let pos = reverse_free_position(
+                                self.grid.as_ref().unwrap(),
+                            );
+                            assert_eq!(
+                                self.grid.as_mut().unwrap().set(
+                                    pos.z as usize,
+                                    pos.y as usize,
+                                    pos.x as usize,
+                                    (tile_pair, None),
+                                    UVec2::splat(1),
+                                ),
+                                Ok(None)
+                            );
+                        }
                     }
+                }
+
+                fn spawn_seed_tiles(&mut self) {
+                    let tile_pair_count = self.rng.random_range(3..=3); // Just use 4 for now.
+                    self.fill_grid_with_n_tile_pairs(tile_pair_count);
+                }
+                
+                fn fill_remaining_cells(&mut self) {
+                    let tile_pair_count = self.tile_pairs_to_be_placed.len();
+                    self.fill_grid_with_n_tile_pairs(tile_pair_count);
                 }
             }
 
-            impl GridFactoryTrait<Entity, LAYERS, ROWS, COLUMNS> for Turtle {
-                type Grid = Grid<Entity, LAYERS, ROWS, COLUMNS>;
+            impl GridFactoryTrait<Occupant, LAYERS, ROWS, COLUMNS> for Turtle {
+                type Grid = Grid<Occupant, LAYERS, ROWS, COLUMNS>;
 
                 fn new() -> Self {
                     Self {
-                        grid: Some(Grid::<Entity, LAYERS, ROWS, COLUMNS>::new(None)),
+                        grid: Some(Grid::<Occupant, LAYERS, ROWS, COLUMNS>::new(None)),
                         rng: rand::rng(),
                         tile_pairs_to_be_placed: (0..TILE_VARIANTS)
                             .collect::<Vec<usize>>()
