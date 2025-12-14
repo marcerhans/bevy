@@ -1911,6 +1911,46 @@ mod logic {
                     self.grid.take().unwrap()
                 }
 
+                /// Determines if the given position is within the allowed tile placements.
+                fn cell_is_valid(
+                    self,
+                    layer: usize,
+                    row: usize,
+                    column: usize,
+                ) -> bool {
+                    match layer {
+                        0 => match row {
+                            0 | 1 | 6 | 9 | 14 | 15 => return column >= 2 && column <= 25,
+                            2 | 3 | 12 | 13 => return column >= 6 && column <= 21,
+                            4 | 5 | 10 | 11 => return column >= 4 && column <= 23,
+                            #[allow(unused_comparisons)] // Just to make it easier to read...
+                            7 | 8 => return column >= 0 && column <= 29,
+                            ROWS.. => unreachable!(),
+                        },
+                        1 => match row {
+                            0 | 1 | 14 | 15 => return false,
+                            2..=13 => return column >= 8 && column <= 19,
+                            ROWS.. => unreachable!(),
+                        },
+                        2 => match row {
+                            0..=3 | 12..=15 => return false,
+                            4..=11 => return column >= 10 && column <= 17,
+                            ROWS.. => unreachable!(),
+                        },
+                        3 => match row {
+                            0..=5 | 10..=15 => return false,
+                            6..=9 => return column >= 12 && column <= 15,
+                            ROWS.. => unreachable!(),
+                        },
+                        4 => match row {
+                            0..=6 | 9..=15 => return false,
+                            7..=8 => return column >= 13 && column <= 14,
+                            ROWS.. => unreachable!(),
+                        },
+                        LAYERS.. => unreachable!(),
+                    }
+                }
+
                 fn fill_grid_with_n_tile_pairs<
                     G: Fn(&Grid<Occupant, LAYERS, ROWS, COLUMNS>) -> UVec3,
                 >(
