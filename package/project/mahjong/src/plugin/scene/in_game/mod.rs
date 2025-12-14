@@ -1866,9 +1866,11 @@ mod logic {
             const LAYERS: usize,
             const ROWS: usize,
             const COLUMNS: usize,
+            V: Fn(usize, usize, usize) -> bool,
         >(
             grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
             layer: usize,
+            position_validator: V,
         ) -> UVec3 {
             todo!()
         }
@@ -1879,8 +1881,14 @@ mod logic {
         /// - Not blocked by other cells in the above layers.
         /// - If row is occupied already, the returned position must be placed to either free side of it.
         /// - The whole row is empty
-        fn reverse_free_position<const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>(
-            grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>
+        fn reverse_free_position<
+            const LAYERS: usize,
+            const ROWS: usize,
+            const COLUMNS: usize,
+            V: Fn(usize, usize, usize) -> bool,
+        >(
+            grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
+            position_validator: V,
         ) -> UVec3 {
             // Pick random row
             // let row =
@@ -1912,8 +1920,7 @@ mod logic {
                 }
 
                 /// Determines if the given position is within the allowed tile placements.
-                fn cell_is_valid(
-                    self,
+                fn position_is_valid(
                     layer: usize,
                     row: usize,
                     column: usize,
@@ -1953,7 +1960,10 @@ mod logic {
                 }
 
                 fn fill_grid_with_n_tile_pairs<
-                    G: Fn(&Grid<Occupant, LAYERS, ROWS, COLUMNS>) -> UVec3,
+                    G: Fn(
+                        &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
+                        &dyn Fn(usize, usize, usize) -> bool,
+                    ) -> UVec3,
                 >(
                     &mut self,
                     tile_pair_count: usize,
@@ -1966,7 +1976,10 @@ mod logic {
 
                         // Spawn 2 tiles (hence tile PAIR)
                         for _ in 0..2 {
-                            let pos = position_generator(self.grid.as_ref().unwrap());
+                            let pos = position_generator(
+                                self.grid.as_ref().unwrap(),
+                                &Self::position_is_valid,
+                            );
                             assert_eq!(
                                 self.grid.as_mut().unwrap().set(
                                     pos.z as usize,
@@ -1982,11 +1995,13 @@ mod logic {
                 }
 
                 fn spawn_seed_tiles(&mut self) {
-                    let tile_pair_count = self.rng.random_range(3..=3); // Just use 4 for now.
+                    let tile_pair_count = self.rng.random_range(3..=3); // Just use 3 for now.
                     self.fill_grid_with_n_tile_pairs(
                         tile_pair_count,
-                        |grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>| -> UVec3 {
-                            reverse_free_position_in_layer(grid, 0)
+                        |grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
+                         position_validator: &dyn Fn(usize, usize, usize) -> bool|
+                         -> UVec3 {
+                            reverse_free_position_in_layer(grid, 0, position_validator)
                         },
                     );
                 }
@@ -1995,8 +2010,10 @@ mod logic {
                     let tile_pair_count = self.tile_pairs_to_be_placed.len();
                     self.fill_grid_with_n_tile_pairs(
                         tile_pair_count,
-                        |grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>| -> UVec3 {
-                            reverse_free_position(grid)
+                        |grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
+                         position_validator: &dyn Fn(usize, usize, usize) -> bool|
+                         -> UVec3 {
+                            reverse_free_position(grid, position_validator)
                         },
                     );
                 }
