@@ -1853,6 +1853,22 @@ mod logic {
 
         pub type Occupant = (usize, Option<Entity>);
 
+        /// Finds and returns a random valid "reverse free" position in the given layer based on current state of a [Grid].
+        ///
+        /// "Reverse free" (for given layer) as in any of these being true in order of priority for any given cell:
+        /// - If row is occupied already, the returned position must be placed to either free side of it.
+        /// - The whole row is empty
+        fn reverse_free_position_in_layer<
+            const LAYERS: usize,
+            const ROWS: usize,
+            const COLUMNS: usize,
+        >(
+            grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
+            layer: usize,
+        ) -> UVec3 {
+            todo!()
+        }
+
         /// Finds and returns a random valid "reverse free" position based on current state of a [Grid].
         ///
         /// "Reverse free" as in any of these being true in order of priority for any given cell:
@@ -1862,6 +1878,9 @@ mod logic {
         fn reverse_free_position<const LAYERS: usize, const ROWS: usize, const COLUMNS: usize>(
             grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>
         ) -> UVec3 {
+            // Pick random row
+            // let row =
+
             todo!()
         }
 
@@ -1888,7 +1907,13 @@ mod logic {
                     self.grid.take().unwrap()
                 }
 
-                fn fill_grid_with_n_tile_pairs(&mut self, tile_pair_count: usize) {
+                fn fill_grid_with_n_tile_pairs<
+                    G: Fn(&Grid<Occupant, LAYERS, ROWS, COLUMNS>) -> UVec3,
+                >(
+                    &mut self,
+                    tile_pair_count: usize,
+                    position_generator: G,
+                ) {
                     for _ in 0..tile_pair_count {
                         let tile_pair = self.tile_pairs_to_be_placed.swap_remove(
                             self.rng.random_range(0..self.tile_pairs_to_be_placed.len()),
@@ -1896,9 +1921,7 @@ mod logic {
 
                         // Spawn 2 tiles (hence tile PAIR)
                         for _ in 0..2 {
-                            let pos = reverse_free_position(
-                                self.grid.as_ref().unwrap(),
-                            );
+                            let pos = position_generator(self.grid.as_ref().unwrap());
                             assert_eq!(
                                 self.grid.as_mut().unwrap().set(
                                     pos.z as usize,
@@ -1915,12 +1938,22 @@ mod logic {
 
                 fn spawn_seed_tiles(&mut self) {
                     let tile_pair_count = self.rng.random_range(3..=3); // Just use 4 for now.
-                    self.fill_grid_with_n_tile_pairs(tile_pair_count);
+                    self.fill_grid_with_n_tile_pairs(
+                        tile_pair_count,
+                        |grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>| -> UVec3 {
+                            reverse_free_position_in_layer(grid, 0)
+                        },
+                    );
                 }
-                
+
                 fn fill_remaining_cells(&mut self) {
                     let tile_pair_count = self.tile_pairs_to_be_placed.len();
-                    self.fill_grid_with_n_tile_pairs(tile_pair_count);
+                    self.fill_grid_with_n_tile_pairs(
+                        tile_pair_count,
+                        |grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>| -> UVec3 {
+                            reverse_free_position(grid)
+                        },
+                    );
                 }
             }
 
