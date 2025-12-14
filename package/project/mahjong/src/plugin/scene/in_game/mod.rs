@@ -1836,6 +1836,7 @@ mod logic {
         use super::super::model::grid::Grid;
         use bevy::prelude::*;
 
+        /// Predefined [Grid]s, automatically populated.
         pub trait GridFactoryTrait<
             Occupant,
             const LAYERS: usize,
@@ -1843,29 +1844,56 @@ mod logic {
             const COLUMNS: usize,
         >
         {
-            fn get() -> Grid<Occupant, LAYERS, ROWS, COLUMNS>;
+            type Grid;
+            fn new() -> Self;
+
+            /// Consumes [self] to transfer ownership of [Self::Grid] to the caller.
+            fn get(self) -> Self::Grid;
         }
 
         pub mod turtle {
             use super::*;
+            use rand::Rng;
 
-            const LAYERS: usize = 5;
-            const ROWS: usize = 8 * 2;
-            const COLUMNS: usize = 15 * 2;
+            pub const LAYERS: usize = 5;
+            pub const ROWS: usize = 8 * 2;
+            pub const COLUMNS: usize = 15 * 2;
+            pub const TILE_PAIRS: usize = 36;
 
-            pub struct Turtle;
+            pub struct Turtle {
+                grid: Option<Grid<Entity, LAYERS, ROWS, COLUMNS>>,
+                tile_pairs_to_be_placed: Vec<usize>,
+            }
 
             impl Turtle {
-                fn populate_grid(
-                    mut grid: Grid<Entity, LAYERS, ROWS, COLUMNS>
-                ) -> Grid<Entity, LAYERS, ROWS, COLUMNS> {
-                    todo!()
+                fn populate_grid(&mut self) -> Grid<Entity, LAYERS, ROWS, COLUMNS> {
+                    self.spawn_seed_tiles();
+                    self.grid.take().unwrap()
+                }
+
+                fn spawn_seed_tiles(&mut self) {
+                    let mut rng = rand::rng();
+                    let tile_pair_count = rng.random_range(4..=4); // Just use 4 for now.
+
+                    for _ in 0..tile_pair_count {
+                        let tile_pair = rng.random_range(0..TILE_PAIRS);
+                        todo!()
+                    }
                 }
             }
 
             impl GridFactoryTrait<Entity, LAYERS, ROWS, COLUMNS> for Turtle {
-                fn get() -> Grid<Entity, LAYERS, ROWS, COLUMNS> {
-                    Turtle::populate_grid(Grid::<Entity, LAYERS, ROWS, COLUMNS>::new(None))
+                type Grid = Grid<Entity, LAYERS, ROWS, COLUMNS>;
+
+                fn new() -> Self {
+                    Self {
+                        grid: Some(Grid::<Entity, LAYERS, ROWS, COLUMNS>::new(None)),
+                        tile_pairs_to_be_placed: (0..TILE_PAIRS).collect(),
+                    }
+                }
+
+                fn get(mut self) -> Self::Grid {
+                    self.populate_grid()
                 }
             }
         }
