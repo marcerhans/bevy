@@ -1918,12 +1918,13 @@ mod logic {
                     row: usize,
                     column: usize,
                 ) -> bool {
+                    #![allow(unused_comparisons)] // Just to make it easier to read...
+
                     match layer {
                         0 => match row {
                             0 | 1 | 6 | 9 | 14 | 15 => return column >= 2 && column <= 25,
                             2 | 3 | 12 | 13 => return column >= 6 && column <= 21,
                             4 | 5 | 10 | 11 => return column >= 4 && column <= 23,
-                            #[allow(unused_comparisons)] // Just to make it easier to read...
                             7 | 8 => return column >= 0 && column <= 29,
                             ROWS.. => unreachable!(),
                         },
