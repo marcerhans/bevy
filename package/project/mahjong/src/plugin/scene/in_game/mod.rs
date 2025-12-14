@@ -1851,7 +1851,11 @@ mod logic {
             fn get(self) -> Self::Grid;
         }
 
-        pub type Occupant = (usize, Option<Entity>);
+        #[derive(Debug, PartialEq)]
+        pub enum Occupant {
+            Blocked,
+            Occupied((usize, Option<Entity>)),
+        }
 
         /// Finds and returns a random valid "reverse free" position in the given layer based on current state of a [Grid].
         ///
@@ -1927,7 +1931,7 @@ mod logic {
                                     pos.z as usize,
                                     pos.y as usize,
                                     pos.x as usize,
-                                    (tile_pair, None),
+                                    Occupant::Occupied((tile_pair, None)),
                                     UVec2::splat(1),
                                 ),
                                 Ok(None)
