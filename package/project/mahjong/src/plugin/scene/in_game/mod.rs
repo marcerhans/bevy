@@ -1835,7 +1835,7 @@ mod logic {
     pub mod grid_factory {
         use super::super::model::grid::Grid;
         use bevy::prelude::*;
-        use rand::rngs::ThreadRng;
+        use rand::{Rng, rngs::ThreadRng};
 
         /// Predefined [Grid]s, automatically populated.
         pub trait GridFactoryTrait<
@@ -1873,10 +1873,25 @@ mod logic {
         >(
             grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
             layer: usize,
-            mut avialable_positions: &mut Vec<UVec3>,
+            mut available_positions: &mut Vec<UVec3>,
             position_validator: V,
             thread_rng: &mut ThreadRng,
         ) -> UVec3 {
+            let viable_pos: Option<UVec3> = None;
+            let available_positions_in_layer = available_positions
+                .iter()
+                .filter(|pos| pos.z == layer as u32);
+
+            while viable_pos.is_none() {
+                let row = thread_rng.random_range(0..ROWS);
+                let cells = available_positions_in_layer
+                    .clone()
+                    .filter(|pos| pos.y == row as u32)
+                    .filter(|pos| {
+                        grid.get(pos.z as usize, pos.y as usize, pos.x as usize)
+                            .is_none()
+                    });
+            }
             todo!()
         }
 
