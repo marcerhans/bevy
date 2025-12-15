@@ -2024,23 +2024,10 @@ mod logic {
                                         row as u32,
                                         layer as u32,
                                     ));
-
-                                    assert_eq!(
-                                        self.grid.as_mut().unwrap().set(
-                                            layer,
-                                            row,
-                                            column,
-                                            Occupant::Occupied((0, None)),
-                                            UVec2::splat(1)
-                                        ),
-                                        Ok(None)
-                                    );
-                                    // }
                                 }
                             }
                         }
                     }
-                    return self.grid.take().unwrap();
 
                     self.spawn_seed_tiles(&mut available_positions);
                     self.fill_remaining_cells(&mut available_positions);
@@ -2069,6 +2056,7 @@ mod logic {
                     position_generator: G,
                 ) {
                     for _ in 0..tile_pair_count {
+                        assert!(self.tile_pairs_to_be_placed.len() > 0);
                         let tile_pair = self.tile_pairs_to_be_placed.swap_remove(
                             self.rng.random_range(0..self.tile_pairs_to_be_placed.len()),
                         );
