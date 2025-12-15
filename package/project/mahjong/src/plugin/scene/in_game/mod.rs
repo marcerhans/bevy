@@ -1835,6 +1835,7 @@ mod logic {
     pub mod grid_factory {
         use super::super::model::grid::Grid;
         use bevy::prelude::*;
+        use rand::rngs::ThreadRng;
 
         /// Predefined [Grid]s, automatically populated.
         pub trait GridFactoryTrait<
@@ -1874,6 +1875,7 @@ mod logic {
             layer: usize,
             mut avialable_positions: &mut Vec<UVec3>,
             position_validator: V,
+            thread_rng: &mut ThreadRng,
         ) -> UVec3 {
             todo!()
         }
@@ -1893,6 +1895,7 @@ mod logic {
             grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
             mut avialable_positions: &mut Vec<UVec3>,
             position_validator: V,
+            thread_rng: &mut ThreadRng,
         ) -> UVec3 {
             // Pick random row
             // let row =
@@ -2048,6 +2051,7 @@ mod logic {
                         &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
                         &mut Vec<UVec3>,
                         &dyn Fn(usize, usize, usize) -> bool,
+                        &mut ThreadRng,
                     ) -> UVec3,
                 >(
                     &mut self,
@@ -2067,6 +2071,7 @@ mod logic {
                                 self.grid.as_ref().unwrap(),
                                 &mut available_positions,
                                 &Self::position_is_valid,
+                                &mut self.rng,
                             );
                             assert_eq!(
                                 self.grid.as_mut().unwrap().set(
@@ -2092,13 +2097,15 @@ mod logic {
                         &mut available_positions,
                         |grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
                          available_positions: &mut Vec<UVec3>,
-                         position_validator: &dyn Fn(usize, usize, usize) -> bool|
+                         position_validator: &dyn Fn(usize, usize, usize) -> bool,
+                         thread_rng: &mut ThreadRng|
                          -> UVec3 {
                             reverse_free_position_in_layer(
                                 grid,
                                 0,
                                 available_positions,
                                 position_validator,
+                                thread_rng,
                             )
                         },
                     );
@@ -2114,9 +2121,15 @@ mod logic {
                         &mut available_positions,
                         |grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
                          available_positions: &mut Vec<UVec3>,
-                         position_validator: &dyn Fn(usize, usize, usize) -> bool|
+                         position_validator: &dyn Fn(usize, usize, usize) -> bool,
+                         thread_rng: &mut ThreadRng|
                          -> UVec3 {
-                            reverse_free_position(grid, available_positions, position_validator)
+                            reverse_free_position(
+                                grid,
+                                available_positions,
+                                position_validator,
+                                thread_rng,
+                            )
                         },
                     );
                 }
