@@ -1848,6 +1848,8 @@ mod logic {
             fn new() -> Self;
 
             /// Consumes [self] to transfer ownership of [Self::Grid] to the caller.
+            /// A bit stupid of me to have the factory collapse when you get an item from it.
+            /// Oh, well. Here we are ¯\_(ツ)_/¯.
             fn get(self) -> Self::Grid;
         }
 
@@ -1870,6 +1872,7 @@ mod logic {
         >(
             grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
             layer: usize,
+            mut avialable_positions: &mut Vec<UVec3>,
             position_validator: V,
         ) -> UVec3 {
             todo!()
@@ -1888,6 +1891,7 @@ mod logic {
             V: Fn(usize, usize, usize) -> bool,
         >(
             grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
+            mut avialable_positions: &mut Vec<UVec3>,
             position_validator: V,
         ) -> UVec3 {
             // Pick random row
@@ -1914,8 +1918,24 @@ mod logic {
 
             impl Turtle {
                 fn populate_grid(&mut self) -> Grid<Occupant, LAYERS, ROWS, COLUMNS> {
-                    self.spawn_seed_tiles();
-                    self.fill_remaining_cells();
+                    let mut available_positions = vec![];
+
+                    for layer in 0..LAYERS {
+                        for row in 0..ROWS {
+                            for column in 0..COLUMNS {
+                                if Self::position_is_valid(layer, row, column) {
+                                    available_positions.push(UVec3::new(
+                                        column as u32,
+                                        row as u32,
+                                        layer as u32,
+                                    ));
+                                }
+                            }
+                        }
+                    }
+
+                    self.spawn_seed_tiles(&mut available_positions);
+                    self.fill_remaining_cells(&mut available_positions);
                     self.grid.take().unwrap()
                 }
 
@@ -1962,11 +1982,13 @@ mod logic {
                 fn fill_grid_with_n_tile_pairs<
                     G: Fn(
                         &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
+                        &mut Vec<UVec3>,
                         &dyn Fn(usize, usize, usize) -> bool,
                     ) -> UVec3,
                 >(
                     &mut self,
                     tile_pair_count: usize,
+                    mut available_positions: &mut Vec<UVec3>,
                     position_generator: G,
                 ) {
                     for _ in 0..tile_pair_count {
@@ -1978,6 +2000,7 @@ mod logic {
                         for _ in 0..2 {
                             let pos = position_generator(
                                 self.grid.as_ref().unwrap(),
+                                &mut available_positions,
                                 &Self::position_is_valid,
                             );
                             assert_eq!(
@@ -1994,26 +2017,41 @@ mod logic {
                     }
                 }
 
-                fn spawn_seed_tiles(&mut self) {
+                fn spawn_seed_tiles(
+                    &mut self,
+                    mut available_positions: &mut Vec<UVec3>,
+                ) {
                     let tile_pair_count = self.rng.random_range(3..=3); // Just use 3 for now.
                     self.fill_grid_with_n_tile_pairs(
                         tile_pair_count,
+                        &mut available_positions,
                         |grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
+                         available_positions: &mut Vec<UVec3>,
                          position_validator: &dyn Fn(usize, usize, usize) -> bool|
                          -> UVec3 {
-                            reverse_free_position_in_layer(grid, 0, position_validator)
+                            reverse_free_position_in_layer(
+                                grid,
+                                0,
+                                available_positions,
+                                position_validator,
+                            )
                         },
                     );
                 }
 
-                fn fill_remaining_cells(&mut self) {
+                fn fill_remaining_cells(
+                    &mut self,
+                    mut available_positions: &mut Vec<UVec3>,
+                ) {
                     let tile_pair_count = self.tile_pairs_to_be_placed.len();
                     self.fill_grid_with_n_tile_pairs(
                         tile_pair_count,
+                        &mut available_positions,
                         |grid: &Grid<Occupant, LAYERS, ROWS, COLUMNS>,
+                         available_positions: &mut Vec<UVec3>,
                          position_validator: &dyn Fn(usize, usize, usize) -> bool|
                          -> UVec3 {
-                            reverse_free_position(grid, position_validator)
+                            reverse_free_position(grid, available_positions, position_validator)
                         },
                     );
                 }
