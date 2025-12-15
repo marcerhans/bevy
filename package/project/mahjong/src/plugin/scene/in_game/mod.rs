@@ -1929,10 +1929,25 @@ mod logic {
                                         row as u32,
                                         layer as u32,
                                     ));
+
+                                    if row % 2 == 0 && column % 2 == 0 {
+                                        println!("{}x{}x{}", layer, row, column);
+                                        assert_eq!(
+                                            self.grid.as_mut().unwrap().set(
+                                                layer,
+                                                row,
+                                                column,
+                                                Occupant::Occupied((0, None)),
+                                                UVec2::splat(1)
+                                            ),
+                                            Ok(None)
+                                        );
+                                    }
                                 }
                             }
                         }
                     }
+                    return self.grid.take().unwrap();
 
                     self.spawn_seed_tiles(&mut available_positions);
                     self.fill_remaining_cells(&mut available_positions);
@@ -2072,6 +2087,17 @@ mod logic {
 
                 fn get(mut self) -> Self::Grid {
                     self.populate_grid()
+                }
+            }
+
+            #[cfg(test)]
+            mod asdf {
+                use super::*;
+
+                #[test]
+                fn test() {
+                    let mut factory = Turtle::new();
+                    println!("{:?}", factory.get());
                 }
             }
         }
