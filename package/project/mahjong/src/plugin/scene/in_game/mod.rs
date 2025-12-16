@@ -1888,33 +1888,83 @@ mod logic {
                             None
                         }
                     });
-            let row = thread_rng.random_range(1..ROWS - 1);
-            let available_positions_in_row = available_positions_in_layer
-                .clone()
-                .filter(|(_index, pos)| pos.y == row as u32);
-            let positions_with_neighbours = available_positions_in_row.filter(|(_index, pos)| {
-                let left = grid
-                    .get(pos.z as usize, pos.y as usize, pos.x as usize - 1)
-                    .is_some();
-                let right = grid
-                    .get(pos.z as usize, pos.y as usize, pos.x as usize + 1)
-                    .is_some();
-                assert!(!(left && right));
-                left || right
-            });
-            let len = positions_with_neighbours.clone().count();
-            todo!("
-            thread_rng.random_range will fail because len == 0. Becauuuuse WE DON'T HAVE ANY NEIGHBOURS YET! DUH!
-            Re-do it, and make sure to pick a RANDOM row, and for each random row, make sure that it EITHER empty or
-            if it isn't, the position should be next to the existing one.
-            ");
-            let (index, viable_position) = positions_with_neighbours
-                .skip(thread_rng.random_range(0..len))
-                .next()
-                .unwrap();
-            let viable_position = viable_position.clone();
-            available_positions.swap_remove(index);
-            viable_position
+
+            let mut index_to_remove = None;
+            let mut free_position_in_layer = None;
+
+            while free_position_in_layer.is_none() {
+                let row = thread_rng.random_range(1..ROWS - 1);
+
+                let available_position_in_row = available_positions_in_layer
+                    .clone()
+                    .find(|(_index, pos)| pos.y == row as u32);
+
+                if available_position_in_row.is_none() {
+                    continue;
+                }
+
+                let (index, pos) = available_position_in_row.unwrap();
+                let mut pos = pos.clone();
+
+                // Scan the row if it is already occupied
+                let all_columns = 0..COLUMNS;
+                if thread_rng.random_bool(0.5) {
+                    'outer: for column in all_columns.clone() {
+                        if grid
+                            .get(layer as usize, row as usize, column as usize)
+                            .is_some()
+                        {
+                            if pos.x == 1 {
+                                // Try the other direction
+                                for column in all_columns.clone().rev() {
+                                    if grid
+                                        .get(layer as usize, row as usize, column as usize)
+                                        .is_some()
+                                    {
+                                        // By the power of static analysis, I have determined that this will always succeed!
+                                        pos = pos.with_x(pos.x + 1);
+                                        break 'outer;
+                                    }
+                                }
+                            }
+
+                            pos = pos.with_x(pos.x - 1);
+                            break;
+                        }
+                    }
+                } else {
+                    'outer: for column in all_columns.clone().rev() {
+                        if grid
+                            .get(layer as usize, row as usize, column as usize)
+                            .is_some()
+                        {
+                            if pos.x == (COLUMNS - 2) as u32 {
+                                // Try the other direction
+                                for column in all_columns.clone() {
+                                    if grid
+                                        .get(layer as usize, row as usize, column as usize)
+                                        .is_some()
+                                    {
+                                        // By the power of static analysis, I have determined that this will always succeed!
+                                        pos = pos.with_x(pos.x - 1);
+                                        break 'outer;
+                                    }
+                                }
+                            }
+
+                            pos = pos.with_x(pos.x + 1);
+                            break;
+                        }
+                    }
+                }
+
+                // Free position was found! Remove it from available positions go move on.
+                index_to_remove = Some(index);
+                free_position_in_layer = Some(pos);
+            }
+
+            available_positions.swap_remove(index_to_remove.unwrap());
+            free_position_in_layer.unwrap()
         }
 
         /// Finds and returns a random valid "reverse free" position based on current state of a [Grid].
@@ -1936,13 +1986,51 @@ mod logic {
         ) -> UVec3 {
             // Pick random row
             // let row =
+            // let available_positions_in_layer =
+            //     available_positions
+            //         .iter()
+            //         .enumerate()
+            //         .filter_map(|(index, pos)| {
+            //             if pos.z == layer as u32 {
+            //                 Some((index, pos))
+            //             } else {
+            //                 None
+            //             }
+            //         });
+            // let row = thread_rng.random_range(1..ROWS - 1);
+            // let available_positions_in_row = available_positions_in_layer
+            //     .clone()
+            //     .filter(|(_index, pos)| pos.y == row as u32);
+            // let positions_with_neighbours = available_positions_in_row.filter(|(_index, pos)| {
+            //     let left = grid
+            //         .get(pos.z as usize, pos.y as usize, pos.x as usize - 1)
+            //         .is_some();
+            //     let right = grid
+            //         .get(pos.z as usize, pos.y as usize, pos.x as usize + 1)
+            //         .is_some();
+            //     assert!(!(left && right));
+            //     left || right
+            // });
+            // let len = positions_with_neighbours.clone().count();
+            // todo!("
+            // thread_rng.random_range will fail because len == 0. Becauuuuse WE DON'T HAVE ANY NEIGHBOURS YET! DUH!
+            // Re-do it, and make sure to pick a RANDOM row, and for each random row, make sure that it EITHER empty or
+            // if it isn't, the position should be next to the existing one.
+            // ");
+            // let (index, viable_position) = positions_with_neighbours
+            //     .skip(thread_rng.random_range(0..len))
+            //     .next()
+            //     .unwrap();
+            // let viable_position = viable_position.clone();
+            // available_positions.swap_remove(index);
+            // viable_position
 
             todo!()
         }
 
         pub mod turtle {
             use super::*;
-            use rand::{Rng, rngs::ThreadRng};
+            use rand::{Rng, rngs::ThreadRng, seq::SliceRandom};
 
             pub const LAYERS: usize = 5;
             pub const ROWS: usize = 9 * 2;
@@ -2079,8 +2167,10 @@ mod logic {
                         }
                     }
 
+                    available_positions.shuffle(&mut self.rng);
+
                     self.spawn_seed_tiles(&mut available_positions);
-                    self.fill_remaining_cells(&mut available_positions);
+                    // self.fill_remaining_cells(&mut available_positions);
                     self.grid.take().unwrap()
                 }
 
