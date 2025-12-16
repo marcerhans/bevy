@@ -1922,13 +1922,13 @@ mod logic {
                                         .is_some()
                                     {
                                         // By the power of static analysis, I have determined that this will always succeed!
-                                        pos = pos.with_x(pos.x + 1);
+                                        pos = pos.with_x(pos.x + 2);
                                         break 'outer;
                                     }
                                 }
                             }
 
-                            pos = pos.with_x(pos.x - 1);
+                            pos = pos.with_x(pos.x - 2);
                             break;
                         }
                     }
@@ -1946,13 +1946,13 @@ mod logic {
                                         .is_some()
                                     {
                                         // By the power of static analysis, I have determined that this will always succeed!
-                                        pos = pos.with_x(pos.x - 1);
+                                        pos = pos.with_x(pos.x - 2);
                                         break 'outer;
                                     }
                                 }
                             }
 
-                            pos = pos.with_x(pos.x + 1);
+                            pos = pos.with_x(pos.x + 2);
                             break;
                         }
                     }
