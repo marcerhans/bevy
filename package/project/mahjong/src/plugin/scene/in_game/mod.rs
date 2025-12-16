@@ -1877,30 +1877,39 @@ mod logic {
             position_validator: V,
             thread_rng: &mut ThreadRng,
         ) -> UVec3 {
-            let available_positions_in_layer = available_positions
-                .iter()
-                .filter(|pos| pos.z == layer as u32);
-            let row = thread_rng.random_range(0..ROWS);
+            let available_positions_in_layer =
+                available_positions
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(index, pos)| {
+                        if pos.z == layer as u32 {
+                            Some((index, pos))
+                        } else {
+                            None
+                        }
+                    });
+            let row = thread_rng.random_range(1..ROWS - 1);
             let available_positions_in_row = available_positions_in_layer
                 .clone()
-                .filter(|pos| pos.y == row as u32)
-                .filter(|pos| {
-                    grid.get(pos.z as usize, pos.y as usize, pos.x as usize)
-                        .is_none()
-                });
-            let positions_with_neighbours = available_positions_in_row.filter(|pos| {
-                todo!("Have to check ranges outside of grid :(");
+                .filter(|(_index, pos)| pos.y == row as u32);
+            let positions_with_neighbours = available_positions_in_row.filter(|(_index, pos)| {
                 let left = grid
-                    .get(pos.z as usize, pos.y as usize, pos.x as usize)
+                    .get(pos.z as usize, pos.y as usize, pos.x as usize - 1)
                     .is_some();
                 let right = grid
-                    .get(pos.z as usize, pos.y as usize, pos.x as usize)
+                    .get(pos.z as usize, pos.y as usize, pos.x as usize + 1)
                     .is_some();
                 assert!(!(left && right));
                 left || right
             });
-
-            todo!()
+            let len = positions_with_neighbours.clone().count();
+            let (index, viable_position) = positions_with_neighbours
+                .skip(thread_rng.random_range(0..len))
+                .next()
+                .unwrap();
+            let viable_position = viable_position.clone();
+            available_positions.swap_remove(index);
+            viable_position
         }
 
         /// Finds and returns a random valid "reverse free" position based on current state of a [Grid].
