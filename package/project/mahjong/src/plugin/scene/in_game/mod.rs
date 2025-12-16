@@ -1903,6 +1903,11 @@ mod logic {
                 left || right
             });
             let len = positions_with_neighbours.clone().count();
+            todo!("
+            thread_rng.random_range will fail because len == 0. Becauuuuse WE DON'T HAVE ANY NEIGHBOURS YET! DUH!
+            Re-do it, and make sure to pick a RANDOM row, and for each random row, make sure that it EITHER empty or
+            if it isn't, the position should be next to the existing one.
+            ");
             let (index, viable_position) = positions_with_neighbours
                 .skip(thread_rng.random_range(0..len))
                 .next()
