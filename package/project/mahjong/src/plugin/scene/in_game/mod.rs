@@ -27,22 +27,22 @@ pub enum InGame {
 mod tile {
     use bevy::prelude::*;
 
-    #[derive(Component)]
-    pub struct TileMarker;
-
-    #[derive(Component, Deref, DerefMut)]
-    pub struct Position(UVec3);
-
     #[derive(Bundle)]
     pub struct Tile {
-        marker: TileMarker,
+        marker: Marker,
         pub position: Position,
         pub variant: Variant,
         pub sprite: Sprite,
     }
 
+    #[derive(Component)]
+    pub struct Marker;
+
+    #[derive(Component, Deref, DerefMut)]
+    pub struct Position(UVec3);
+
     pub trait VariantTrait {
-        fn get_texture(
+        fn get_sprite(
             &self,
             size: Vec2,
         ) -> impl Bundle;
@@ -64,7 +64,7 @@ mod tile {
             }
 
             impl VariantTrait for Variant {
-                fn get_texture(
+                fn get_sprite(
                     &self,
                     size: Vec2,
                 ) -> impl Bundle {
