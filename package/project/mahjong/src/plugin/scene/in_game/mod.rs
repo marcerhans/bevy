@@ -187,9 +187,14 @@ pub fn spawn_tiles(
 
 pub fn spawn_buttons(
     mut commands: Commands,
+    projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
+    let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
+        panic!();
+    };
+
     let texture_button_atlas: Handle<Image> =
         asset_server.load("misc/rev2/button-atlas_1998x429.png");
     let texture_atlas = TextureAtlasLayout::from_grid(UVec2::new(666, 429), 3, 1, None, None);
@@ -204,75 +209,77 @@ pub fn spawn_buttons(
         // ButtonSprite,
         Pickable::default(),
     );
-    // let button_size = Vec2::new(tile_height * 1.5, tile_height * 0.75);
-    // let button_margin = Vec2::new(5.0, 5.0);
-    // let button_pos_start = Vec3::new(
-    //     -(tile_size.x - tile_thickness_offset.x) * PositionGenerator::<Turtle>::COLUMNS as f32
-    //         / 2.0
-    //         - tile_size.x / 2.0,
-    //     -(tile_size.y - tile_thickness_offset.y) * PositionGenerator::<Turtle>::ROWS as f32 / 2.0
-    //         + button_size.y * 0.5,
-    //     999.0,
-    // );
-    // let button_pos_start_right = Vec3::new(
-    //     (tile_size.x - tile_thickness_offset.x) * PositionGenerator::<Turtle>::COLUMNS as f32 / 2.0
-    //         + tile_size.x / 2.0,
-    //     -(tile_size.y - tile_thickness_offset.y) * PositionGenerator::<Turtle>::ROWS as f32 / 2.0
-    //         + button_size.y * 0.5,
-    //     999.0,
-    // );
-    // let buttons = [
-    //     Button {
-    //         translation: button_pos_start,
-    //         text: "[H]elp",
-    //     },
-    //     Button {
-    //         translation: Vec3 {
-    //             x: button_pos_start.x + (button_size.x + button_margin.x) * 0.0,
-    //             y: button_pos_start.y + (button_size.y + button_margin.y) * 1.0,
-    //             ..button_pos_start
-    //         },
-    //         text: "[S]huffle",
-    //     },
-    //     Button {
-    //         translation: button_pos_start_right,
-    //         text: "  [U]ndo\n(limit: 32)",
-    //     },
-    // ];
 
-    // for button in buttons {
-    //     commands
-    //         .spawn((
-    //             button_base.clone(),
-    //             Sprite {
-    //                 custom_size: Some(button_size.clone()),
-    //                 ..Sprite::from_atlas_image(
-    //                     texture_button_atlas.clone(),
-    //                     TextureAtlas {
-    //                         layout: texture_atlas_handle.clone(),
-    //                         index: 0,
-    //                     },
-    //                 )
-    //             },
-    //             Transform {
-    //                 translation: button.translation,
-    //                 ..default()
-    //             },
-    //         ))
-    //         .with_child((
-    //             ButtonSprite,
-    //             Text2d::new(button.text),
-    //             TextFont {
-    //                 font_size: button_size.y / 5.0,
-    //                 ..default()
-    //             },
-    //             TextColor(Color::srgb_u8(255, 215, 0)),
-    //         ))
-    //         .observe(button_over)
-    //         .observe(button_press)
-    //         .observe(button_release)
-    //         .observe(button_out);
-    // }
+    let tile_height = projection.area.height() / 8.0 * 1.5;
+    let button_size = Vec2::new(tile_height * 1.5, tile_height * 0.75);
+    let button_margin = Vec2::new(5.0, 5.0);
+    let button_pos_start = Vec3::new(
+        -(tile_size.x - tile_thickness_offset.x) * PositionGenerator::<Turtle>::COLUMNS as f32
+            / 2.0
+            - tile_size.x / 2.0,
+        -(tile_size.y - tile_thickness_offset.y) * PositionGenerator::<Turtle>::ROWS as f32 / 2.0
+            + button_size.y * 0.5,
+        999.0,
+    );
+    let button_pos_start_right = Vec3::new(
+        (tile_size.x - tile_thickness_offset.x) * PositionGenerator::<Turtle>::COLUMNS as f32 / 2.0
+            + tile_size.x / 2.0,
+        -(tile_size.y - tile_thickness_offset.y) * PositionGenerator::<Turtle>::ROWS as f32 / 2.0
+            + button_size.y * 0.5,
+        999.0,
+    );
+    let buttons = [
+        Button {
+            translation: button_pos_start,
+            text: "[H]elp",
+        },
+        Button {
+            translation: Vec3 {
+                x: button_pos_start.x + (button_size.x + button_margin.x) * 0.0,
+                y: button_pos_start.y + (button_size.y + button_margin.y) * 1.0,
+                ..button_pos_start
+            },
+            text: "[S]huffle",
+        },
+        Button {
+            translation: button_pos_start_right,
+            text: "  [U]ndo\n(limit: 32)",
+        },
+    ];
+
+    for button in buttons {
+        commands
+            .spawn((
+                button_base.clone(),
+                Sprite {
+                    custom_size: Some(button_size.clone()),
+                    ..Sprite::from_atlas_image(
+                        texture_button_atlas.clone(),
+                        TextureAtlas {
+                            layout: texture_atlas_handle.clone(),
+                            index: 0,
+                        },
+                    )
+                },
+                Transform {
+                    translation: button.translation,
+                    ..default()
+                },
+            ))
+            .with_child((
+                ButtonSprite,
+                Text2d::new(button.text),
+                TextFont {
+                    font_size: button_size.y / 5.0,
+                    ..default()
+                },
+                TextColor(Color::srgb_u8(255, 215, 0)),
+            ));
+            // .observe(button_over)
+            // .observe(button_press)
+            // .observe(button_release)
+            // .observe(button_out);
+    }
 }
 
 fn resize_background(
