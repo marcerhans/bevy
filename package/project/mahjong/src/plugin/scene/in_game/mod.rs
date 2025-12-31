@@ -8,10 +8,12 @@ impl bevy::prelude::Plugin for Plugin {
         &self,
         app: &mut App,
     ) {
-        app.add_sub_state::<InGame>().add_systems(
-            OnEnter(InGame::Root),
-            (spawn_background, spawn_tiles, spawn_buttons),
-        );
+        app.add_sub_state::<InGame>()
+            .add_systems(
+                OnEnter(InGame::Root),
+                (spawn_background, spawn_tiles, spawn_buttons),
+            )
+            .add_systems(Update, resize_background.run_if(in_state(InGame::Root)));
     }
 }
 
@@ -25,6 +27,9 @@ pub enum InGame {
 
 // #[derive(Resource)]
 // pub struct PreviouslySelectedTile(pub Option<(Entity, tile::Variant)>);
+
+#[derive(Component)]
+pub struct Background;
 
 mod tile {
     use bevy::prelude::*;
@@ -124,10 +129,13 @@ pub fn spawn_background(
 
     let handle: Handle<Image> = asset_server.load("misc/rev2/original/Arthas_LichKing_GPT2.png");
 
-    commands.spawn(Sprite {
-        custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
-        ..Sprite::from_image(handle)
-    });
+    commands.spawn((
+        Background,
+        Sprite {
+            custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
+            ..Sprite::from_image(handle)
+        },
+    ));
 }
 
 pub fn spawn_tiles(
@@ -169,3 +177,25 @@ pub fn spawn_tiles(
 }
 
 pub fn spawn_buttons() {}
+
+fn resize_background(
+    mut transform: Query<(&mut Transform, &mut Sprite), With<Background>>,
+    projection: Query<&Projection, With<Camera>>,
+) {
+    let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
+        panic!();
+    };
+
+    let Some((_, mut sprite)) = transform.iter_mut().next() else {
+        panic!();
+    };
+
+    if sprite.custom_size.unwrap().x != projection.area.width()
+        || sprite.custom_size.unwrap().y != projection.area.height()
+    {
+        sprite.custom_size = Some(Vec2 {
+            x: projection.area.width(),
+            y: projection.area.height(),
+        });
+    }
+}
