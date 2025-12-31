@@ -10,7 +10,7 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_sub_state::<InGame>().add_systems(
             OnEnter(InGame::Root),
-            (spawn_tiles, spawn_buttons, spawn_background),
+            (spawn_background, spawn_tiles, spawn_buttons),
         );
     }
 }
@@ -113,6 +113,23 @@ mod tile {
     }
 }
 
+pub fn spawn_background(
+    mut commands: Commands,
+    projection: Query<&Projection, With<Camera>>,
+    asset_server: Res<AssetServer>,
+) {
+    let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
+        panic!();
+    };
+
+    let handle: Handle<Image> = asset_server.load("misc/rev2/original/Arthas_LichKing_GPT2.png");
+
+    commands.spawn(Sprite {
+        custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
+        ..Sprite::from_image(handle)
+    });
+}
+
 pub fn spawn_tiles(
     mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
@@ -152,5 +169,3 @@ pub fn spawn_tiles(
 }
 
 pub fn spawn_buttons() {}
-
-pub fn spawn_background() {}
