@@ -25,18 +25,14 @@ pub enum InGame {
     Root,
 }
 
-mod background {
+mod marker {
     use bevy::prelude::*;
 
     #[derive(Component)]
-    pub struct Marker;
-}
-
-mod button {
-    use bevy::prelude::*;
+    pub struct Background;
 
     #[derive(Component)]
-    pub struct Marker;
+    pub struct Button;
 }
 
 mod tile {
@@ -82,7 +78,7 @@ pub fn spawn_background(
     let handle: Handle<Image> = asset_server.load("misc/rev2/original/Arthas_LichKing_GPT2.png");
 
     commands.spawn((
-        Background,
+        marker::Background,
         DespawnOnExit(InGame::Root),
         Sprite {
             custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
@@ -108,33 +104,6 @@ pub fn spawn_tiles(
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
     };
-
-    // Load assets and set texture constants
-    // Tile
-
-    // Determine size and position(s) for tiles
-    // let tile_height = projection.area.height() as f32 / PositionGenerator::<Turtle>::ROWS as f32;
-    // let tile_height = tile_height + TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y * tile_height; // NOTE:1: This is hacky, but allows for tile height to fill height of window.
-    // let tile_width = tile_height * 0.7;
-    // let tile_size = Vec2::new(tile_width, tile_height);
-    // let tile_center_offset = Vec2::new(
-    //     TEXTURE_LEFT_BORDER_PERCENTAGE_X,
-    //     TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y,
-    // ) * tile_size
-    //     / 2.0;
-    // let tile_thickness_offset = Vec2::new(
-    //     TEXTURE_LEFT_BORDER_PERCENTAGE_X,
-    //     TEXTURE_BOTTOM_BORDER_PERCENTAGE_Y,
-    // ) * tile_size;
-    // let tile_logical_size = tile_size - tile_thickness_offset * 1.2;
-    // let tile_factory = tile::Factory::new(
-    //     texture_tile.clone(),
-    //     texture_alliance,
-    //     texture_horde,
-    //     tile_logical_size,
-    //     Some(tile_size),
-    //     Some(tile_center_offset),
-    // );
 }
 
 pub fn spawn_buttons(
