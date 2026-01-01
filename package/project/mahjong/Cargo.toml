@@ -16,6 +16,7 @@ version.workspace = true
 bevy = { workspace = true, features = ["jpeg"] }
 rand = { workspace = true }
 bevy-inspector-egui = { workspace = true }
+bevy_tweening = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 getrandom = { version = "0.3.4" }
