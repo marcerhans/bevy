@@ -118,7 +118,7 @@ pub fn spawn_buttons(
 }
 
 fn resize_background(
-    mut transform: Query<(&mut Transform, &mut Sprite), With<Background>>,
+    mut transform: Query<(&mut Transform, &mut Sprite), With<marker::Background>>,
     projection: Query<&Projection, With<Camera>>,
 ) {
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
