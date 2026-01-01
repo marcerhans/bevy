@@ -25,11 +25,19 @@ pub enum InGame {
     Root,
 }
 
-// #[derive(Resource)]
-// pub struct PreviouslySelectedTile(pub Option<(Entity, tile::Variant)>);
+mod background {
+    use bevy::prelude::*;
 
-#[derive(Component)]
-pub struct Background;
+    #[derive(Component)]
+    pub struct Marker;
+}
+
+mod button {
+    use bevy::prelude::*;
+
+    #[derive(Component)]
+    pub struct Marker;
+}
 
 mod tile {
     use bevy::prelude::*;
