@@ -128,13 +128,11 @@ mod tile {
                 },
                 143 => {
                     // Special case. Just return value immediately.
-                    let row = 3.5;
-                    let column = 6.5;
+                    let row = 3.5 * self.tile_grid_size.y as f32;
+                    let column = 6.5 * self.tile_grid_size.x as f32;
                     let layer = 4.0;
-                    let local_position = Position(
-                        UVec3::new(column as u32, row as u32, layer as u32)
-                            * self.tile_grid_size.extend(1),
-                    );
+                    let local_position =
+                        Position(UVec3::new(column as u32, row as u32, layer as u32));
                     self.counter += 1;
                     return Some(local_position);
                 },
@@ -155,32 +153,26 @@ mod tile {
                         8 => match self.counter - 84 {
                             // Last 3 are special cases. Do not follow a pattern.
                             0 => {
-                                let row = 3.5;
-                                let column = 0.0;
-                                let local_position = Position(
-                                    UVec3::new(column as u32, row as u32, layer as u32)
-                                        * self.tile_grid_size.extend(1),
-                                );
+                                let row = 3.5 * self.tile_grid_size.y as f32;
+                                let column = 0.0 * self.tile_grid_size.x as f32;
+                                let local_position =
+                                    Position(UVec3::new(column as u32, row as u32, layer as u32));
                                 self.counter += 1;
                                 return Some(local_position);
                             },
                             1 => {
-                                let row = 3.5;
-                                let column = 13.0;
-                                let local_position = Position(
-                                    UVec3::new(column as u32, row as u32, layer as u32)
-                                        * self.tile_grid_size.extend(1),
-                                );
+                                let row = 3.5 * self.tile_grid_size.y as f32;
+                                let column = 13.0 * self.tile_grid_size.x as f32;
+                                let local_position =
+                                    Position(UVec3::new(column as u32, row as u32, layer as u32));
                                 self.counter += 1;
                                 return Some(local_position);
                             },
                             2 => {
-                                let row = 3.5;
-                                let column = 14.0;
-                                let local_position = Position(
-                                    UVec3::new(column as u32, row as u32, layer as u32)
-                                        * self.tile_grid_size.extend(1),
-                                );
+                                let row = 3.5 * self.tile_grid_size.y as f32;
+                                let column = 14.0 * self.tile_grid_size.x as f32;
+                                let local_position =
+                                    Position(UVec3::new(column as u32, row as u32, layer as u32));
                                 self.counter += 1;
                                 return Some(local_position);
                             },
@@ -195,11 +187,9 @@ mod tile {
                 _ => unreachable!(),
             };
 
-            let row = row;
-            let column = column;
-            let local_position = Position(
-                UVec3::new(column as u32, row as u32, layer as u32) * self.tile_grid_size.extend(1),
-            );
+            let row = row * self.tile_grid_size.y;
+            let column = column * self.tile_grid_size.x;
+            let local_position = Position(UVec3::new(column as u32, row as u32, layer as u32));
             self.counter += 1;
             return Some(local_position);
         }
