@@ -87,10 +87,10 @@ mod tile {
             let layer;
             let row;
 
-            match current {
+            match self.counter {
                 ..87 => {
                     layer = 0;
-                    match current {
+                    match self.counter {
                         0..12 => row = 0,
                         12..20 => row = 1,
                         20..30 => row = 2,
@@ -105,75 +105,82 @@ mod tile {
                 },
                 87..123 => {
                     layer = 1;
-                    row = (current - 87) / 6 + 1;
+                    row = (self.counter - 87) / 6 + 1;
                 },
                 123..139 => {
                     layer = 2;
-                    row = (current - 123) / 4 + 2;
+                    row = (self.counter - 123) / 4 + 2;
                 },
                 139..143 => {
                     layer = 3;
-                    row = (current - 139) / 2 + 3;
+                    row = (self.counter - 139) / 2 + 3;
                 },
                 143 => {
                     // Special case. Just return value immediately.
                     let row = 3.5 * 2.0;
                     let column = 5.5 * 2.0;
-                    let layer = 4.0 * 2.0;
-                    let local_position = Position(UVec3::new(column as u32, row as u32, layer as u32));
+                    let layer = 4.0;
+                    let local_position =
+                        Position(UVec3::new(column as u32, row as u32, layer as u32));
+                    self.counter += 1;
                     return Some(local_position);
                 },
                 _ => return None,
             }
 
-            // let column = match layer {
-            //     0 => {
-            //         match row {
-            //             0 => 0 + current - 0,
-            //             1 => 2 + current - 12,
-            //             2 => 1 + current - 20,
-            //             3 => 0 + current - 30,
-            //             4 => 0 + current - 42,
-            //             5 => 1 + current - 54,
-            //             6 => 2 + current - 64,
-            //             7 => 0 + current - 72,
-            //             8 => match current - 84 {
-            //                 // Last 3 are special cases. Do not follow a pattern.
-            //                 0 => {
-            //                     let row = 3.5;
-            //                     let column = -1.0;
-            //                     let local_position = Vec3::new(column, row, layer as f32)
-            //                         * self.tile_size.extend(1.0);
-            //                     return Some(self.local2global(&local_position) + offsets);
-            //                 },
-            //                 1 => {
-            //                     let row = 3.5;
-            //                     let column = 12.0;
-            //                     let local_position = Vec3::new(column, row, layer as f32)
-            //                         * self.tile_size.extend(1.0);
-            //                     return Some(self.local2global(&local_position) + offsets);
-            //                 },
-            //                 2 => {
-            //                     let row = 3.5;
-            //                     let column = 13.0;
-            //                     let local_position = Vec3::new(column, row, layer as f32)
-            //                         * self.tile_size.extend(1.0);
-            //                     return Some(self.local2global(&local_position) + offsets);
-            //                 },
-            //                 _ => unreachable!(),
-            //             },
-            //             _ => unreachable!(),
-            //         }
-            //     },
-            //     1 => 3 + ((current - 87) % 6),
-            //     2 => 4 + ((current - 123) % 4),
-            //     3 => 5 + ((current - 139) % 2),
-            //     _ => unreachable!(),
-            // };
+            let column = match layer {
+                0 => {
+                    match row {
+                        0 => 0 + self.counter - 0,
+                        1 => 2 + self.counter - 12,
+                        2 => 1 + self.counter - 20,
+                        3 => 0 + self.counter - 30,
+                        4 => 0 + self.counter - 42,
+                        5 => 1 + self.counter - 54,
+                        6 => 2 + self.counter - 64,
+                        7 => 0 + self.counter - 72,
+                        8 => match self.counter - 84 {
+                            // Last 3 are special cases. Do not follow a pattern.
+                            0 => {
+                                let row = 3.5 * 2.0;
+                                let column = -1.0 * 2.0;
+                                let local_position =
+                                    Position(UVec3::new(column as u32, row as u32, layer as u32));
+                                self.counter += 1;
+                                return Some(local_position);
+                            },
+                            1 => {
+                                let row = 3.5 * 2.0;
+                                let column = 12.0 * 2.0;
+                                let local_position =
+                                    Position(UVec3::new(column as u32, row as u32, layer as u32));
+                                self.counter += 1;
+                                return Some(local_position);
+                            },
+                            2 => {
+                                let row = 3.5 * 2.0;
+                                let column = 13.0 * 2.0;
+                                let local_position =
+                                    Position(UVec3::new(column as u32, row as u32, layer as u32));
+                                self.counter += 1;
+                                return Some(local_position);
+                            },
+                            _ => unreachable!(),
+                        },
+                        _ => unreachable!(),
+                    }
+                },
+                1 => 3 + ((self.counter - 87) % 6),
+                2 => 4 + ((self.counter - 123) % 4),
+                3 => 5 + ((self.counter - 139) % 2),
+                _ => unreachable!(),
+            };
 
-            // let local_position =
-            //     Vec3::new(column as f32, row as f32, layer as f32) * self.tile_size.extend(1.0);
-            // Some(self.local2global(&local_position) + offsets)
+            let row = row * 2;
+            let column = column * 2;
+            let local_position = Position(UVec3::new(column as u32, row as u32, layer as u32));
+            self.counter += 1;
+            return Some(local_position);
         }
     }
 
