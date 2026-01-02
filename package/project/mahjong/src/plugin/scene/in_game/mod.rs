@@ -83,15 +83,6 @@ mod tile {
 
     pub struct Turtle;
 
-    impl Turtle {
-        pub const TILES: usize = 144;
-        pub const TILE_VARIANT_SIZE: usize = 4;
-        pub const ROWS: usize = 8;
-        pub const COLUMNS: usize = 15;
-        pub const LAYERS: usize = 5;
-        pub const TILE_SIZE: usize = 2;
-    }
-
     pub struct PositionGenerator<T> {
         counter: u32,
         tile_grid_size: UVec2,
@@ -99,6 +90,13 @@ mod tile {
     }
 
     impl<T> PositionGenerator<T> {
+        pub const TILES: usize = 144;
+        pub const TILE_VARIANT_SIZE: usize = 4;
+        pub const ROWS: usize = 8;
+        pub const COLUMNS: usize = 15;
+        pub const LAYERS: usize = 5;
+        pub const TILE_SIZE: usize = 2;
+
         pub fn new(tile_grid_size: UVec2) -> Self {
             Self {
                 counter: 0,
@@ -112,6 +110,7 @@ mod tile {
         type Item = Position;
 
         fn next(&mut self) -> Option<Self::Item> {
+            const TILES_INDEX_MAX: u32 = PositionGenerator::<Turtle>::TILES as u32 - 1;
             let layer;
             let row;
 
@@ -143,7 +142,7 @@ mod tile {
                     layer = 3;
                     row = (self.counter - 139) / 2 + 3;
                 },
-                143 => {
+                TILES_INDEX_MAX => {
                     // Special case. Just return value immediately.
                     let row = 3.5 * self.tile_grid_size.y as f32;
                     let column = 6.5 * self.tile_grid_size.x as f32;
@@ -258,11 +257,12 @@ pub fn spawn_tiles(
     };
 
     let tile_size = Vec2::new(
-        (projection.area.height() / tile::Turtle::ROWS as f32) * 0.7,
-        projection.area.height() / tile::Turtle::ROWS as f32,
+        (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.7,
+        projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
     );
     let tile_pos_offset = Vec3::new(
-        -(tile_size.x * tile::Turtle::COLUMNS as f32 / 2.0) + tile_size.x * 1.0,
+        -(tile_size.x * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32 / 2.0)
+            + tile_size.x * 1.0,
         -projection.area.height() / 2.0 + tile_size.y * 0.5,
         0.0,
     );
