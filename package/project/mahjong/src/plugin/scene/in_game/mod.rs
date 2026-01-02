@@ -252,11 +252,12 @@ pub fn spawn_tiles(
         1.0,
         projection.area.height() / tile::Turtle::ROWS as f32,
     );
-    // let tile_pos_offset = UVec2::new(
-    //     (projection.area.width() * (projection.area.height() / tile::Turtle::ROWS as f32) * 0.7)
-    //         as u32,
-    //     (projection.area.height() / tile::Turtle::ROWS as f32) as u32,
-    // );
+    let tile_pos_offset = Vec3::new(
+        // -projection.area.width() / 2.0,
+        0.0,
+        -projection.area.height() / 2.0,
+        0.0,
+    );
 
     for pos in position_generator {
         commands.spawn((
@@ -264,7 +265,7 @@ pub fn spawn_tiles(
                 ..Sprite::from_color(Color::WHITE, tile_size)
             },
             Transform {
-                translation: (pos.as_vec3() * tile_size.extend(1.0)),
+                translation: ((pos.as_vec3() / 2.0) * tile_size.extend(1.0)) + tile_pos_offset,
                 ..default()
             },
         ));
