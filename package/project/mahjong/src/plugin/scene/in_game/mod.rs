@@ -9,6 +9,7 @@ impl bevy::prelude::Plugin for Plugin {
         app: &mut App,
     ) {
         app.add_sub_state::<InGame>()
+            .insert_resource(SelectedTile::default())
             .add_systems(
                 OnEnter(InGame::Root),
                 (spawn_background, spawn_tiles, spawn_buttons),
@@ -33,6 +34,9 @@ pub enum InGame {
     #[default]
     Root,
 }
+
+#[derive(Resource, Deref, DerefMut, Default)]
+struct SelectedTile(Option<Entity>);
 
 mod marker {
     use bevy::prelude::*;
@@ -61,14 +65,17 @@ mod tile {
 
     #[derive(Bundle)]
     pub struct Tile {
-        marker: Marker,
+        marker: Marker<0>,
         pub position: Position,
         pub variant: Variant,
         pub sprite: Sprite,
     }
 
     #[derive(Component)]
-    pub struct Marker;
+    pub struct Marker<const DEPTH: u32>;
+
+    #[derive(Component)]
+    pub struct MarkerChild;
 
     #[derive(Component, Deref, DerefMut)]
     pub struct Position(UVec3);
@@ -266,6 +273,7 @@ pub fn spawn_tiles(
         spawn(
             &mut commands,
             (
+                tile::Marker::<0>,
                 Sprite {
                     ..Sprite::from_color(Color::WHITE, tile_size)
                 },
@@ -276,15 +284,28 @@ pub fn spawn_tiles(
                 },
             ),
         )
-        .with_child((Sprite {
-            ..Sprite::from_color(Color::BLACK, tile_size * 0.9)
-        },))
-        .observe(tile_clicked);
+        .with_child((
+            tile::Marker::<1>,
+            Sprite {
+                ..Sprite::from_color(Color::BLACK, tile_size * 0.9)
+            },
+        ))
+        .observe(tile_pressed);
     }
 }
 
-pub fn tile_clicked(on_click: On<Pointer<Press>>) {
-    info!("hej");
+pub fn tile_pressed(
+    on_press: On<Pointer<Press>>,
+    query_tile_parent: Query<(Entity, &Children), With<tile::Marker<0>>>,
+    query_tile_children: Query<Entity, With<tile::Marker<1>>>,
+    mut selected_tile: ResMut<SelectedTile>,
+) {
+    let Some(selected_tile_) = **selected_tile else {
+        **selected_tile = Some(on_press.entity);
+        return;
+    };
+
+    **selected_tile = None;
 }
 
 pub fn spawn_buttons(
