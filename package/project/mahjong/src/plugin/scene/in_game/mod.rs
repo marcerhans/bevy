@@ -278,18 +278,14 @@ pub fn spawn_tiles(
         )
         .with_child((Sprite {
             ..Sprite::from_color(Color::BLACK, tile_size * 0.9)
-        },));
+        },))
+        .observe(tile_clicked);
     }
 }
 
-// pub fn tile_clicked(
-
-//                 |on_press: On<Pointer<Press>>, mut msg: MessageWriter<super::OnClick>| {
-//                     msg.write(super::OnClick(on_press.entity));
-//                 },
-// ) {
-//     ol
-// }
+pub fn tile_clicked(on_click: On<Pointer<Press>>) {
+    info!("hej");
+}
 
 pub fn spawn_buttons(
     mut commands: Commands,
