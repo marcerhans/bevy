@@ -22,7 +22,7 @@ fn spawn<'a>(
     bundle: impl Bundle,
 ) -> EntityCommands<'a> {
     let mut ec = commands.spawn(bundle);
-    ec.insert(DespawnOnExit(InGame::Root));
+    ec.insert((DespawnOnExit(InGame::Root), Pickable::default()));
     ec
 }
 
@@ -266,8 +266,6 @@ pub fn spawn_tiles(
         spawn(
             &mut commands,
             (
-                DespawnOnExit(InGame::Root),
-                Pickable::default(),
                 Sprite {
                     ..Sprite::from_color(Color::WHITE, tile_size)
                 },
