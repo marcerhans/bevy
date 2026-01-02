@@ -36,7 +36,7 @@ pub enum InGame {
 }
 
 #[derive(Resource, Deref, DerefMut, Default)]
-struct SelectedTile(Option<Entity>);
+struct SelectedTile(Option<(Entity, tile::Variant)>);
 
 mod marker {
     use bevy::prelude::*;
@@ -65,7 +65,7 @@ mod tile {
 
     #[derive(Bundle)]
     pub struct Tile {
-        marker: Marker<0>,
+        pub marker: Marker<0>,
         pub position: Position,
         pub variant: Variant,
         pub sprite: Sprite,
@@ -77,7 +77,7 @@ mod tile {
     #[derive(Component)]
     pub struct MarkerChild;
 
-    #[derive(Component, Deref, DerefMut)]
+    #[derive(Component, Deref, DerefMut, Clone, Copy)]
     pub struct Position(UVec3);
 
     pub struct Turtle;
@@ -211,8 +211,8 @@ mod tile {
         }
     }
 
-    #[derive(Component, Deref, DerefMut)]
-    pub struct Variant(u32);
+    #[derive(Component, Deref, DerefMut, Clone, Copy)]
+    pub struct Variant(pub u32);
 }
 
 pub fn spawn_background(
@@ -273,9 +273,11 @@ pub fn spawn_tiles(
         spawn(
             &mut commands,
             (
-                tile::Marker::<0>,
-                Sprite {
-                    ..Sprite::from_color(Color::WHITE, tile_size)
+                tile::Tile {
+                    marker: tile::Marker::<0>,
+                    position: pos,
+                    variant: tile::Variant(0),
+                    sprite: Sprite::from_color(Color::WHITE, tile_size),
                 },
                 Transform {
                     translation: ((pos.as_vec3() / tile_grid_size as f32) * tile_size.extend(1.0))
@@ -296,16 +298,23 @@ pub fn spawn_tiles(
 
 pub fn tile_pressed(
     on_press: On<Pointer<Press>>,
-    query_tile_parent: Query<(Entity, &Children), With<tile::Marker<0>>>,
-    query_tile_children: Query<Entity, With<tile::Marker<1>>>,
+    tiles: Query<(Entity, &tile::Variant, &tile::Position), With<tile::Marker<0>>>,
+    // children: Query<Entity, With<tile::Marker<1>>>,
     mut selected_tile: ResMut<SelectedTile>,
 ) {
-    let Some(selected_tile_) = **selected_tile else {
-        **selected_tile = Some(on_press.entity);
+    let (entity, variant, position) = tiles.iter().find(|tile| tile.0 == on_press.entity).unwrap();
+
+    let Some((selected_entity, slected_variant)) = &selected_tile.0 else {
+        selected_tile.0 = Some((entity, *variant));
         return;
     };
 
-    **selected_tile = None;
+    // if selected_tile_. == on_press.entity {}
+
+    // let child = None;
+    // let Some() query_tile_children.iter().find(|child| child == )
+
+    selected_tile.0 = None;
 }
 
 pub fn spawn_buttons(
