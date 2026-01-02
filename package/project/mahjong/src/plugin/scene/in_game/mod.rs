@@ -17,6 +17,15 @@ impl bevy::prelude::Plugin for Plugin {
     }
 }
 
+fn spawn<'a>(
+    commands: &'a mut Commands,
+    bundle: impl Bundle,
+) -> EntityCommands<'a> {
+    let mut ec = commands.spawn(bundle);
+    ec.insert(DespawnOnExit(InGame::Root));
+    ec
+}
+
 #[derive(SubStates, Default, Debug, Hash, Eq, PartialEq, Clone)]
 #[source(MainMenu = MainMenu::Play)]
 #[states(scoped_entities)]
@@ -210,22 +219,24 @@ pub fn spawn_background(
 
     let handle: Handle<Image> = asset_server.load("misc/rev2/original/Arthas_LichKing_GPT2.png");
 
-    commands.spawn((
-        marker::Background,
-        DespawnOnExit(InGame::Root),
-        Sprite {
-            custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
-            color: Color::srgb(1.0, 1.0, 1.0).with_luminance(0.3),
-            ..Sprite::from_image(handle)
-        },
-        Transform {
-            translation: Vec3 {
-                z: -10.0,
+    spawn(
+        &mut commands,
+        (
+            marker::Background,
+            Sprite {
+                custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
+                color: Color::srgb(1.0, 1.0, 1.0).with_luminance(0.3),
+                ..Sprite::from_image(handle)
+            },
+            Transform {
+                translation: Vec3 {
+                    z: -10.0,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        },
-    ));
+        ),
+    );
 }
 
 pub fn spawn_tiles(
@@ -252,8 +263,11 @@ pub fn spawn_tiles(
         tile::PositionGenerator::<tile::Turtle>::new(UVec2::splat(tile_grid_size));
 
     for pos in position_generator {
-        commands
-            .spawn((
+        spawn(
+            &mut commands,
+            (
+                DespawnOnExit(InGame::Root),
+                Pickable::default(),
                 Sprite {
                     ..Sprite::from_color(Color::WHITE, tile_size)
                 },
@@ -262,12 +276,22 @@ pub fn spawn_tiles(
                         + tile_pos_offset,
                     ..default()
                 },
-            ))
-            .with_child((Sprite {
-                ..Sprite::from_color(Color::BLACK, tile_size * 0.9)
-            },));
+            ),
+        )
+        .with_child((Sprite {
+            ..Sprite::from_color(Color::BLACK, tile_size * 0.9)
+        },));
     }
 }
+
+// pub fn tile_clicked(
+
+//                 |on_press: On<Pointer<Press>>, mut msg: MessageWriter<super::OnClick>| {
+//                     msg.write(super::OnClick(on_press.entity));
+//                 },
+// ) {
+//     ol
+// }
 
 pub fn spawn_buttons(
     mut commands: Commands,
