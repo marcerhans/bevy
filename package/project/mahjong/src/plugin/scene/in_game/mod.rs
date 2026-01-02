@@ -71,6 +71,7 @@ mod tile {
         pub sprite: Sprite,
     }
 
+    /// "DEPTH" implies on which "Child" level the marker is at.
     #[derive(Component)]
     pub struct Marker<const DEPTH: u32>;
 
@@ -298,23 +299,25 @@ pub fn spawn_tiles(
 
 pub fn tile_pressed(
     on_press: On<Pointer<Press>>,
-    tiles: Query<(Entity, &tile::Variant, &tile::Position), With<tile::Marker<0>>>,
-    // children: Query<Entity, With<tile::Marker<1>>>,
+    tiles: Query<(Entity, &tile::Variant, &tile::Position, &mut Sprite), With<tile::Marker<0>>>,
     mut selected_tile: ResMut<SelectedTile>,
 ) {
-    let (entity, variant, position) = tiles.iter().find(|tile| tile.0 == on_press.entity).unwrap();
+    let (pressed_entity, pressed_variant, pressed_position, pressed_sprite) =
+        tiles.iter().find(|tile| tile.0 == on_press.entity).unwrap();
 
-    let Some((selected_entity, slected_variant)) = &selected_tile.0 else {
-        selected_tile.0 = Some((entity, *variant));
+    let Some((selected_entity, slected_variant)) = selected_tile.0.take() else {
+        selected_tile.0 = Some((pressed_entity, *pressed_variant));
         return;
     };
 
-    // if selected_tile_. == on_press.entity {}
+    if pressed_entity == selected_entity {
+        info!("Tile cannot be matched against itself!");
+        return;
+    }
+}
 
-    // let child = None;
-    // let Some() query_tile_children.iter().find(|child| child == )
-
-    selected_tile.0 = None;
+pub fn valid_removal() -> bool {
+    false
 }
 
 pub fn spawn_buttons(
