@@ -75,9 +75,27 @@ mod tile {
 
     pub struct Turtle;
 
+    impl Turtle {
+        pub const TILES: usize = 144;
+        pub const TILE_VARIANT_SIZE: usize = 4;
+        pub const ROWS: usize = 8;
+        pub const COLUMNS: usize = 15;
+        pub const LAYERS: usize = 5;
+        pub const TILE_SIZE: usize = 2;
+    }
+
     pub struct PositionGenerator<T> {
         counter: u32,
         _type: PhantomData<T>,
+    }
+
+    impl<T> PositionGenerator<T> {
+        pub fn new() -> Self {
+            Self {
+                counter: 0,
+                _type: PhantomData,
+            }
+        }
     }
 
     impl Iterator for PositionGenerator<Turtle> {
@@ -226,6 +244,31 @@ pub fn spawn_tiles(
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
     };
+
+    let position_generator = tile::PositionGenerator::<tile::Turtle>::new();
+    let tile_size = Vec2::new(
+        // (projection.area.width() * (projection.area.height() / tile::Turtle::ROWS as f32) * 0.7)
+        //     as u32,
+        1.0,
+        projection.area.height() / tile::Turtle::ROWS as f32,
+    );
+    // let tile_pos_offset = UVec2::new(
+    //     (projection.area.width() * (projection.area.height() / tile::Turtle::ROWS as f32) * 0.7)
+    //         as u32,
+    //     (projection.area.height() / tile::Turtle::ROWS as f32) as u32,
+    // );
+
+    for pos in position_generator {
+        commands.spawn((
+            Sprite {
+                ..Sprite::from_color(Color::WHITE, tile_size)
+            },
+            Transform {
+                translation: (pos.as_vec3() * tile_size.extend(1.0)),
+                ..default()
+            },
+        ));
+    }
 }
 
 pub fn spawn_buttons(
