@@ -224,6 +224,7 @@ mod tile {
             const MAX_VARIANTS: u32 = (PositionGenerator::<Turtle>::TILES
                 / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE)
                 as u32;
+            const MAX_VARIANTS_HALF: u32 = MAX_VARIANTS / 2;
             const TVR: u32 = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32;
             let index = variant / TVR;
             let common: (Transform, Visibility) = (
@@ -241,7 +242,7 @@ mod tile {
                 alliance
             };
 
-            match index {
+            match index % (MAX_VARIANTS / 2)  {
                 0 => {
                     entity_commands.with_child((
                         common.clone(),
@@ -332,25 +333,7 @@ mod tile {
                 15 => (),
                 16 => (),
                 17 => (),
-                18 => (),
-                19 => (),
-                20 => (),
-                21 => (),
-                22 => (),
-                23 => (),
-                24 => (),
-                25 => (),
-                26 => (),
-                27 => (),
-                28 => (),
-                29 => (),
-                30 => (),
-                31 => (),
-                32 => (),
-                33 => (),
-                34 => (),
-                35 => (),
-                MAX_VARIANTS.. => warn!("Unsupported variant!"),
+                MAX_VARIANTS_HALF.. => warn!("Unsupported variant!"),
             };
         }
     }
