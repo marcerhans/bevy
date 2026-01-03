@@ -227,21 +227,14 @@ mod tile {
             const MAX_VARIANTS_HALF: u32 = MAX_VARIANTS / 2;
             const TVR: u32 = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32;
             let index = variant / TVR;
-            let common: (Transform, Visibility) = (
-                Transform::default().with_translation(Vec3::default().with_z(0.1)),
-                Visibility::Inherited,
-            );
-
             let large = max_size;
             let medium = large * 0.5;
             let small = large * 0.25;
-
             let image = if index / (MAX_VARIANTS / 2) == 0 {
                 horde
             } else {
                 alliance
             };
-
             let mut size = large;
             let mut positions: Vec<Vec3> = vec![];
 
@@ -285,29 +278,86 @@ mod tile {
                     size = &small;
                     positions.append(&mut vec![
                         Vec3 {
-                            x: -max_size.x / 4.0,
-                            y: -max_size.y / 4.0,
+                            x: -max_size.x / 5.0,
+                            y: -max_size.y / 5.0,
                             ..default()
                         },
                         Vec3 {
-                            x: max_size.x / 4.0,
-                            y: -max_size.y / 4.0,
+                            x: max_size.x / 5.0,
+                            y: -max_size.y / 5.0,
                             ..default()
                         },
                         Vec3 {
-                            x: -max_size.x / 4.0,
-                            y: max_size.y / 4.0,
+                            x: -max_size.x / 5.0,
+                            y: max_size.y / 5.0,
                             ..default()
                         },
                         Vec3 {
-                            x: max_size.x / 4.0,
-                            y: max_size.y / 4.0,
+                            x: max_size.x / 5.0,
+                            y: max_size.y / 5.0,
                             ..default()
                         },
                     ]);
                 },
-                4 => (),
-                5 => (),
+                4 => {
+                    size = &small;
+                    positions.append(&mut vec![
+                        Vec3 {
+                            x: -max_size.x / 5.0,
+                            y: -max_size.y / 5.0,
+                            ..default()
+                        },
+                        Vec3 {
+                            x: max_size.x / 5.0,
+                            y: -max_size.y / 5.0,
+                            ..default()
+                        },
+                        Vec3 {
+                            x: -max_size.x / 5.0,
+                            y: max_size.y / 5.0,
+                            ..default()
+                        },
+                        Vec3 {
+                            x: max_size.x / 5.0,
+                            y: max_size.y / 5.0,
+                            ..default()
+                        },
+                        Vec3 { ..default() },
+                    ]);
+                },
+                5 => {
+                    size = &small;
+                    positions.append(&mut vec![
+                        Vec3 {
+                            x: -max_size.x / 5.0,
+                            y: -max_size.y / 5.0,
+                            ..default()
+                        },
+                        Vec3 {
+                            x: -max_size.x / 5.0,
+                            ..default()
+                        },
+                        Vec3 {
+                            x: -max_size.x / 5.0,
+                            y: max_size.y / 5.0,
+                            ..default()
+                        },
+                        Vec3 {
+                            x: max_size.x / 5.0,
+                            y: max_size.y / 5.0,
+                            ..default()
+                        },
+                        Vec3 {
+                            x: max_size.x / 5.0,
+                            ..default()
+                        },
+                        Vec3 {
+                            x: max_size.x / 5.0,
+                            y: max_size.y / 5.0,
+                            ..default()
+                        },
+                    ]);
+                },
                 6 => (),
                 7 => (),
                 8 => (),
@@ -443,6 +493,10 @@ pub fn spawn_tiles(
             alliance.clone(),
             &tile_size,
         );
+
+        if variant > 85 {
+            break;
+        }
     }
 }
 
