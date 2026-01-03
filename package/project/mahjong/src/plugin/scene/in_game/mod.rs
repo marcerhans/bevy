@@ -242,7 +242,7 @@ mod tile {
                 alliance
             };
 
-            match index % (MAX_VARIANTS / 2)  {
+            match index % (MAX_VARIANTS / 2) {
                 0 => {
                     entity_commands.with_child((
                         common.clone(),
@@ -260,7 +260,11 @@ mod tile {
                         children![
                             (
                                 Transform {
-                                    translation: Vec3 { ..default() },
+                                    translation: Vec3 {
+                                        x: -max_size.x / 5.0,
+                                        y: max_size.y / 5.0,
+                                        ..default()
+                                    },
                                     ..default()
                                 },
                                 Sprite {
@@ -270,7 +274,11 @@ mod tile {
                             ),
                             (
                                 Transform {
-                                    translation: Vec3 { ..default() },
+                                    translation: Vec3 {
+                                        x: max_size.x / 5.0,
+                                        y: -max_size.y / 5.0,
+                                        ..default()
+                                    },
                                     ..default()
                                 },
                                 Sprite {
@@ -287,11 +295,15 @@ mod tile {
                         children![
                             (
                                 Transform {
-                                    translation: Vec3 { ..default() },
+                                    translation: Vec3 {
+                                        x: -max_size.x / 4.0,
+                                        y: max_size.y / 4.0,
+                                        ..default()
+                                    },
                                     ..default()
                                 },
                                 Sprite {
-                                    custom_size: Some(medium.clone()),
+                                    custom_size: Some(small.clone()),
                                     ..Sprite::from_image(image.clone())
                                 }
                             ),
@@ -301,17 +313,21 @@ mod tile {
                                     ..default()
                                 },
                                 Sprite {
-                                    custom_size: Some(medium.clone()),
+                                    custom_size: Some(small.clone()),
                                     ..Sprite::from_image(image.clone())
                                 }
                             ),
                             (
                                 Transform {
-                                    translation: Vec3 { ..default() },
+                                    translation: Vec3 {
+                                        x: max_size.x / 4.0,
+                                        y: -max_size.y / 4.0,
+                                        ..default()
+                                    },
                                     ..default()
                                 },
                                 Sprite {
-                                    custom_size: Some(medium.clone()),
+                                    custom_size: Some(small.clone()),
                                     ..Sprite::from_image(image.clone())
                                 }
                             ),
