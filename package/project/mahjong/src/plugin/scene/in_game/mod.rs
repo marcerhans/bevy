@@ -60,6 +60,7 @@ mod tile {
             pub const HORDE: &'static str = "misc/rev2/Horde_740x1093.png";
             pub const ALLIANCE_BUTTON: &'static str = "misc/rev2/original/alliance_button.png";
             pub const HORDE_BUTTON: &'static str = "misc/rev2/original/horde_button.png";
+            pub const BLADES: &'static str = "misc/rev2/original/Blades_GPT.png";
             pub const BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
             pub const LEFT_BORDER_PERCENTAGE_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
         }
@@ -221,8 +222,7 @@ mod tile {
             variant: u32,
             horde: Handle<Image>,
             alliance: Handle<Image>,
-            horde_button: Handle<Image>,
-            alliance_button: Handle<Image>,
+            blades: Handle<Image>,
             max_size: &Vec2,
         ) {
             const MAX_VARIANTS: u32 = (PositionGenerator::<Turtle>::TILES
