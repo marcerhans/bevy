@@ -275,7 +275,7 @@ pub fn spawn_tiles(
                     marker: tile::Marker::<0>,
                     position: pos,
                     variant: tile::Variant(0),
-                    sprite: Sprite::from_color(Color::WHITE, tile_size),
+                    sprite: Sprite::from_color(Color::srgb(0.8, 0.4, 0.2), tile_size),
                 },
                 Transform {
                     translation: ((pos.as_vec3() / tile_grid_size as f32) * tile_size.extend(1.0))
@@ -306,13 +306,13 @@ pub fn tile_pressed(
 
     let Some(selected_entity) = selected_tile.0.take() else {
         selected_tile.0 = Some(pressed_entity);
-        pressed_sprite.color = Color::hsl(1.0, 1.0, 1.5);
+        // pressed_sprite.color = Color::hsl(1.0, 1.0, 1.5); // TODO!
         return;
     };
 
     let (selected_entity, selected_variant, selected_position, mut selected_sprite) =
         tiles.get_mut(selected_entity).unwrap();
-    selected_sprite.color = Color::hsl(1.0, 1.0, 1.0);
+    // selected_sprite.color = Color::hsl(1.0, 1.0, 1.0); // TODO!
 
     // selected_color =
 
