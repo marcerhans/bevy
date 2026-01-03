@@ -224,24 +224,25 @@ mod tile {
                 / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE)
                 as u32;
             const TVR: u32 = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32;
+// Some(children![
+//                     (
+//                         Sprite {
+//                             custom_size: Some(Vec2::new(200.0, 200.0)),
+//                             ..Sprite::from_image(horde)
+//                         }
+//                     ),
+//                     (
+//                         Sprite {
+//                             custom_size: Some(Vec2::new(200.0, 200.0)),
+//                             ..Sprite::from_image(horde)
+//                         }
+//                     )
+//                 ])
 
-            // match variant / TVR {
-            //     0.. => Some(children![
-            //         (
-            //             Sprite {
-            //                 custom_size: Some(Vec2::new(200.0, 200.0)),
-            //                 ..Sprite::from_image(horde)
-            //             }
-            //         ),
-            //         (
-            //             Sprite {
-            //                 custom_size: Some(Vec2::new(200.0, 200.0)),
-            //                 ..Sprite::from_image(horde)
-            //             }
-            //         )
-            //     ]),
-            //     MAX_VARIANTS.. => None::<()>,
-            // }
+            match variant / TVR {
+                0.. => {},
+                MAX_VARIANTS.. => (),
+            };
         }
     }
 }
