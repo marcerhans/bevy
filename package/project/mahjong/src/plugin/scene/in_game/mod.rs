@@ -268,14 +268,15 @@ pub fn spawn_tiles(
         tile::PositionGenerator::<tile::Turtle>::new(UVec2::splat(tile_grid_size));
 
     for pos in position_generator {
+        let variant = 0;
         spawn(
             &mut commands,
             (
                 tile::Tile {
                     marker: tile::Marker::<0>,
                     position: pos,
-                    variant: tile::Variant(0),
-                    sprite: Sprite::from_color(Color::srgb(0.8, 0.4, 0.2), tile_size),
+                    variant: tile::Variant(variant),
+                    sprite: Sprite::from_color(Color::WHITE, tile_size),
                 },
                 Transform {
                     translation: ((pos.as_vec3() / tile_grid_size as f32) * tile_size.extend(1.0))
@@ -288,6 +289,11 @@ pub fn spawn_tiles(
             tile::Marker::<1>,
             Sprite {
                 ..Sprite::from_color(Color::BLACK, tile_size * 0.9)
+            },
+            Text2d(variant.to_string()),
+            Transform {
+                translation: Vec3::default().with_z(pos.z as f32 + 0.1),
+                ..default()
             },
         ))
         .observe(tile_pressed);
