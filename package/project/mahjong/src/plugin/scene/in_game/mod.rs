@@ -302,6 +302,7 @@ pub fn spawn_tiles(
 
 pub fn tile_pressed(
     on_press: On<Pointer<Press>>,
+    mut commands: Commands,
     mut tiles: Query<(Entity, &tile::Variant, &tile::Position, &mut Sprite), With<tile::Marker<0>>>,
     mut selected_tile: ResMut<SelectedTile>,
 ) {
@@ -312,7 +313,7 @@ pub fn tile_pressed(
 
     let Some(selected_entity) = selected_tile.0.take() else {
         selected_tile.0 = Some(pressed_entity);
-        // pressed_sprite.color = Color::hsl(1.0, 1.0, 1.5); // TODO!
+        // pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5); // TODO!
         return;
     };
 
