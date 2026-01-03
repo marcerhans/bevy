@@ -224,8 +224,10 @@ mod tile {
                 / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE)
                 as u32;
             const TVR: u32 = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32;
-            let common: (Transform, InheritedVisibility) =
-                (Transform::default(), InheritedVisibility::VISIBLE);
+            let common: (Transform, InheritedVisibility) = (
+                Transform::default().with_translation(Vec3::default().with_z(0.1)),
+                InheritedVisibility::VISIBLE,
+            );
 
             match variant / TVR {
                 0..MAX_VARIANTS => {
@@ -337,7 +339,7 @@ pub fn spawn_tiles(
                 //     ..default()
                 // },
             ))
-        .observe(tile_pressed);
+            .observe(tile_pressed);
         tile::Variant::insert_sprite_as_child(
             &mut entity_commands,
             variant,
