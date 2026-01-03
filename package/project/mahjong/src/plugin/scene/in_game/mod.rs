@@ -231,9 +231,9 @@ mod tile {
                 Visibility::Inherited,
             );
 
-            let large = max_size;
-            let medium = max_size / 2.0;
-            let small = max_size / 4.0;
+            let large = max_size * 0.9;
+            let medium = large * 0.5;
+            let small = large * 0.25;
 
             let image = if index / (MAX_VARIANTS / 2) == 0 {
                 horde
