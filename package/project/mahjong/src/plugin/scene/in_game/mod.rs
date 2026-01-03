@@ -242,99 +242,70 @@ mod tile {
                 alliance
             };
 
+            let mut size = large;
+            let mut positions: Vec<Vec3> = vec![];
+
             match index % (MAX_VARIANTS / 2) {
                 0 => {
-                    entity_commands.with_child((
-                        common.clone(),
-                        children![
-                            (Sprite {
-                                custom_size: Some(large.clone()),
-                                ..Sprite::from_image(image.clone())
-                            }),
-                        ],
-                    ));
+                    size = large;
+                    positions.append(&mut vec![Vec3 { ..default() }]);
                 },
                 1 => {
-                    entity_commands.with_child((
-                        common.clone(),
-                        children![
-                            (
-                                Transform {
-                                    translation: Vec3 {
-                                        x: -max_size.x / 5.0,
-                                        y: max_size.y / 5.0,
-                                        ..default()
-                                    },
-                                    ..default()
-                                },
-                                Sprite {
-                                    custom_size: Some(medium.clone()),
-                                    ..Sprite::from_image(image.clone())
-                                }
-                            ),
-                            (
-                                Transform {
-                                    translation: Vec3 {
-                                        x: max_size.x / 5.0,
-                                        y: -max_size.y / 5.0,
-                                        ..default()
-                                    },
-                                    ..default()
-                                },
-                                Sprite {
-                                    custom_size: Some(medium.clone()),
-                                    ..Sprite::from_image(image.clone())
-                                }
-                            ),
-                        ],
-                    ));
+                    size = &medium;
+                    positions.append(&mut vec![
+                        Vec3 {
+                            x: -max_size.x / 5.0,
+                            y: max_size.y / 5.0,
+                            ..default()
+                        },
+                        Vec3 {
+                            x: max_size.x / 5.0,
+                            y: -max_size.y / 5.0,
+                            ..default()
+                        },
+                    ]);
                 },
                 2 => {
-                    entity_commands.with_child((
-                        common.clone(),
-                        children![
-                            (
-                                Transform {
-                                    translation: Vec3 {
-                                        x: -max_size.x / 4.0,
-                                        y: max_size.y / 4.0,
-                                        ..default()
-                                    },
-                                    ..default()
-                                },
-                                Sprite {
-                                    custom_size: Some(small.clone()),
-                                    ..Sprite::from_image(image.clone())
-                                }
-                            ),
-                            (
-                                Transform {
-                                    translation: Vec3 { ..default() },
-                                    ..default()
-                                },
-                                Sprite {
-                                    custom_size: Some(small.clone()),
-                                    ..Sprite::from_image(image.clone())
-                                }
-                            ),
-                            (
-                                Transform {
-                                    translation: Vec3 {
-                                        x: max_size.x / 4.0,
-                                        y: -max_size.y / 4.0,
-                                        ..default()
-                                    },
-                                    ..default()
-                                },
-                                Sprite {
-                                    custom_size: Some(small.clone()),
-                                    ..Sprite::from_image(image.clone())
-                                }
-                            ),
-                        ],
-                    ));
+                    size = &small;
+                    positions.append(&mut vec![
+                        Vec3 {
+                            x: -max_size.x / 4.0,
+                            y: max_size.y / 4.0,
+                            ..default()
+                        },
+                        Vec3 { ..default() },
+                        Vec3 {
+                            x: max_size.x / 4.0,
+                            y: -max_size.y / 4.0,
+                            ..default()
+                        },
+                    ]);
                 },
-                3 => (),
+                3 => {
+                    size = &small;
+                    positions.append(&mut vec![
+                        Vec3 {
+                            x: -max_size.x / 4.0,
+                            y: -max_size.y / 4.0,
+                            ..default()
+                        },
+                        Vec3 {
+                            x: max_size.x / 4.0,
+                            y: -max_size.y / 4.0,
+                            ..default()
+                        },
+                        Vec3 {
+                            x: -max_size.x / 4.0,
+                            y: max_size.y / 4.0,
+                            ..default()
+                        },
+                        Vec3 {
+                            x: max_size.x / 4.0,
+                            y: max_size.y / 4.0,
+                            ..default()
+                        },
+                    ]);
+                },
                 4 => (),
                 5 => (),
                 6 => (),
@@ -351,6 +322,28 @@ mod tile {
                 17 => (),
                 MAX_VARIANTS_HALF.. => warn!("Unsupported variant!"),
             };
+
+            let common = (
+                Transform::default().with_translation(Vec3::default().with_z(0.1)),
+                Visibility::Inherited,
+            );
+
+            entity_commands.with_children(|parent| {
+                parent.spawn(common).with_children(|common| {
+                    for position in positions {
+                        common.spawn((
+                            Transform {
+                                translation: position,
+                                ..default()
+                            },
+                            Sprite {
+                                custom_size: Some(size.clone()),
+                                ..Sprite::from_image(image.clone())
+                            },
+                        ));
+                    }
+                });
+            });
         }
     }
 }
