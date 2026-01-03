@@ -224,14 +224,24 @@ mod tile {
                 / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE)
                 as u32;
             const TVR: u32 = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32;
-            let common: (Transform, InheritedVisibility) = (
+            let common: (Transform, Visibility) = (
                 Transform::default().with_translation(Vec3::default().with_z(0.1)),
-                InheritedVisibility::VISIBLE,
+                Visibility::Inherited,
             );
 
-            const LARGE: Vec2 = Vec2::new(50.0, 75.0);
-            const MEDIUM: Vec2 = Vec2::new(25.0, 37.5);
-            const SMALL: Vec2 = Vec2::new(10.0, 15.0);
+            const LARGE: Vec2 = Vec2::new(60.0, 60.0 * 1.5);
+            const MEDIUM: Vec2 = Vec2::new(30.0, 30.0 * 1.5);
+            const SMALL: Vec2 = Vec2::new(10.0, 10.0 * 1.5);
+
+            const PADDING: Vec2 = Vec2::new(8.0, 8.0);
+            let large_half_with_padding: Vec2 = LARGE / 2.0 + PADDING;
+            let medium_half_with_padding: Vec2 = MEDIUM / 2.0 + PADDING;
+            let small_half_with_padding: Vec2 = SMALL / 2.0 + PADDING;
+
+            let padding_diag: f32 = PADDING.length();
+            let large_half_with_padding_diag: Vec2 = LARGE / 2.0 + padding_diag;
+            let medium_half_with_padding_diag: Vec2 = MEDIUM / 2.0 + padding_diag;
+            let small_half_with_padding_diag: Vec2 = SMALL / 2.0 + padding_diag;
 
             match variant / TVR {
                 0 => {
@@ -252,7 +262,7 @@ mod tile {
                             (
                                 Transform {
                                     translation: Vec3 {
-                                        y: MEDIUM.y / 2.0,
+                                        y: medium_half_with_padding.y,
                                         ..default()
                                     },
                                     ..default()
@@ -265,7 +275,7 @@ mod tile {
                             (
                                 Transform {
                                     translation: Vec3 {
-                                        y: -MEDIUM.y / 2.0,
+                                        y: -medium_half_with_padding.y,
                                         ..default()
                                     },
                                     ..default()
@@ -285,8 +295,8 @@ mod tile {
                             (
                                 Transform {
                                     translation: Vec3 {
-                                        x: -MEDIUM.y / 2.0,
-                                        y: MEDIUM.y / 2.0,
+                                        x: -medium_half_with_padding_diag.x,
+                                        y: medium_half_with_padding_diag.y,
                                         z: 0.0,
                                     },
                                     ..default()
@@ -309,8 +319,8 @@ mod tile {
                             (
                                 Transform {
                                     translation: Vec3 {
-                                        x: MEDIUM.y / 2.0,
-                                        y: -MEDIUM.y / 2.0,
+                                        x: medium_half_with_padding_diag.x,
+                                        y: -medium_half_with_padding_diag.y,
                                         z: 0.0,
                                     },
                                     ..default()
