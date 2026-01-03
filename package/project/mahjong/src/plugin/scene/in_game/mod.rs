@@ -251,7 +251,10 @@ mod tile {
                         children![
                             (
                                 Transform {
-                                    translation: Vec3::default().with_y(MEDIUM.y / 2.0),
+                                    translation: Vec3 {
+                                        y: MEDIUM.y / 2.0,
+                                        ..default()
+                                    },
                                     ..default()
                                 },
                                 Sprite {
@@ -261,7 +264,10 @@ mod tile {
                             ),
                             (
                                 Transform {
-                                    translation: Vec3::default().with_y(-MEDIUM.y / 2.0),
+                                    translation: Vec3 {
+                                        y: -MEDIUM.y / 2.0,
+                                        ..default()
+                                    },
                                     ..default()
                                 },
                                 Sprite {
@@ -272,7 +278,51 @@ mod tile {
                         ],
                     ));
                 },
-                2 => (),
+                2 => {
+                    entity_commands.with_child((
+                        common.clone(),
+                        children![
+                            (
+                                Transform {
+                                    translation: Vec3 {
+                                        x: -MEDIUM.y / 2.0,
+                                        y: MEDIUM.y / 2.0,
+                                        z: 0.0,
+                                    },
+                                    ..default()
+                                },
+                                Sprite {
+                                    custom_size: Some(MEDIUM.clone()),
+                                    ..Sprite::from_image(horde.clone())
+                                }
+                            ),
+                            (
+                                Transform {
+                                    translation: Vec3 { ..default() },
+                                    ..default()
+                                },
+                                Sprite {
+                                    custom_size: Some(MEDIUM.clone()),
+                                    ..Sprite::from_image(horde.clone())
+                                }
+                            ),
+                            (
+                                Transform {
+                                    translation: Vec3 {
+                                        x: MEDIUM.y / 2.0,
+                                        y: -MEDIUM.y / 2.0,
+                                        z: 0.0,
+                                    },
+                                    ..default()
+                                },
+                                Sprite {
+                                    custom_size: Some(MEDIUM.clone()),
+                                    ..Sprite::from_image(horde.clone())
+                                }
+                            ),
+                        ],
+                    ));
+                },
                 3 => (),
                 4 => (),
                 5 => (),
