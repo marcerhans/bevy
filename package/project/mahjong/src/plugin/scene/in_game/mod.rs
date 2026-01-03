@@ -214,52 +214,34 @@ mod tile {
     pub struct Variant(pub u32);
 
     impl Variant {
-        pub fn get_sprite(variant: u32) -> Option<impl Bundle> {
+        pub fn insert_sprite_as_child(
+            entity_commands: &mut EntityCommands,
+            variant: u32,
+            horde: Handle<Image>,
+            alliance: Handle<Image>,
+        ) {
             const MAX_VARIANTS: u32 = (PositionGenerator::<Turtle>::TILES
                 / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE)
                 as u32;
             const TVR: u32 = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32;
 
-            match variant / TVR {
-                0 => Some(()),
-                1 => Some(()),
-                2 => Some(()),
-                3 => Some(()),
-                4 => Some(()),
-                5 => Some(()),
-                6 => Some(()),
-                7 => Some(()),
-                8 => Some(()),
-                9 => Some(()),
-                10 => Some(()),
-                11 => Some(()),
-                12 => Some(()),
-                13 => Some(()),
-                14 => Some(()),
-                15 => Some(()),
-                16 => Some(()),
-                17 => Some(()),
-                18 => Some(()),
-                19 => Some(()),
-                20 => Some(()),
-                21 => Some(()),
-                22 => Some(()),
-                23 => Some(()),
-                24 => Some(()),
-                25 => Some(()),
-                26 => Some(()),
-                27 => Some(()),
-                28 => Some(()),
-                29 => Some(()),
-                30 => Some(()),
-                31 => Some(()),
-                32 => Some(()),
-                33 => Some(()),
-                34 => Some(()),
-                35 => Some(()),
-                36 => Some(()),
-                MAX_VARIANTS.. => None::<()>,
-            }
+            // match variant / TVR {
+            //     0.. => Some(children![
+            //         (
+            //             Sprite {
+            //                 custom_size: Some(Vec2::new(200.0, 200.0)),
+            //                 ..Sprite::from_image(horde)
+            //             }
+            //         ),
+            //         (
+            //             Sprite {
+            //                 custom_size: Some(Vec2::new(200.0, 200.0)),
+            //                 ..Sprite::from_image(horde)
+            //             }
+            //         )
+            //     ]),
+            //     MAX_VARIANTS.. => None::<()>,
+            // }
         }
     }
 }
@@ -305,6 +287,9 @@ pub fn spawn_tiles(
         panic!();
     };
 
+    let alliance: Handle<Image> = asset_server.load(tile::asset::texture::ALLIANCE);
+    let horde: Handle<Image> = asset_server.load(tile::asset::texture::HORDE);
+
     let tile_size = Vec2::new(
         (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.7,
         projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
@@ -321,7 +306,7 @@ pub fn spawn_tiles(
 
     for pos in position_generator {
         let variant = 0;
-        spawn(
+        let mut entity_commands = spawn(
             &mut commands,
             (
                 tile::Tile {
@@ -336,19 +321,26 @@ pub fn spawn_tiles(
                     ..default()
                 },
             ),
-        )
-        .with_child((
-            tile::Marker::<1>,
-            Sprite {
-                ..Sprite::from_color(Color::BLACK, tile_size * 0.9)
-            },
-            Text2d(variant.to_string()),
-            Transform {
-                translation: Vec3::default().with_z(0.1),
-                ..default()
-            },
-        ))
-        .observe(tile_pressed);
+        );
+        entity_commands
+            .with_child((
+                tile::Marker::<1>,
+                Sprite {
+                    ..Sprite::from_color(Color::BLACK, tile_size * 0.9)
+                },
+                Text2d(variant.to_string()),
+                Transform {
+                    translation: Vec3::default().with_z(0.1),
+                    ..default()
+                },
+            ))
+            .observe(tile_pressed);
+        tile::Variant::insert_sprite_as_child(
+            &mut entity_commands,
+            variant,
+            horde.clone(),
+            alliance.clone(),
+        );
     }
 }
 
