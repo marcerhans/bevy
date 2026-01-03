@@ -344,7 +344,7 @@ mod tile {
                         },
                         Vec3 {
                             x: max_size.x / 5.0,
-                            y: max_size.y / 5.0,
+                            y: -max_size.y / 5.0,
                             ..default()
                         },
                         Vec3 {
