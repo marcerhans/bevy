@@ -75,9 +75,6 @@ mod tile {
     #[derive(Component)]
     pub struct Marker<const DEPTH: u32>;
 
-    #[derive(Component)]
-    pub struct MarkerChild;
-
     #[derive(Component, Deref, DerefMut, Clone, Copy)]
     pub struct Position(UVec3);
 
