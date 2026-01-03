@@ -229,22 +229,83 @@ mod tile {
                 InheritedVisibility::VISIBLE,
             );
 
+            const LARGE: Vec2 = Vec2::new(50.0, 75.0);
+            const MEDIUM: Vec2 = Vec2::new(25.0, 37.5);
+            const SMALL: Vec2 = Vec2::new(10.0, 15.0);
+
             match variant / TVR {
-                0..MAX_VARIANTS => {
+                0 => {
                     entity_commands.with_child((
                         common.clone(),
                         children![
                             (Sprite {
-                                custom_size: Some(Vec2::new(50.0, 75.0)),
+                                custom_size: Some(LARGE.clone()),
                                 ..Sprite::from_image(horde.clone())
                             }),
-                            (Sprite {
-                                custom_size: Some(Vec2::new(50.0, 75.0)),
-                                ..Sprite::from_image(horde.clone())
-                            })
                         ],
                     ));
                 },
+                1 => {
+                    entity_commands.with_child((
+                        common.clone(),
+                        children![
+                            (
+                                Transform {
+                                    translation: Vec3::default().with_y(MEDIUM.y / 2.0),
+                                    ..default()
+                                },
+                                Sprite {
+                                    custom_size: Some(MEDIUM.clone()),
+                                    ..Sprite::from_image(horde.clone())
+                                }
+                            ),
+                            (
+                                Transform {
+                                    translation: Vec3::default().with_y(-MEDIUM.y / 2.0),
+                                    ..default()
+                                },
+                                Sprite {
+                                    custom_size: Some(MEDIUM.clone()),
+                                    ..Sprite::from_image(horde.clone())
+                                }
+                            ),
+                        ],
+                    ));
+                },
+                2 => (),
+                3 => (),
+                4 => (),
+                5 => (),
+                6 => (),
+                7 => (),
+                8 => (),
+                9 => (),
+                10 => (),
+                11 => (),
+                12 => (),
+                13 => (),
+                14 => (),
+                15 => (),
+                16 => (),
+                17 => (),
+                18 => (),
+                19 => (),
+                20 => (),
+                21 => (),
+                22 => (),
+                23 => (),
+                24 => (),
+                25 => (),
+                26 => (),
+                27 => (),
+                28 => (),
+                29 => (),
+                30 => (),
+                31 => (),
+                32 => (),
+                33 => (),
+                34 => (),
+                35 => (),
                 MAX_VARIANTS.. => warn!("Unsupported variant!"),
             };
         }
@@ -309,8 +370,8 @@ pub fn spawn_tiles(
     let position_generator =
         tile::PositionGenerator::<tile::Turtle>::new(UVec2::splat(tile_grid_size));
 
-    for pos in position_generator {
-        let variant = 0;
+    for (variant, pos) in position_generator.enumerate() {
+        let variant = variant as u32;
         let mut entity_commands = spawn(
             &mut commands,
             (
