@@ -210,7 +210,7 @@ mod tile {
         }
     }
 
-    #[derive(Component, Deref, DerefMut, Clone, Copy)]
+    #[derive(Component, Deref, DerefMut, Clone, Copy, PartialEq, Eq)]
     pub struct Variant(pub u32);
 
     impl Variant {
@@ -219,38 +219,36 @@ mod tile {
             variant: u32,
             horde: Handle<Image>,
             alliance: Handle<Image>,
+            max_size: &Vec2,
         ) {
             const MAX_VARIANTS: u32 = (PositionGenerator::<Turtle>::TILES
                 / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE)
                 as u32;
             const TVR: u32 = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32;
+            let index = variant / TVR;
             let common: (Transform, Visibility) = (
                 Transform::default().with_translation(Vec3::default().with_z(0.1)),
                 Visibility::Inherited,
             );
 
-            const LARGE: Vec2 = Vec2::new(60.0, 60.0 * 1.5);
-            const MEDIUM: Vec2 = Vec2::new(30.0, 30.0 * 1.5);
-            const SMALL: Vec2 = Vec2::new(10.0, 10.0 * 1.5);
+            let large = max_size;
+            let medium = max_size / 2.0;
+            let small = max_size / 4.0;
 
-            const PADDING: Vec2 = Vec2::new(8.0, 8.0);
-            let large_half_with_padding: Vec2 = LARGE / 2.0 + PADDING;
-            let medium_half_with_padding: Vec2 = MEDIUM / 2.0 + PADDING;
-            let small_half_with_padding: Vec2 = SMALL / 2.0 + PADDING;
+            let image = if index / (MAX_VARIANTS / 2) == 0 {
+                horde
+            } else {
+                alliance
+            };
 
-            let padding_diag: f32 = PADDING.length();
-            let large_half_with_padding_diag: Vec2 = LARGE / 2.0 + padding_diag;
-            let medium_half_with_padding_diag: Vec2 = MEDIUM / 2.0 + padding_diag;
-            let small_half_with_padding_diag: Vec2 = SMALL / 2.0 + padding_diag;
-
-            match variant / TVR {
+            match index {
                 0 => {
                     entity_commands.with_child((
                         common.clone(),
                         children![
                             (Sprite {
-                                custom_size: Some(LARGE.clone()),
-                                ..Sprite::from_image(horde.clone())
+                                custom_size: Some(large.clone()),
+                                ..Sprite::from_image(image.clone())
                             }),
                         ],
                     ));
@@ -261,28 +259,22 @@ mod tile {
                         children![
                             (
                                 Transform {
-                                    translation: Vec3 {
-                                        y: medium_half_with_padding.y,
-                                        ..default()
-                                    },
+                                    translation: Vec3 { ..default() },
                                     ..default()
                                 },
                                 Sprite {
-                                    custom_size: Some(MEDIUM.clone()),
-                                    ..Sprite::from_image(horde.clone())
+                                    custom_size: Some(medium.clone()),
+                                    ..Sprite::from_image(image.clone())
                                 }
                             ),
                             (
                                 Transform {
-                                    translation: Vec3 {
-                                        y: -medium_half_with_padding.y,
-                                        ..default()
-                                    },
+                                    translation: Vec3 { ..default() },
                                     ..default()
                                 },
                                 Sprite {
-                                    custom_size: Some(MEDIUM.clone()),
-                                    ..Sprite::from_image(horde.clone())
+                                    custom_size: Some(medium.clone()),
+                                    ..Sprite::from_image(image.clone())
                                 }
                             ),
                         ],
@@ -294,16 +286,12 @@ mod tile {
                         children![
                             (
                                 Transform {
-                                    translation: Vec3 {
-                                        x: -medium_half_with_padding_diag.x,
-                                        y: medium_half_with_padding_diag.y,
-                                        z: 0.0,
-                                    },
+                                    translation: Vec3 { ..default() },
                                     ..default()
                                 },
                                 Sprite {
-                                    custom_size: Some(MEDIUM.clone()),
-                                    ..Sprite::from_image(horde.clone())
+                                    custom_size: Some(medium.clone()),
+                                    ..Sprite::from_image(image.clone())
                                 }
                             ),
                             (
@@ -312,22 +300,18 @@ mod tile {
                                     ..default()
                                 },
                                 Sprite {
-                                    custom_size: Some(MEDIUM.clone()),
-                                    ..Sprite::from_image(horde.clone())
+                                    custom_size: Some(medium.clone()),
+                                    ..Sprite::from_image(image.clone())
                                 }
                             ),
                             (
                                 Transform {
-                                    translation: Vec3 {
-                                        x: medium_half_with_padding_diag.x,
-                                        y: -medium_half_with_padding_diag.y,
-                                        z: 0.0,
-                                    },
+                                    translation: Vec3 { ..default() },
                                     ..default()
                                 },
                                 Sprite {
-                                    custom_size: Some(MEDIUM.clone()),
-                                    ..Sprite::from_image(horde.clone())
+                                    custom_size: Some(medium.clone()),
+                                    ..Sprite::from_image(image.clone())
                                 }
                             ),
                         ],
@@ -449,23 +433,23 @@ pub fn spawn_tiles(
             ),
         );
         entity_commands
-            .with_child((
-                tile::Marker::<1>,
-                // Sprite {
-                //     ..Sprite::from_color(Color::BLACK, tile_size * 0.9)
-                // },
-                // Text2d(variant.to_string()),
-                // Transform {
-                //     translation: Vec3::default().with_z(0.1),
-                //     ..default()
-                // },
-            ))
+            // .with_child((
+            //     Sprite {
+            //         ..Sprite::from_color(Color::BLACK, tile_size * 0.9)
+            //     },
+            //     Text2d(variant.to_string()),
+            //     Transform {
+            //         translation: Vec3::default().with_z(0.1),
+            //         ..default()
+            //     },
+            // ))
             .observe(tile_pressed);
         tile::Variant::insert_sprite_as_child(
             &mut entity_commands,
             variant,
             horde.clone(),
             alliance.clone(),
+            &tile_size,
         );
     }
 }
