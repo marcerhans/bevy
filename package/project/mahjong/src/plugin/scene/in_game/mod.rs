@@ -92,7 +92,7 @@ mod tile {
         pub const ROWS: usize = 8;
         pub const COLUMNS: usize = 15;
         pub const LAYERS: usize = 5;
-        pub const TILE_SIZE: usize = 2;
+        pub const TILE_GRID_SIZE: usize = 2;
 
         pub fn new(tile_grid_size: UVec2) -> Self {
             Self {
@@ -263,7 +263,7 @@ pub fn spawn_tiles(
         -projection.area.height() / 2.0 + tile_size.y * 0.5,
         0.0,
     );
-    let tile_grid_size = 2;
+    let tile_grid_size = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
     let position_generator =
         tile::PositionGenerator::<tile::Turtle>::new(UVec2::splat(tile_grid_size));
 
