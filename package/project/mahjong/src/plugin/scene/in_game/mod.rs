@@ -231,7 +231,7 @@ mod tile {
                 Visibility::Inherited,
             );
 
-            let large = max_size * 0.9;
+            let large = max_size;
             let medium = large * 0.5;
             let small = large * 0.25;
 
