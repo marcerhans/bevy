@@ -224,24 +224,26 @@ mod tile {
                 / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE)
                 as u32;
             const TVR: u32 = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32;
-// Some(children![
-//                     (
-//                         Sprite {
-//                             custom_size: Some(Vec2::new(200.0, 200.0)),
-//                             ..Sprite::from_image(horde)
-//                         }
-//                     ),
-//                     (
-//                         Sprite {
-//                             custom_size: Some(Vec2::new(200.0, 200.0)),
-//                             ..Sprite::from_image(horde)
-//                         }
-//                     )
-//                 ])
+            let common: (Transform, InheritedVisibility) =
+                (Transform::default(), InheritedVisibility::VISIBLE);
 
             match variant / TVR {
-                0.. => {},
-                MAX_VARIANTS.. => (),
+                0..MAX_VARIANTS => {
+                    entity_commands.with_child((
+                        common.clone(),
+                        children![
+                            (Sprite {
+                                custom_size: Some(Vec2::new(50.0, 75.0)),
+                                ..Sprite::from_image(horde.clone())
+                            }),
+                            (Sprite {
+                                custom_size: Some(Vec2::new(50.0, 75.0)),
+                                ..Sprite::from_image(horde.clone())
+                            })
+                        ],
+                    ));
+                },
+                MAX_VARIANTS.. => warn!("Unsupported variant!"),
             };
         }
     }
@@ -326,16 +328,16 @@ pub fn spawn_tiles(
         entity_commands
             .with_child((
                 tile::Marker::<1>,
-                Sprite {
-                    ..Sprite::from_color(Color::BLACK, tile_size * 0.9)
-                },
-                Text2d(variant.to_string()),
-                Transform {
-                    translation: Vec3::default().with_z(0.1),
-                    ..default()
-                },
+                // Sprite {
+                //     ..Sprite::from_color(Color::BLACK, tile_size * 0.9)
+                // },
+                // Text2d(variant.to_string()),
+                // Transform {
+                //     translation: Vec3::default().with_z(0.1),
+                //     ..default()
+                // },
             ))
-            .observe(tile_pressed);
+        .observe(tile_pressed);
         tile::Variant::insert_sprite_as_child(
             &mut entity_commands,
             variant,
