@@ -36,7 +36,7 @@ pub enum InGame {
 }
 
 #[derive(Resource, Deref, DerefMut, Default)]
-struct SelectedTile(Option<(Entity, tile::Variant)>);
+pub struct SelectedTile(Option<Entity>);
 
 mod marker {
     use bevy::prelude::*;
@@ -296,21 +296,30 @@ pub fn spawn_tiles(
 
 pub fn tile_pressed(
     on_press: On<Pointer<Press>>,
-    tiles: Query<(Entity, &tile::Variant, &tile::Position, &mut Sprite), With<tile::Marker<0>>>,
+    mut tiles: Query<(Entity, &tile::Variant, &tile::Position, &mut Sprite), With<tile::Marker<0>>>,
     mut selected_tile: ResMut<SelectedTile>,
 ) {
-    let (pressed_entity, pressed_variant, pressed_position, pressed_sprite) =
-        tiles.iter().find(|tile| tile.0 == on_press.entity).unwrap();
+    let (pressed_entity, pressed_variant, pressed_position, mut pressed_sprite) = tiles
+        .iter_mut()
+        .find(|tile| tile.0 == on_press.entity)
+        .unwrap();
 
-    let Some((selected_entity, slected_variant)) = selected_tile.0.take() else {
-        selected_tile.0 = Some((pressed_entity, *pressed_variant));
+    let Some(selected_entity) = selected_tile.0.take() else {
+        selected_tile.0 = Some(pressed_entity);
+        pressed_sprite.color = Color::hsl(1.0, 1.0, 1.5);
         return;
     };
 
-    if pressed_entity == selected_entity {
-        info!("Tile cannot be matched against itself!");
-        return;
-    }
+    let (selected_entity, selected_variant, selected_position, mut selected_sprite) =
+        tiles.get_mut(selected_entity).unwrap();
+    selected_sprite.color = Color::hsl(1.0, 1.0, 1.0);
+
+    // selected_color =
+
+    // if pressed_entity == selected_entity {
+    //     info!("Tile cannot be matched against itself!");
+    //     return;
+    // }
 }
 
 pub fn valid_removal() -> bool {
