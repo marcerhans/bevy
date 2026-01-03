@@ -292,7 +292,7 @@ pub fn spawn_tiles(
             },
             Text2d(variant.to_string()),
             Transform {
-                translation: Vec3::default().with_z(pos.z as f32 + 0.1),
+                translation: Vec3::default().with_z(0.1),
                 ..default()
             },
         ))
