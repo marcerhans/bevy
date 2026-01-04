@@ -60,7 +60,7 @@ mod tile {
             pub const HORDE: &'static str = "misc/rev2/Horde.png";
             pub const ALLIANCE_BUTTON: &'static str = "misc/rev2/original/alliance_button.png";
             pub const HORDE_BUTTON: &'static str = "misc/rev2/original/horde_button.png";
-            pub const BLADES: &'static str = "misc/rev2/Blades.png";
+            pub const BLADE: &'static str = "misc/rev2/Frostmourne.png";
             pub const HEARTHSTONE: &'static str = "misc/rev2/Hearthstone.png";
             pub const BUTTON_INACTIVE: &'static str = "misc/rev2/button-inactive_666x429.png";
             pub const BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
@@ -237,7 +237,7 @@ mod tile {
 
             let alliance: Handle<Image> = asset_server.load(asset::texture::ALLIANCE);
             let horde: Handle<Image> = asset_server.load(asset::texture::HORDE);
-            let blades: Handle<Image> = asset_server.load(asset::texture::BLADES);
+            let blades: Handle<Image> = asset_server.load(asset::texture::BLADE);
             let hs: Handle<Image> = asset_server.load(asset::texture::HEARTHSTONE);
 
             let common = (
