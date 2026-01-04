@@ -284,14 +284,14 @@ mod tile {
                         common,
                         children![
                             template(
-                                -max_size.x / 5.0,
-                                max_size.y / 5.0,
+                                -max_size.x / 6.0,
+                                max_size.y / 6.0,
                                 medium.clone(),
                                 image.clone()
                             ),
                             template(
-                                max_size.x / 5.0,
-                                -max_size.y / 5.0,
+                                max_size.x / 6.0,
+                                -max_size.y / 6.0,
                                 medium.clone(),
                                 image.clone()
                             ),
