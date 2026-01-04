@@ -218,11 +218,9 @@ mod tile {
 
     impl Variant {
         pub fn insert_sprite_as_child(
+            asset_server: &Res<AssetServer>,
             entity_commands: &mut EntityCommands,
             variant: u32,
-            horde: Handle<Image>,
-            alliance: Handle<Image>,
-            blades: Handle<Image>,
             max_size: &Vec2,
         ) {
             const MAX_VARIANTS: u32 = (PositionGenerator::<Turtle>::TILES
@@ -234,413 +232,418 @@ mod tile {
             let large = max_size;
             let medium = large * 0.5;
             let small = large * 0.25;
-            let images = if index / (MAX_VARIANTS / 2) == 0 {
-                (horde, horde_button)
-            } else {
-                (alliance, alliance_button)
-            };
-            let mut size = large;
-            let mut positions: Vec<(Vec3, ImageType)> = vec![];
 
-            enum ImageType {
-                Regular,
-                Button,
-            }
+            let alliance: Handle<Image> = asset_server.load(asset::texture::ALLIANCE);
+            let horde: Handle<Image> = asset_server.load(asset::texture::HORDE);
+            let blades: Handle<Image> = asset_server.load(asset::texture::BLADES);
 
-            match index % (MAX_VARIANTS / 2) {
-                0 => {
-                    size = large;
-                    positions.append(&mut vec![(Vec3 { ..default() }, ImageType::Regular)]);
-                },
-                1 => {
-                    size = &medium;
-                    positions.append(&mut vec![
-                        (
-                            Vec3 {
-                                x: -max_size.x / 5.0,
-                                y: max_size.y / 5.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 5.0,
-                                y: -max_size.y / 5.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                    ]);
-                },
-                2 => {
-                    size = &small;
-                    positions.append(&mut vec![
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                y: max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (Vec3 { ..default() }, ImageType::Regular),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                y: -max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                    ]);
-                },
-                3 => {
-                    size = &small;
-                    positions.append(&mut vec![
-                        (
-                            Vec3 {
-                                x: -max_size.x / 5.0,
-                                y: -max_size.y / 5.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 5.0,
-                                y: -max_size.y / 5.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: -max_size.x / 5.0,
-                                y: max_size.y / 5.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 5.0,
-                                y: max_size.y / 5.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                    ]);
-                },
-                4 => {
-                    size = &small;
-                    positions.append(&mut vec![
-                        (
-                            Vec3 {
-                                x: -max_size.x / 5.0,
-                                y: -max_size.y / 5.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 5.0,
-                                y: -max_size.y / 5.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: -max_size.x / 5.0,
-                                y: max_size.y / 5.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 5.0,
-                                y: max_size.y / 5.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (Vec3 { ..default() }, ImageType::Regular),
-                    ]);
-                },
-                5 => {
-                    size = &small;
-                    positions.append(&mut vec![
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                y: -max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                y: max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                y: -max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                y: max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                    ]);
-                },
-                6 => {
-                    size = &small;
-                    positions.append(&mut vec![
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                y: -max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                y: max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                y: -max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                y: max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (Vec3 { ..default() }, ImageType::Regular),
-                    ]);
-                },
-                7 => {
-                    size = &small;
-                    positions.append(&mut vec![
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                y: -max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                y: max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                y: -max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                y: max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                y: -max_size.y / 7.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                y: max_size.y / 7.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                    ]);
-                },
-                8 => {
-                    size = &small;
-                    positions.append(&mut vec![
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                y: -max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: -max_size.x / 4.0,
-                                y: max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                y: -max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                x: max_size.x / 4.0,
-                                y: max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (
-                            Vec3 {
-                                y: -max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                        (Vec3 { ..default() }, ImageType::Regular),
-                        (
-                            Vec3 {
-                                y: max_size.y / 4.0,
-                                ..default()
-                            },
-                            ImageType::Regular,
-                        ),
-                    ]);
-                },
-                9 => (),
-                10 => (),
-                11 => (),
-                12 => (),
-                13 => (),
-                14 => (),
-                15 => (),
-                16 => (),
-                17 => (),
-                MAX_VARIANTS_HALF.. => warn!("Unsupported variant!"),
-            };
+            // let images = if index / (MAX_VARIANTS / 2) == 0 {
+            //     (horde, horde_button)
+            // } else {
+            //     (alliance, alliance_button)
+            // };
+            // let mut size = large;
+            // let mut positions: Vec<(Vec3, ImageType)> = vec![];
 
-            let common = (
-                Transform::default().with_translation(Vec3::default().with_z(0.1)),
-                Visibility::Inherited,
-            );
+            // enum ImageType {
+            //     Regular,
+            //     Button,
+            // }
 
-            entity_commands.with_children(|parent| {
-                parent.spawn(common).with_children(|common| {
-                    for (position, image_type) in positions {
-                        let image = match image_type {
-                            ImageType::Regular => images.0.clone(),
-                            ImageType::Button => images.1.clone(),
-                        };
-                        common.spawn((
-                            Transform {
-                                translation: position,
-                                ..default()
-                            },
-                            Sprite {
-                                custom_size: Some(size.clone()),
-                                ..Sprite::from_image(image.clone())
-                            },
-                        ));
-                    }
-                });
-            });
+            // match index % (MAX_VARIANTS / 2) {
+            //     0 => {
+            //         size = large;
+            //         positions.append(&mut vec![(Vec3 { ..default() }, ImageType::Regular)]);
+            //     },
+            //     1 => {
+            //         size = &medium;
+            //         positions.append(&mut vec![
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 5.0,
+            //                     y: max_size.y / 5.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 5.0,
+            //                     y: -max_size.y / 5.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //         ]);
+            //     },
+            //     2 => {
+            //         size = &small;
+            //         positions.append(&mut vec![
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     y: max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (Vec3 { ..default() }, ImageType::Regular),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     y: -max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //         ]);
+            //     },
+            //     3 => {
+            //         size = &small;
+            //         positions.append(&mut vec![
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 5.0,
+            //                     y: -max_size.y / 5.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 5.0,
+            //                     y: -max_size.y / 5.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 5.0,
+            //                     y: max_size.y / 5.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 5.0,
+            //                     y: max_size.y / 5.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //         ]);
+            //     },
+            //     4 => {
+            //         size = &small;
+            //         positions.append(&mut vec![
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 5.0,
+            //                     y: -max_size.y / 5.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 5.0,
+            //                     y: -max_size.y / 5.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 5.0,
+            //                     y: max_size.y / 5.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 5.0,
+            //                     y: max_size.y / 5.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (Vec3 { ..default() }, ImageType::Regular),
+            //         ]);
+            //     },
+            //     5 => {
+            //         size = &small;
+            //         positions.append(&mut vec![
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     y: -max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     y: max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     y: -max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     y: max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //         ]);
+            //     },
+            //     6 => {
+            //         size = &small;
+            //         positions.append(&mut vec![
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     y: -max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     y: max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     y: -max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     y: max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (Vec3 { ..default() }, ImageType::Regular),
+            //         ]);
+            //     },
+            //     7 => {
+            //         size = &small;
+            //         positions.append(&mut vec![
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     y: -max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     y: max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     y: -max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     y: max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     y: -max_size.y / 7.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     y: max_size.y / 7.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //         ]);
+            //     },
+            //     8 => {
+            //         size = &small;
+            //         positions.append(&mut vec![
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     y: -max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: -max_size.x / 4.0,
+            //                     y: max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     y: -max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     x: max_size.x / 4.0,
+            //                     y: max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (
+            //                 Vec3 {
+            //                     y: -max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //             (Vec3 { ..default() }, ImageType::Regular),
+            //             (
+            //                 Vec3 {
+            //                     y: max_size.y / 4.0,
+            //                     ..default()
+            //                 },
+            //                 ImageType::Regular,
+            //             ),
+            //         ]);
+            //     },
+            //     9 => (),
+            //     10 => (),
+            //     11 => (),
+            //     12 => (),
+            //     13 => (),
+            //     14 => (),
+            //     15 => (),
+            //     16 => (),
+            //     17 => (),
+            //     MAX_VARIANTS_HALF.. => warn!("Unsupported variant!"),
+            // };
+
+            // let common = (
+            //     Transform::default().with_translation(Vec3::default().with_z(0.1)),
+            //     Visibility::Inherited,
+            // );
+
+            // entity_commands.with_children(|parent| {
+            //     parent.spawn(common).with_children(|common| {
+            //         for (position, image_type) in positions {
+            //             let image = match image_type {
+            //                 ImageType::Regular => images.0.clone(),
+            //                 ImageType::Button => images.1.clone(),
+            //             };
+            //             common.spawn((
+            //                 Transform {
+            //                     translation: position,
+            //                     ..default()
+            //                 },
+            //                 Sprite {
+            //                     custom_size: Some(size.clone()),
+            //                     ..Sprite::from_image(image.clone())
+            //                 },
+            //             ));
+            //         }
+            //     });
+            // });
         }
     }
 }
@@ -685,11 +688,6 @@ pub fn spawn_tiles(
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
     };
-
-    let alliance: Handle<Image> = asset_server.load(tile::asset::texture::ALLIANCE);
-    let horde: Handle<Image> = asset_server.load(tile::asset::texture::HORDE);
-    let alliance_button: Handle<Image> = asset_server.load(tile::asset::texture::ALLIANCE_BUTTON);
-    let horde_button: Handle<Image> = asset_server.load(tile::asset::texture::HORDE_BUTTON);
 
     let tile_size = Vec2::new(
         (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.7,
@@ -736,12 +734,9 @@ pub fn spawn_tiles(
             // ))
             .observe(tile_pressed);
         tile::Variant::insert_sprite_as_child(
+            &asset_server,
             &mut entity_commands,
             variant,
-            horde.clone(),
-            alliance.clone(),
-            horde_button.clone(),
-            alliance_button.clone(),
             &tile_size,
         );
 
