@@ -61,6 +61,7 @@ mod tile {
             pub const ALLIANCE_BUTTON: &'static str = "misc/rev2/original/alliance_button.png";
             pub const HORDE_BUTTON: &'static str = "misc/rev2/original/horde_button.png";
             pub const BLADES: &'static str = "misc/rev2/Blades.png";
+            pub const HEARTHSTONE: &'static str = "misc/rev2/Hearthstone.png";
             pub const BUTTON_INACTIVE: &'static str = "misc/rev2/button-inactive_666x429.png";
             pub const BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
             pub const LEFT_BORDER_PERCENTAGE_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
@@ -237,6 +238,7 @@ mod tile {
             let alliance: Handle<Image> = asset_server.load(asset::texture::ALLIANCE);
             let horde: Handle<Image> = asset_server.load(asset::texture::HORDE);
             let blades: Handle<Image> = asset_server.load(asset::texture::BLADES);
+            let hs: Handle<Image> = asset_server.load(asset::texture::HEARTHSTONE);
 
             let common = (
                 Transform::default().with_translation(Vec3::default().with_z(0.1)),
@@ -264,11 +266,12 @@ mod tile {
             }
 
             match index {
-                0 | 1 | 2 => {
+                0 | 1 | 2 | 3 => {
                     let image = match index {
                         0 => alliance,
                         1 => horde,
                         2 => blades,
+                        3 => hs,
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -276,11 +279,12 @@ mod tile {
                         children![template(0.0, 0.0, large.clone(), image.clone(), None),],
                     ));
                 },
-                3 | 4 | 5 => {
+                4 | 5 | 6 | 7 => {
                     let image = match index {
-                        3 => alliance,
-                        4 => horde,
-                        5 => blades,
+                        4 => alliance,
+                        5 => horde,
+                        6 => blades,
+                        7 => hs,
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -303,11 +307,12 @@ mod tile {
                         ],
                     ));
                 },
-                6 | 7 | 8 => {
+                8 | 9 | 10 | 11 => {
                     let image = match index {
-                        6 => alliance,
-                        7 => horde,
-                        8 => blades,
+                        8 => alliance,
+                        9 => horde,
+                        10 => blades,
+                        11 => hs,
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -331,11 +336,12 @@ mod tile {
                         ],
                     ));
                 },
-                9 | 10 | 11 => {
+                12 | 13 | 14 | 15 => {
                     let image = match index {
-                        9 => alliance,
-                        10 => horde,
-                        11 => blades,
+                        12 => alliance,
+                        13 => horde,
+                        14 => blades,
+                        15 => hs,
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -372,11 +378,12 @@ mod tile {
                         ],
                     ));
                 },
-                12 | 13 | 14 => {
+                16 | 17 | 18 | 19 => {
                     let (image, color) = match index {
-                        12 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
-                        13 => (horde, Color::hsl(240.0, 1.0, 0.5)),
-                        14 => (blades, Color::BLACK),
+                        16 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
+                        17 => (horde, Color::hsl(240.0, 1.0, 0.5)),
+                        18 => (blades, Color::BLACK),
+                        19 => (blades, Color::BLACK),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -414,11 +421,12 @@ mod tile {
                         ],
                     ));
                 },
-                15 | 16 | 17 => {
+                20 | 21 | 22 | 23 => {
                     let (image, color) = match index {
-                        15 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
-                        16 => (horde, Color::hsl(240.0, 1.0, 0.5)),
-                        17 => (blades, Color::BLACK),
+                        20 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
+                        21 => (horde, Color::hsl(240.0, 1.0, 0.5)),
+                        22 => (blades, Color::BLACK),
+                        23 => (blades, Color::BLACK),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -457,11 +465,12 @@ mod tile {
                         ],
                     ));
                 },
-                18 | 19 | 20 => {
+                24 | 25 | 26 | 27 => {
                     let (image, color) = match index {
-                        18 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
-                        19 => (horde, Color::hsl(240.0, 1.0, 0.5)),
-                        20 => (blades, Color::BLACK),
+                        24 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
+                        25 => (horde, Color::hsl(240.0, 1.0, 0.5)),
+                        26 => (blades, Color::BLACK),
+                        27 => (blades, Color::BLACK),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -495,11 +504,12 @@ mod tile {
                         ],
                     ));
                 },
-                21 | 22 | 23 => {
+                28 | 29 | 30 | 31 => {
                     let (image, color) = match index {
-                        21 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
-                        22 => (horde, Color::hsl(240.0, 1.0, 0.5)),
-                        23 => (blades, Color::BLACK),
+                        28 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
+                        29 => (horde, Color::hsl(240.0, 1.0, 0.5)),
+                        30 => (blades, Color::BLACK),
+                        31 => (blades, Color::BLACK),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
