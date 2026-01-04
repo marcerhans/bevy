@@ -995,13 +995,13 @@ pub fn spawn_tiles(
             * tile::asset::texture::TILE_HEIGHT as f32,
     );
     let tile_size_ratio = tile_size_full / tile_size;
-
     let tile_pos_offset = Vec3::new(
         -(tile_size_full.x * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32 / 2.0)
             + tile_size_full.x * 1.0,
         -projection.area.height() / 2.0 + tile_size_full.y * 0.5,
         0.0,
     );
+
 
     info!("tile_size: {:?}", tile_size);
     info!(
@@ -1030,7 +1030,7 @@ pub fn spawn_tiles(
                 },
                 Transform {
                     translation: (((pos.as_vec3() / tile_grid_size as f32)
-                        * tile_size_full.extend(1.0))
+                        * tile_size.extend(1.0))
                         + tile_pos_offset)
                         - (order_offset_factor * index as f32)
                         + (layer_offset_factor * layer as f32),
