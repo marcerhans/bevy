@@ -430,13 +430,7 @@ mod tile {
                                 image.clone(),
                                 None,
                             ),
-                            template(
-                                -max_size.x / 6.0,
-                                0.0,
-                                small.clone(),
-                                image.clone(),
-                                None,
-                            ),
+                            template(-max_size.x / 6.0, 0.0, small.clone(), image.clone(), None,),
                             template(
                                 -max_size.x / 6.0,
                                 max_size.y / 5.0,
@@ -451,13 +445,7 @@ mod tile {
                                 image.clone(),
                                 None,
                             ),
-                            template(
-                                max_size.x / 6.0,
-                                0.0,
-                                small.clone(),
-                                image.clone(),
-                                None,
-                            ),
+                            template(max_size.x / 6.0, 0.0, small.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 6.0,
                                 max_size.y / 5.0,
@@ -465,6 +453,56 @@ mod tile {
                                 image.clone(),
                                 None,
                             ),
+                        ],
+                    ));
+                },
+                18 | 19 | 20 => {
+                    let (image, color) = match index {
+                        18 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
+                        19 => (horde, Color::hsl(240.0, 1.0, 0.5)),
+                        20 => (blades, Color::BLACK),
+                        _ => unreachable!(),
+                    };
+                    entity_commands.with_child((
+                        common,
+                        children![
+                            template(
+                                -max_size.x / 5.0,
+                                -max_size.y / 5.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(0.0, -max_size.y / 5.0, small.clone(), image.clone(), None,),
+                            template(
+                                max_size.x / 5.0,
+                                -max_size.y / 5.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                -max_size.x / 5.0,
+                                -max_size.y / 5.0 * 2.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                0.0,
+                                -max_size.y / 5.0 * 2.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                max_size.x / 5.0,
+                                -max_size.y / 5.0 * 2.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(0.0, max_size.y / 5.0, small.clone(), image.clone(), None,),
                         ],
                     ));
                 },
