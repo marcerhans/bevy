@@ -55,16 +55,14 @@ mod tile {
 
     pub mod asset {
         pub mod texture {
-            pub const BORDER: &'static str = "misc/rev2/Tile.png";
+            pub const BORDER: &'static str = "misc/rev2/Tile_690x990.png";
+            pub const BORDER_FULL: &'static str = "misc/rev2/Tile_690x990_Full.png";
             pub const ALLIANCE: &'static str = "misc/rev2/Alliance.png";
             pub const HORDE: &'static str = "misc/rev2/Horde.png";
-            pub const ALLIANCE_BUTTON: &'static str = "misc/rev2/original/alliance_button.png";
-            pub const HORDE_BUTTON: &'static str = "misc/rev2/original/horde_button.png";
             pub const BLADE: &'static str = "misc/rev2/Frostmourne.png";
             pub const HEARTHSTONE: &'static str = "misc/rev2/Hearthstone.png";
-            pub const BUTTON_INACTIVE: &'static str = "misc/rev2/button-inactive_666x429.png";
-            pub const BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
-            pub const LEFT_BORDER_PERCENTAGE_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
+            // pub const BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
+            // pub const LEFT_BORDER_PERCENTAGE_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
         }
     }
 
