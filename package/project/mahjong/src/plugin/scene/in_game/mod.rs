@@ -261,13 +261,25 @@ mod tile {
             }
 
             match index {
-                0 => {
+                0 | 1 | 2 => {
+                    let image = match index {
+                        0 => alliance,
+                        1 => horde,
+                        2 => blades,
+                        _ => unreachable!(),
+                    };
                     entity_commands.with_child((
                         common,
-                        children![template(0.0, 0.0, large.clone(), blades.clone()),],
+                        children![template(0.0, 0.0, large.clone(), image.clone()),],
                     ));
                 },
-                1 => {
+                3 | 4 | 5 => {
+                    let image = match index {
+                        3 => alliance,
+                        4 => horde,
+                        5 => blades,
+                        _ => unreachable!(),
+                    };
                     entity_commands.with_child((
                         common,
                         children![
@@ -275,13 +287,13 @@ mod tile {
                                 -max_size.x / 5.0,
                                 max_size.y / 5.0,
                                 medium.clone(),
-                                blades.clone()
+                                image.clone()
                             ),
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
                                 medium.clone(),
-                                blades.clone()
+                                image.clone()
                             ),
                         ],
                     ));
