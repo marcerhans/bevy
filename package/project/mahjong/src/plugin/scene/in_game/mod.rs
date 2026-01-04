@@ -330,6 +330,47 @@ mod tile {
                         ],
                     ));
                 },
+                9 | 10 | 11 => {
+                    let image = match index {
+                        9 => alliance,
+                        10 => horde,
+                        11 => blades,
+                        _ => unreachable!(),
+                    };
+                    entity_commands.with_child((
+                        common,
+                        children![
+                            template(
+                                -max_size.x / 6.0,
+                                -max_size.y / 6.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                -max_size.x / 6.0,
+                                max_size.y / 6.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                max_size.x / 6.0,
+                                -max_size.y / 6.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                max_size.x / 6.0,
+                                max_size.y / 6.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                        ],
+                    ));
+                },
                 //     1 => {
                 //         size = &medium;
                 //         positions.append(&mut vec![
