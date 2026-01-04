@@ -309,10 +309,10 @@ mod tile {
                 },
                 8 | 9 | 10 | 11 => {
                     let (image, size) = match index {
-                        8 => (alliance, medium),
-                        9 => (horde, medium),
-                        10 => (blades, medium),
-                        11 => (hs, medium),
+                        8 => (alliance, small),
+                        9 => (horde, small),
+                        10 => (blades, small),
+                        11 => (hs, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -338,10 +338,10 @@ mod tile {
                 },
                 12 | 13 | 14 | 15 => {
                     let (image, size) = match index {
-                        12 => (alliance, medium),
-                        13 => (horde, medium),
-                        14 => (blades, medium),
-                        15 => (hs, medium),
+                        12 => (alliance, small),
+                        13 => (horde, small),
+                        14 => (blades, small),
+                        15 => (hs, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -380,10 +380,10 @@ mod tile {
                 },
                 16 | 17 | 18 | 19 => {
                     let (image, color, size) = match index {
-                        16 => (alliance, Color::hsl(0.0, 1.0, 0.5), medium),
-                        17 => (horde, Color::hsl(240.0, 1.0, 0.5), medium),
-                        18 => (blades, Color::BLACK, medium),
-                        19 => (blades, Color::BLACK, medium),
+                        16 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
+                        17 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
+                        18 => (blades, Color::BLACK, small),
+                        19 => (blades, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -423,10 +423,10 @@ mod tile {
                 },
                 20 | 21 | 22 | 23 => {
                     let (image, color, size) = match index {
-                        20 => (alliance, Color::hsl(0.0, 1.0, 0.5), medium),
-                        21 => (horde, Color::hsl(240.0, 1.0, 0.5), medium),
-                        22 => (blades, Color::BLACK, medium),
-                        23 => (blades, Color::BLACK, medium),
+                        20 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
+                        21 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
+                        22 => (blades, Color::BLACK, small),
+                        23 => (blades, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -467,10 +467,10 @@ mod tile {
                 },
                 24 | 25 | 26 | 27 => {
                     let (image, color, size) = match index {
-                        24 => (alliance, Color::hsl(0.0, 1.0, 0.5), medium),
-                        25 => (horde, Color::hsl(240.0, 1.0, 0.5), medium),
-                        26 => (blades, Color::BLACK, medium),
-                        27 => (blades, Color::BLACK, medium),
+                        24 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
+                        25 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
+                        26 => (blades, Color::BLACK, small),
+                        27 => (blades, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -506,10 +506,10 @@ mod tile {
                 },
                 28 | 29 | 30 | 31 => {
                     let (image, color, size) = match index {
-                        28 => (alliance, Color::hsl(0.0, 1.0, 0.5), medium),
-                        29 => (horde, Color::hsl(240.0, 1.0, 0.5), medium),
-                        30 => (blades, Color::BLACK, medium),
-                        31 => (blades, Color::BLACK, medium),
+                        28 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
+                        29 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
+                        30 => (blades, Color::BLACK, small),
+                        31 => (blades, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
