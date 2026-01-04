@@ -413,6 +413,61 @@ mod tile {
                         ],
                     ));
                 },
+                15 | 16 | 17 => {
+                    let (image, color) = match index {
+                        15 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
+                        16 => (horde, Color::hsl(240.0, 1.0, 0.5)),
+                        17 => (blades, Color::BLACK),
+                        _ => unreachable!(),
+                    };
+                    entity_commands.with_child((
+                        common,
+                        children![
+                            template(
+                                -max_size.x / 6.0,
+                                -max_size.y / 5.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                -max_size.x / 6.0,
+                                0.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                -max_size.x / 6.0,
+                                max_size.y / 5.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                max_size.x / 6.0,
+                                -max_size.y / 5.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                max_size.x / 6.0,
+                                0.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                max_size.x / 6.0,
+                                max_size.y / 5.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                        ],
+                    ));
+                },
                 //     1 => {
                 //         size = &medium;
                 //         positions.append(&mut vec![
