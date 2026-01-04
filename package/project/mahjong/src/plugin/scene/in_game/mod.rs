@@ -55,12 +55,13 @@ mod tile {
 
     pub mod asset {
         pub mod texture {
-            pub const BORDER: &'static str = "misc/rev2/Tile4_700x1000.png";
-            pub const ALLIANCE: &'static str = "misc/rev2/Alliance_1104x882.png";
-            pub const HORDE: &'static str = "misc/rev2/Horde_740x1093.png";
+            pub const BORDER: &'static str = "misc/rev2/original/Tile4_fixed.png";
+            pub const ALLIANCE: &'static str = "misc/rev2/Alliance.png";
+            pub const HORDE: &'static str = "misc/rev2/Horde.png";
             pub const ALLIANCE_BUTTON: &'static str = "misc/rev2/original/alliance_button.png";
             pub const HORDE_BUTTON: &'static str = "misc/rev2/original/horde_button.png";
-            pub const BLADES: &'static str = "misc/rev2/original/Blades_GPT.png";
+            pub const BLADES: &'static str = "misc/rev2/Blades.png";
+            pub const BUTTON_INACTIVE: &'static str = "misc/rev2/button-inactive_666x429.png";
             pub const BOTTOM_BORDER_PERCENTAGE_Y: f32 = 175.0 / 1000.0; // (Just the "thickness" of the tile, excluding the border)
             pub const LEFT_BORDER_PERCENTAGE_X: f32 = 124.0 / 700.0; // (Just the "thickness" of the tile, excluding the border)
         }
@@ -395,7 +396,7 @@ mod tile {
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, 0.0, small.clone(), image.clone(), Some(color),),
+                            template(0.0, 0.0, medium.clone(), image.clone(), Some(color),),
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
@@ -968,6 +969,8 @@ pub fn spawn_tiles(
         panic!();
     };
 
+    let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::BORDER);
+
     let tile_size = Vec2::new(
         (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.7,
         projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
@@ -991,7 +994,10 @@ pub fn spawn_tiles(
                     marker: tile::Marker::<0>,
                     position: pos,
                     variant: tile::Variant(variant),
-                    sprite: Sprite::from_color(Color::WHITE, tile_size),
+                    sprite: Sprite {
+                        custom_size: Some(tile_size),
+                        ..Sprite::from_image(tile_texture.clone())
+                    },
                 },
                 Transform {
                     translation: ((pos.as_vec3() / tile_grid_size as f32) * tile_size.extend(1.0))
