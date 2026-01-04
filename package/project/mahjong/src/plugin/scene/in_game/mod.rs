@@ -61,10 +61,11 @@ mod tile {
             pub const BLADE: &'static str = "misc/rev2/Frostmourne.png";
             pub const HEARTHSTONE: &'static str = "misc/rev2/Hearthstone.png";
 
-            pub const BORDER_WIDTH: u32 = 962;
-            pub const BORDER_HEIGHT: u32 = 1238;
-            pub const BORDER_NO_EDGE_WIDTH: u32 = 872;
-            pub const BORDER_NO_EDGE_HEIGHT: u32 = 1149;
+            pub const TILE_WIDTH: u32 = 962;
+            pub const TILE_HEIGHT: u32 = 1238;
+            pub const TILE_NO_BORDER_WIDTH: u32 = 872;
+            pub const TILE_NO_BORDER_HEIGHT: u32 = 1149;
+            pub const TILE_BORDER_LENGTH: u32 = 110;
         }
     }
 
@@ -73,7 +74,6 @@ mod tile {
         pub marker: Marker<0>,
         pub position: Position,
         pub variant: Variant,
-        // pub sprite: Sprite,
     }
 
     /// "DEPTH" implies on which "Child" level the marker is at.
@@ -981,7 +981,6 @@ pub fn spawn_tiles(
     };
 
     let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::BORDER);
-
     let tile_size = Vec2::new(
         (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32)
             * (1.0 / 1.5),
@@ -996,15 +995,19 @@ pub fn spawn_tiles(
     let tile_grid_size = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
     let position_generator =
         tile::PositionGenerator::<tile::Turtle>::new(UVec2::splat(tile_grid_size));
-
     let tile_size_full = Vec2::new(
-        (tile_size.x / tile::asset::texture::BORDER_NO_EDGE_WIDTH as f32)
-            * tile::asset::texture::BORDER_WIDTH as f32,
-        (tile_size.y / tile::asset::texture::BORDER_NO_EDGE_HEIGHT as f32)
-            * tile::asset::texture::BORDER_HEIGHT as f32,
+        (tile_size.x / tile::asset::texture::TILE_NO_BORDER_WIDTH as f32)
+            * tile::asset::texture::TILE_WIDTH as f32,
+        (tile_size.y / tile::asset::texture::TILE_NO_BORDER_HEIGHT as f32)
+            * tile::asset::texture::TILE_HEIGHT as f32,
     );
+    let tile_size_ratio = tile_size_full / tile_size;
 
     for (variant, pos) in position_generator.enumerate() {
+        let index = variant; // TODO: Have to enumerate them!!!
+        let layer = pos.z;
+        let layer_offset_factor = Vec3::default().with_z(10.0);
+
         let variant = variant as u32;
         let mut entity_commands = spawn(
             &mut commands,
@@ -1013,14 +1016,13 @@ pub fn spawn_tiles(
                     marker: tile::Marker::<0>,
                     position: pos,
                     variant: tile::Variant(variant),
-                    // sprite: Sprite {
-                    //     custom_size: Some(tile_size),
-                    //     ..Sprite::from_image(tile_texture.clone())
-                    // },
                 },
                 Transform {
-                    translation: ((pos.as_vec3() / tile_grid_size as f32) * tile_size.extend(1.0))
-                        + tile_pos_offset,
+                    translation: (((pos.as_vec3() / tile_grid_size as f32)
+                        * tile_size.extend(1.0))
+                        + tile_pos_offset)
+                        - (0.1 * index as f32)
+                        + layer_offset_factor * layer as f32,
                     ..default()
                 },
             ),
@@ -1028,27 +1030,17 @@ pub fn spawn_tiles(
         entity_commands
             .with_child((
                 Sprite {
-                    // custom_size: Some(
-                    //     tile_size
-                    //         .with_x(
-                    //             tile_size.x
-                    //                 + tile::asset::texture::BORDER_FULL_MINUS_BORDER_X as f32,
-                    //         )
-                    //         .with_y(
-                    //             tile_size.y
-                    //                 + tile::asset::texture::BORDER_FULL_MINUS_BORDER_X as f32,
-                    //         ),
-                    // ),
-                    ..Sprite::from_image(tile_texture_full.clone())
+                    custom_size: Some(tile_size_full),
+                    ..Sprite::from_image(tile_texture.clone())
                 },
-                // Transform {
-                //     translation: Vec3 {
-                //         x: tile::asset::texture::BORDER_FULL_MINUS_BORDER_X as f32,
-                //         y: tile::asset::texture::BORDER_FULL_MINUS_BORDER_Y as f32,
-                //         ..default()
-                //     },
-                //     ..default()
-                // },
+                Transform {
+                    translation: Vec3 {
+                        x: -tile_size_ratio.x / tile::asset::texture::TILE_WIDTH as f32,
+                        y: -tile_size_ratio.y / tile::asset::texture::TILE_HEIGHT as f32,
+                        ..default()
+                    },
+                    ..default()
+                },
             ))
             .observe(tile_pressed);
         tile::Variant::insert_sprite_as_child(
