@@ -55,7 +55,7 @@ mod tile {
 
     pub mod asset {
         pub mod texture {
-            pub const BORDER: &'static str = "misc/rev2/Tile_690x990.png";
+            pub const TILE: &'static str = "misc/rev2/Tile.png";
             pub const ALLIANCE: &'static str = "misc/rev2/Alliance.png";
             pub const HORDE: &'static str = "misc/rev2/Horde.png";
             pub const BLADE: &'static str = "misc/rev2/Frostmourne.png";
@@ -980,16 +980,10 @@ pub fn spawn_tiles(
         panic!();
     };
 
-    let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::BORDER);
+    let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::TILE);
     let tile_size = Vec2::new(
         (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.7,
         projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
-    );
-    let tile_pos_offset = Vec3::new(
-        -(tile_size.x * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32 / 2.0)
-            + tile_size.x * 1.0,
-        -projection.area.height() / 2.0 + tile_size.y * 0.5,
-        0.0,
     );
     let tile_grid_size = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
     let position_generator =
@@ -1001,6 +995,13 @@ pub fn spawn_tiles(
             * tile::asset::texture::TILE_HEIGHT as f32,
     );
     let tile_size_ratio = tile_size_full / tile_size;
+
+    let tile_pos_offset = Vec3::new(
+        -(tile_size_full.x * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32 / 2.0)
+            + tile_size_full.x * 1.0,
+        -projection.area.height() / 2.0 + tile_size_full.y * 0.5,
+        0.0,
+    );
 
     info!("tile_size: {:?}", tile_size);
     info!(
@@ -1029,7 +1030,7 @@ pub fn spawn_tiles(
                 },
                 Transform {
                     translation: (((pos.as_vec3() / tile_grid_size as f32)
-                        * tile_size.extend(1.0))
+                        * tile_size_full.extend(1.0))
                         + tile_pos_offset)
                         - (order_offset_factor * index as f32)
                         + (layer_offset_factor * layer as f32),
@@ -1038,27 +1039,27 @@ pub fn spawn_tiles(
             ),
         );
         entity_commands
-            .with_child((
-                // Sprite {
-                //     custom_size: Some(tile_size_full),
-                //     ..Sprite::from_image(tile_texture.clone())
-                // },
-                Transform {
-                    translation: Vec3 {
-                        x: -tile_size_ratio.x / tile::asset::texture::TILE_WIDTH as f32,
-                        y: -tile_size_ratio.y / tile::asset::texture::TILE_HEIGHT as f32,
-                        ..default()
-                    },
-                    ..default()
-                },
-            ))
+            // .with_child((
+            // Sprite {
+            //     custom_size: Some(tile_size_full),
+            //     ..Sprite::from_image(tile_texture.clone())
+            // },
+            //     Transform {
+            //         translation: Vec3 {
+            //             x: -tile_size_ratio.x / tile::asset::texture::TILE_WIDTH as f32,
+            //             y: -tile_size_ratio.y / tile::asset::texture::TILE_HEIGHT as f32,
+            //             ..default()
+            //         },
+            //         ..default()
+            //     },
+            // ))
             .observe(tile_pressed);
-        tile::Variant::insert_sprite_as_child(
-            &asset_server,
-            &mut entity_commands,
-            variant,
-            &tile_size,
-        );
+        // tile::Variant::insert_sprite_as_child(
+        //     &asset_server,
+        //     &mut entity_commands,
+        //     variant,
+        //     &tile_size,
+        // );
 
         if variant > 95 {
             break;
