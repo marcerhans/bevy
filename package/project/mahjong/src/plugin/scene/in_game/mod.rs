@@ -247,6 +247,7 @@ mod tile {
                 y: f32,
                 size: Vec2,
                 image: Handle<Image>,
+                shading: Option<Color>,
             ) -> impl Bundle {
                 (
                     Transform {
@@ -255,6 +256,7 @@ mod tile {
                     },
                     Sprite {
                         custom_size: Some(size),
+                        color: shading.unwrap_or_default(),
                         ..Sprite::from_image(image)
                     },
                 )
@@ -270,7 +272,7 @@ mod tile {
                     };
                     entity_commands.with_child((
                         common,
-                        children![template(0.0, 0.0, large.clone(), image.clone()),],
+                        children![template(0.0, 0.0, large.clone(), image.clone(), None),],
                     ));
                 },
                 3 | 4 | 5 => {
@@ -287,13 +289,15 @@ mod tile {
                                 -max_size.x / 6.0,
                                 max_size.y / 6.0,
                                 medium.clone(),
-                                image.clone()
+                                image.clone(),
+                                None,
                             ),
                             template(
                                 max_size.x / 6.0,
                                 -max_size.y / 6.0,
                                 medium.clone(),
-                                image.clone()
+                                image.clone(),
+                                None,
                             ),
                         ],
                     ));
@@ -312,19 +316,16 @@ mod tile {
                                 -max_size.x / 4.0,
                                 max_size.y / 4.0,
                                 small.clone(),
-                                image.clone()
+                                image.clone(),
+                                None,
                             ),
-                            template(
-                                0.0,
-                                0.0,
-                                small.clone(),
-                                image.clone()
-                            ),
+                            template(0.0, 0.0, small.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 4.0,
                                 -max_size.y / 4.0,
                                 small.clone(),
-                                image.clone()
+                                image.clone(),
+                                None,
                             ),
                         ],
                     ));
