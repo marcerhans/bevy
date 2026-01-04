@@ -229,7 +229,7 @@ mod tile {
             const MAX_VARIANTS_HALF: u32 = MAX_VARIANTS / 2;
             const TVR: u32 = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32;
             let index = variant / TVR;
-            let large = max_size;
+            let large = max_size * 0.8;
             let medium = large * 0.5;
             let small = large * 0.25;
 
@@ -255,6 +255,41 @@ mod tile {
                                 custom_size: Some(large.clone()),
                                 ..Sprite::from_image(blades.clone())
                             },
+                        ],
+                    ));
+                },
+                1 => {
+                    entity_commands.with_child((
+                        common,
+                        children![
+                            (
+                                Transform {
+                                    translation: Vec3 {
+                                        x: -max_size.x / 4.0,
+                                        y: max_size.x / 4.0,
+                                        ..default()
+                                    },
+                                    ..default()
+                                },
+                                Sprite {
+                                    custom_size: Some(large.clone()),
+                                    ..Sprite::from_image(blades.clone())
+                                },
+                            ),
+                            (
+                                Transform {
+                                    translation: Vec3 {
+                                        x: max_size.x / 4.0,
+                                        y: -max_size.x / 4.0,
+                                        ..default()
+                                    },
+                                    ..default()
+                                },
+                                Sprite {
+                                    custom_size: Some(large.clone()),
+                                    ..Sprite::from_image(blades.clone())
+                                },
+                            ),
                         ],
                     ));
                 },
