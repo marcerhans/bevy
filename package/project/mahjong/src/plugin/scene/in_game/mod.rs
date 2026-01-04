@@ -55,7 +55,7 @@ mod tile {
 
     pub mod asset {
         pub mod texture {
-            pub const BORDER: &'static str = "misc/rev2/original/Tile4_fixed.png";
+            pub const BORDER: &'static str = "misc/rev2/Tile.png";
             pub const ALLIANCE: &'static str = "misc/rev2/Alliance.png";
             pub const HORDE: &'static str = "misc/rev2/Horde.png";
             pub const ALLIANCE_BUTTON: &'static str = "misc/rev2/original/alliance_button.png";
