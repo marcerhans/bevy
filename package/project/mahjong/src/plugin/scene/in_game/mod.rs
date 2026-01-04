@@ -233,7 +233,8 @@ mod tile {
             let index = variant / TVR;
             let large = max_size * 0.8;
             let medium = large * 0.5;
-            let small = large * 0.25;
+            let small = large * 0.40;
+            let small2 = large * 0.25;
 
             let alliance: Handle<Image> = asset_server.load(asset::texture::ALLIANCE);
             let horde: Handle<Image> = asset_server.load(asset::texture::HORDE);
@@ -311,24 +312,24 @@ mod tile {
                     let (image, size) = match index {
                         8 => (alliance, small),
                         9 => (horde, small),
-                        10 => (blades, small),
-                        11 => (hs, small),
+                        10 => (blades, medium),
+                        11 => (hs, medium),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
                         common,
                         children![
                             template(
-                                -max_size.x / 4.0,
-                                max_size.y / 4.0,
+                                -max_size.x / 5.0,
+                                max_size.y / 5.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(0.0, 0.0, size.clone(), image.clone(), None,),
                             template(
-                                max_size.x / 4.0,
-                                -max_size.y / 4.0,
+                                max_size.x / 5.0,
+                                -max_size.y / 5.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -338,8 +339,8 @@ mod tile {
                 },
                 12 | 13 | 14 | 15 => {
                     let (image, size) = match index {
-                        12 => (alliance, small),
-                        13 => (horde, small),
+                        12 => (alliance, small2),
+                        13 => (horde, small2),
                         14 => (blades, small),
                         15 => (hs, small),
                         _ => unreachable!(),
@@ -348,29 +349,29 @@ mod tile {
                         common,
                         children![
                             template(
-                                -max_size.x / 6.0,
-                                -max_size.y / 6.0,
+                                -max_size.x / 7.0,
+                                -max_size.y / 7.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(
-                                -max_size.x / 6.0,
-                                max_size.y / 6.0,
+                                -max_size.x / 7.0,
+                                max_size.y / 7.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(
-                                max_size.x / 6.0,
-                                -max_size.y / 6.0,
+                                max_size.x / 7.0,
+                                -max_size.y / 7.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(
-                                max_size.x / 6.0,
-                                max_size.y / 6.0,
+                                max_size.x / 7.0,
+                                max_size.y / 7.0,
                                 size.clone(),
                                 image.clone(),
                                 None,

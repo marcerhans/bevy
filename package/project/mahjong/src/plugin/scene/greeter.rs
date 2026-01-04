@@ -71,9 +71,9 @@ fn on_update(
 ) {
     timer.inner.tick(time.delta());
 
-    if timer.inner.just_finished() {
+    // if timer.inner.just_finished() {
         next_state.set(Startup::MainMenu);
-    }
+    // }
 
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
