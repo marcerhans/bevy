@@ -1006,6 +1006,7 @@ pub fn spawn_tiles(
     for (variant, pos) in position_generator.enumerate() {
         let index = variant; // TODO: Have to enumerate them!!!
         let layer = pos.z;
+        let order_offset_factor = Vec3::default().with_z(0.1);
         let layer_offset_factor = Vec3::default().with_z(10.0);
 
         let variant = variant as u32;
@@ -1021,8 +1022,8 @@ pub fn spawn_tiles(
                     translation: (((pos.as_vec3() / tile_grid_size as f32)
                         * tile_size.extend(1.0))
                         + tile_pos_offset)
-                        - (0.1 * index as f32)
-                        + layer_offset_factor * layer as f32,
+                        - (order_offset_factor * index as f32)
+                        + (layer_offset_factor * layer as f32),
                     ..default()
                 },
             ),
