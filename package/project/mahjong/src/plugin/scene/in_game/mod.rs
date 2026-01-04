@@ -292,15 +292,15 @@ mod tile {
                         common,
                         children![
                             template(
-                                -max_size.x / 6.0,
-                                max_size.y / 6.0,
+                                -max_size.x / 8.0,
+                                max_size.y / 8.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(
-                                max_size.x / 6.0,
-                                -max_size.y / 6.0,
+                                max_size.x / 8.0,
+                                -max_size.y / 8.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -381,10 +381,10 @@ mod tile {
                 },
                 16 | 17 | 18 | 19 => {
                     let (image, color, size) = match index {
-                        16 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
+                        16 => (alliance, Color::hsl(0.0, 0.0, 1.0), small),
                         17 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
                         18 => (blades, Color::BLACK, small),
-                        19 => (blades, Color::BLACK, small),
+                        19 => (hs, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -427,7 +427,7 @@ mod tile {
                         20 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
                         21 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
                         22 => (blades, Color::BLACK, small),
-                        23 => (blades, Color::BLACK, small),
+                        23 => (hs, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -471,7 +471,7 @@ mod tile {
                         24 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
                         25 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
                         26 => (blades, Color::BLACK, small),
-                        27 => (blades, Color::BLACK, small),
+                        27 => (hs, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -510,7 +510,7 @@ mod tile {
                         28 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
                         29 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
                         30 => (blades, Color::BLACK, small),
-                        31 => (blades, Color::BLACK, small),
+                        31 => (hs, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
