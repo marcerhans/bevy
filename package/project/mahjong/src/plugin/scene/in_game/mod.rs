@@ -65,7 +65,7 @@ mod tile {
             pub const TILE_HEIGHT: u32 = 1238;
             pub const TILE_NO_BORDER_WIDTH: u32 = 872;
             pub const TILE_NO_BORDER_HEIGHT: u32 = 1149;
-            pub const TILE_BORDER_LENGTH: u32 = 110;
+            pub const TILE_BORDER_LENGTH: u32 = 90;
         }
     }
 
@@ -994,13 +994,13 @@ pub fn spawn_tiles(
         (tile_size.y / tile::asset::texture::TILE_NO_BORDER_HEIGHT as f32)
             * tile::asset::texture::TILE_HEIGHT as f32,
     );
-    let tile_size_ratio = tile_size / tile_size_full;
+    let tile_size_ratio = tile_size.y / tile::asset::texture::TILE_NO_BORDER_HEIGHT as f32;
     let tile_border_length_scaled =
-        tile::asset::texture::TILE_BORDER_LENGTH as f32 / tile_size_ratio;
+        tile::asset::texture::TILE_BORDER_LENGTH as f32 * tile_size_ratio;
     let tile_pos_offset = Vec3::new(
         -(tile_size.x * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32 / 2.0)
             + tile_size.x * 1.0,
-        -projection.area.height() / 2.0 + tile_size.y * 0.5,
+        -projection.area.height() / 2.0 + tile_size_full.y * 0.5 - tile_border_length_scaled,
         0.0,
     );
 
