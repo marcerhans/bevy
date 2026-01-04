@@ -242,53 +242,46 @@ mod tile {
                 Visibility::Inherited,
             );
 
+            fn template(
+                x: f32,
+                y: f32,
+                size: Vec2,
+                image: Handle<Image>,
+            ) -> impl Bundle {
+                (
+                    Transform {
+                        translation: Vec3 { x, y, ..default() },
+                        ..default()
+                    },
+                    Sprite {
+                        custom_size: Some(size),
+                        ..Sprite::from_image(image)
+                    },
+                )
+            }
+
             match index {
                 0 => {
                     entity_commands.with_child((
                         common,
-                        children![
-                            Transform {
-                                translation: Vec3 { ..default() },
-                                ..default()
-                            },
-                            Sprite {
-                                custom_size: Some(large.clone()),
-                                ..Sprite::from_image(blades.clone())
-                            },
-                        ],
+                        children![template(0.0, 0.0, large.clone(), blades.clone()),],
                     ));
                 },
                 1 => {
                     entity_commands.with_child((
                         common,
                         children![
-                            (
-                                Transform {
-                                    translation: Vec3 {
-                                        x: -max_size.x / 4.0,
-                                        y: max_size.x / 4.0,
-                                        ..default()
-                                    },
-                                    ..default()
-                                },
-                                Sprite {
-                                    custom_size: Some(large.clone()),
-                                    ..Sprite::from_image(blades.clone())
-                                },
+                            template(
+                                -max_size.x / 2.0,
+                                max_size.y / 2.0,
+                                medium.clone(),
+                                blades.clone()
                             ),
-                            (
-                                Transform {
-                                    translation: Vec3 {
-                                        x: max_size.x / 4.0,
-                                        y: -max_size.x / 4.0,
-                                        ..default()
-                                    },
-                                    ..default()
-                                },
-                                Sprite {
-                                    custom_size: Some(large.clone()),
-                                    ..Sprite::from_image(blades.clone())
-                                },
+                            template(
+                                max_size.x / 2.0,
+                                -max_size.y / 2.0,
+                                medium.clone(),
+                                blades.clone()
                             ),
                         ],
                     ));
