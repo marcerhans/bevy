@@ -371,6 +371,48 @@ mod tile {
                         ],
                     ));
                 },
+                12 | 13 | 14 => {
+                    let (image, color) = match index {
+                        12 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
+                        13 => (horde, Color::hsl(240.0, 1.0, 0.5)),
+                        14 => (blades, Color::BLACK),
+                        _ => unreachable!(),
+                    };
+                    entity_commands.with_child((
+                        common,
+                        children![
+                            template(
+                                -max_size.x / 5.0,
+                                -max_size.y / 5.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                -max_size.x / 5.0,
+                                max_size.y / 5.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(0.0, 0.0, small.clone(), image.clone(), Some(color),),
+                            template(
+                                max_size.x / 5.0,
+                                -max_size.y / 5.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(
+                                max_size.x / 5.0,
+                                max_size.y / 5.0,
+                                small.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                        ],
+                    ));
+                },
                 //     1 => {
                 //         size = &medium;
                 //         positions.append(&mut vec![
