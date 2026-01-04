@@ -982,8 +982,7 @@ pub fn spawn_tiles(
 
     let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::BORDER);
     let tile_size = Vec2::new(
-        (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32)
-            * (1.0 / 1.5),
+        (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.7,
         projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
     );
     let tile_pos_offset = Vec3::new(
@@ -1003,6 +1002,12 @@ pub fn spawn_tiles(
     );
     let tile_size_ratio = tile_size_full / tile_size;
 
+    info!("tile_size: {:?}", tile_size);
+    info!(
+        "tile_size_ratio * tile_size_full: {:?}",
+        tile_size_ratio * tile_size_full
+    );
+
     for (variant, pos) in position_generator.enumerate() {
         let index = variant; // TODO: Have to enumerate them!!!
         let layer = pos.z;
@@ -1018,6 +1023,10 @@ pub fn spawn_tiles(
                     position: pos,
                     variant: tile::Variant(variant),
                 },
+                Sprite {
+                    custom_size: Some(tile_size),
+                    ..Sprite::from_image(tile_texture.clone())
+                },
                 Transform {
                     translation: (((pos.as_vec3() / tile_grid_size as f32)
                         * tile_size.extend(1.0))
@@ -1030,10 +1039,10 @@ pub fn spawn_tiles(
         );
         entity_commands
             .with_child((
-                Sprite {
-                    custom_size: Some(tile_size_full),
-                    ..Sprite::from_image(tile_texture.clone())
-                },
+                // Sprite {
+                //     custom_size: Some(tile_size_full),
+                //     ..Sprite::from_image(tile_texture.clone())
+                // },
                 Transform {
                     translation: Vec3 {
                         x: -tile_size_ratio.x / tile::asset::texture::TILE_WIDTH as f32,
