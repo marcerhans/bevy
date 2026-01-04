@@ -280,11 +280,11 @@ mod tile {
                     ));
                 },
                 4 | 5 | 6 | 7 => {
-                    let image = match index {
-                        4 => alliance,
-                        5 => horde,
-                        6 => blades,
-                        7 => hs,
+                    let (image, size) = match index {
+                        4 => (alliance, medium),
+                        5 => (horde, medium),
+                        6 => (blades, medium),
+                        7 => (hs, medium),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -293,14 +293,14 @@ mod tile {
                             template(
                                 -max_size.x / 6.0,
                                 max_size.y / 6.0,
-                                medium.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(
                                 max_size.x / 6.0,
                                 -max_size.y / 6.0,
-                                medium.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
@@ -308,11 +308,11 @@ mod tile {
                     ));
                 },
                 8 | 9 | 10 | 11 => {
-                    let image = match index {
-                        8 => alliance,
-                        9 => horde,
-                        10 => blades,
-                        11 => hs,
+                    let (image, size) = match index {
+                        8 => (alliance, medium),
+                        9 => (horde, medium),
+                        10 => (blades, medium),
+                        11 => (hs, medium),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -321,15 +321,15 @@ mod tile {
                             template(
                                 -max_size.x / 4.0,
                                 max_size.y / 4.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, 0.0, small.clone(), image.clone(), None,),
+                            template(0.0, 0.0, size.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 4.0,
                                 -max_size.y / 4.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
@@ -337,11 +337,11 @@ mod tile {
                     ));
                 },
                 12 | 13 | 14 | 15 => {
-                    let image = match index {
-                        12 => alliance,
-                        13 => horde,
-                        14 => blades,
-                        15 => hs,
+                    let (image, size) = match index {
+                        12 => (alliance, medium),
+                        13 => (horde, medium),
+                        14 => (blades, medium),
+                        15 => (hs, medium),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -350,28 +350,28 @@ mod tile {
                             template(
                                 -max_size.x / 6.0,
                                 -max_size.y / 6.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(
                                 -max_size.x / 6.0,
                                 max_size.y / 6.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(
                                 max_size.x / 6.0,
                                 -max_size.y / 6.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(
                                 max_size.x / 6.0,
                                 max_size.y / 6.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
@@ -379,11 +379,11 @@ mod tile {
                     ));
                 },
                 16 | 17 | 18 | 19 => {
-                    let (image, color) = match index {
-                        16 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
-                        17 => (horde, Color::hsl(240.0, 1.0, 0.5)),
-                        18 => (blades, Color::BLACK),
-                        19 => (blades, Color::BLACK),
+                    let (image, color, size) = match index {
+                        16 => (alliance, Color::hsl(0.0, 1.0, 0.5), medium),
+                        17 => (horde, Color::hsl(240.0, 1.0, 0.5), medium),
+                        18 => (blades, Color::BLACK, medium),
+                        19 => (blades, Color::BLACK, medium),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -392,29 +392,29 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(
                                 -max_size.x / 5.0,
                                 max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, 0.0, medium.clone(), image.clone(), Some(color),),
+                            template(0.0, 0.0, size.clone(), image.clone(), Some(color),),
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(
                                 max_size.x / 5.0,
                                 max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
@@ -422,11 +422,11 @@ mod tile {
                     ));
                 },
                 20 | 21 | 22 | 23 => {
-                    let (image, color) = match index {
-                        20 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
-                        21 => (horde, Color::hsl(240.0, 1.0, 0.5)),
-                        22 => (blades, Color::BLACK),
-                        23 => (blades, Color::BLACK),
+                    let (image, color, size) = match index {
+                        20 => (alliance, Color::hsl(0.0, 1.0, 0.5), medium),
+                        21 => (horde, Color::hsl(240.0, 1.0, 0.5), medium),
+                        22 => (blades, Color::BLACK, medium),
+                        23 => (blades, Color::BLACK, medium),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -435,30 +435,30 @@ mod tile {
                             template(
                                 -max_size.x / 6.0,
                                 -max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(-max_size.x / 6.0, 0.0, small.clone(), image.clone(), None,),
+                            template(-max_size.x / 6.0, 0.0, size.clone(), image.clone(), None,),
                             template(
                                 -max_size.x / 6.0,
                                 max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(
                                 max_size.x / 6.0,
                                 -max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(max_size.x / 6.0, 0.0, small.clone(), image.clone(), None,),
+                            template(max_size.x / 6.0, 0.0, size.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 6.0,
                                 max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
@@ -466,11 +466,11 @@ mod tile {
                     ));
                 },
                 24 | 25 | 26 | 27 => {
-                    let (image, color) = match index {
-                        24 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
-                        25 => (horde, Color::hsl(240.0, 1.0, 0.5)),
-                        26 => (blades, Color::BLACK),
-                        27 => (blades, Color::BLACK),
+                    let (image, color, size) = match index {
+                        24 => (alliance, Color::hsl(0.0, 1.0, 0.5), medium),
+                        25 => (horde, Color::hsl(240.0, 1.0, 0.5), medium),
+                        26 => (blades, Color::BLACK, medium),
+                        27 => (blades, Color::BLACK, medium),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -479,25 +479,25 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, -max_size.y / 5.0, small.clone(), image.clone(), None,),
+                            template(0.0, -max_size.y / 5.0, size.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(-max_size.x / 5.0, 0.0, small.clone(), image.clone(), None,),
-                            template(0.0, 0.0, small.clone(), image.clone(), None,),
-                            template(max_size.x / 5.0, 0.0, small.clone(), image.clone(), None,),
+                            template(-max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
+                            template(0.0, 0.0, size.clone(), image.clone(), None,),
+                            template(max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
                             template(
                                 0.0,
                                 max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 Some(color),
                             ),
@@ -505,11 +505,11 @@ mod tile {
                     ));
                 },
                 28 | 29 | 30 | 31 => {
-                    let (image, color) = match index {
-                        28 => (alliance, Color::hsl(0.0, 1.0, 0.5)),
-                        29 => (horde, Color::hsl(240.0, 1.0, 0.5)),
-                        30 => (blades, Color::BLACK),
-                        31 => (blades, Color::BLACK),
+                    let (image, color, size) = match index {
+                        28 => (alliance, Color::hsl(0.0, 1.0, 0.5), medium),
+                        29 => (horde, Color::hsl(240.0, 1.0, 0.5), medium),
+                        30 => (blades, Color::BLACK, medium),
+                        31 => (blades, Color::BLACK, medium),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -518,32 +518,32 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, max_size.y / 5.0, small.clone(), image.clone(), None,),
+                            template(0.0, max_size.y / 5.0, size.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 5.0,
                                 max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(-max_size.x / 5.0, 0.0, small.clone(), image.clone(), None,),
-                            template(0.0, 0.0, small.clone(), image.clone(), None,),
-                            template(max_size.x / 5.0, 0.0, small.clone(), image.clone(), None,),
+                            template(-max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
+                            template(0.0, 0.0, size.clone(), image.clone(), None,),
+                            template(max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
                             template(
                                 -max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 Some(color),
                             ),
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                small.clone(),
+                                size.clone(),
                                 image.clone(),
                                 Some(color),
                             ),
