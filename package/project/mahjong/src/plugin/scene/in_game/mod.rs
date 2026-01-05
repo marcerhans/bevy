@@ -932,14 +932,15 @@ pub fn tile_pressed(
 
     selected_sprite.color = Color::default();
 
-    // if *pressed_variant != *selected_variant || valid_removal() {
-    //     let (_, _, _, mut pressed_sprite) = tiles.get_mut(pressed_entity).unwrap();
-    //     pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
-    //     selected_tile.0 = Some(pressed_entity);
-    //     return;
-    // }
+    if *pressed_variant != *selected_variant || valid_removal() == false {
+        let (_, _, _, mut pressed_sprite) = tiles.get_mut(pressed_entity).unwrap();
+        pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
+        selected_tile.0 = Some(pressed_entity);
+        return;
+    }
 
     commands.entity(pressed_entity).despawn();
+    commands.entity(selected_entity).despawn();
 
     // let Some(selected_entity) = selected_tile.0.take() else {
     //     selected_tile.0 = Some(pressed_entity);
