@@ -241,8 +241,8 @@ mod tile {
             let index = variant / TVR;
             let large = max_size * 0.8;
             let medium = large * 0.5;
+            let medium2 = large * 0.7;
             let small = large * 0.40;
-            let small2 = large * 0.25;
 
             let alliance: Handle<Image> = asset_server.load(asset::texture::ALLIANCE);
             let horde: Handle<Image> = asset_server.load(asset::texture::HORDE);
@@ -289,25 +289,26 @@ mod tile {
                     ));
                 },
                 4 | 5 | 6 | 7 => {
-                    let (image, size) = match index {
-                        4 => (alliance, medium),
-                        5 => (horde, medium),
-                        6 => (frostmourne, medium),
-                        7 => (ashbringer, medium),
+                    let (image, size, inverted) = match index {
+                        4 => (alliance, medium, 1.0),
+                        5 => (horde, medium, 1.0),
+                        6 => (frostmourne, medium2, 1.0),
+                        7 => (ashbringer, medium2, -1.0),
                         _ => unreachable!(),
                     };
+
                     entity_commands.with_child((
                         common,
                         children![
                             template(
-                                -max_size.x / 8.0,
+                                -max_size.x / 8.0 * inverted,
                                 max_size.y / 8.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
                             template(
-                                max_size.x / 8.0,
+                                max_size.x / 8.0 * inverted,
                                 -max_size.y / 8.0,
                                 size.clone(),
                                 image.clone(),
@@ -317,18 +318,18 @@ mod tile {
                     ));
                 },
                 8 | 9 | 10 | 11 => {
-                    let (image, size) = match index {
-                        8 => (alliance, small),
-                        9 => (horde, small),
-                        10 => (frostmourne, medium),
-                        11 => (ashbringer, medium),
+                    let (image, size, inverted) = match index {
+                        8 => (alliance, small, 1.0),
+                        9 => (horde, small, 1.0),
+                        10 => (frostmourne, medium, 1.0),
+                        11 => (ashbringer, medium, -1.0),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
                         common,
                         children![
                             template(
-                                -max_size.x / 5.0,
+                                -max_size.x / 5.0 * inverted,
                                 max_size.y / 5.0,
                                 size.clone(),
                                 image.clone(),
@@ -336,7 +337,7 @@ mod tile {
                             ),
                             template(0.0, 0.0, size.clone(), image.clone(), None,),
                             template(
-                                max_size.x / 5.0,
+                                max_size.x / 5.0 * inverted,
                                 -max_size.y / 5.0,
                                 size.clone(),
                                 image.clone(),
@@ -347,10 +348,10 @@ mod tile {
                 },
                 12 | 13 | 14 | 15 => {
                     let (image, size) = match index {
-                        12 => (alliance, small2),
-                        13 => (horde, small2),
-                        14 => (frostmourne, small),
-                        15 => (ashbringer, small),
+                        12 => (alliance, small),
+                        13 => (horde, small),
+                        14 => (frostmourne, medium),
+                        15 => (ashbringer, medium),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -593,7 +594,7 @@ mod tile {
                                 -max_size.y / 5.0,
                                 size.clone(),
                                 image.clone(),
-                                Some(color),
+                                None,
                             ),
                             template(0.0, -max_size.y / 5.0, size.clone(), image.clone(), None,),
                             template(
@@ -601,7 +602,7 @@ mod tile {
                                 -max_size.y / 5.0,
                                 size.clone(),
                                 image.clone(),
-                                Some(color),
+                                None,
                             ),
                         ],
                     ));
@@ -819,12 +820,14 @@ pub fn tile_pressed(
 
     selected_sprite.color = Color::default();
 
-    if *pressed_variant != *selected_variant || valid_removal() {
-        let (_, _, _, mut pressed_sprite) = tiles.get_mut(pressed_entity).unwrap();
-        pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
-        selected_tile.0 = Some(pressed_entity);
-        return;
-    }
+    // if *pressed_variant != *selected_variant || valid_removal() {
+    //     let (_, _, _, mut pressed_sprite) = tiles.get_mut(pressed_entity).unwrap();
+    //     pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
+    //     selected_tile.0 = Some(pressed_entity);
+    //     return;
+    // }
+
+    commands.entity(pressed_entity).despawn();
 
     // let Some(selected_entity) = selected_tile.0.take() else {
     //     selected_tile.0 = Some(pressed_entity);
