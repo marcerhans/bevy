@@ -1004,91 +1004,67 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    for i in 0..8 {
-        commands.spawn((
-            Sprite {
-                custom_size: Some(tile_size_full),
-                ..Sprite::from_image(tile_texture.clone())
-            },
-            Transform {
-                translation: Vec3 {
-                    y: i as f32 * tile_size.y + tile_pos_offset.y,
+    for (variant, pos) in position_generator.enumerate() {
+        let index = variant; // TODO: Have to enumerate them!!!
+        let order_depth_offset_factor = Vec3::default().with_z(0.1);
+        let layer_depth_offset_factor = Vec3::default().with_z(10.0);
+        let layer_offset_factor = Vec3 {
+            x: tile_border_length_scaled,
+            y: tile_border_length_scaled,
+            ..default()
+        };
+        let variant = variant as u32;
+
+        let mut entity_commands = spawn(
+            &mut commands,
+            (
+                tile::Tile {
+                    marker: tile::Marker::<0>,
+                    position: pos,
+                    variant: tile::Variant(variant),
+                },
+                Sprite {
+                    custom_size: Some(tile_size_full),
+                    ..Sprite::from_image(tile_texture.clone())
+                },
+                Transform {
+                    translation: (((pos.as_vec3() / tile_grid_size as f32)
+                        * tile_size.extend(1.0))
+                        + tile_pos_offset)
+                        + (layer_offset_factor * pos.z as f32)
+                        - (order_depth_offset_factor * index as f32)
+                        + (layer_depth_offset_factor * pos.z as f32),
                     ..default()
                 },
-                ..default()
-            },
-        ));
+            ),
+        );
+        entity_commands
+            // .with_child((
+            // Sprite {
+            //     custom_size: Some(tile_size_full),
+            //     ..Sprite::from_image(tile_texture.clone())
+            // },
+            //     Transform {
+            //         translation: Vec3 {
+            //             x: -tile_size_ratio.x / tile::asset::texture::TILE_WIDTH as f32,
+            //             y: -tile_size_ratio.y / tile::asset::texture::TILE_HEIGHT as f32,
+            //             ..default()
+            //         },
+            //         ..default()
+            //     },
+            // ))
+            .observe(tile_pressed);
+        // tile::Variant::insert_sprite_as_child(
+        //     &asset_server,
+        //     &mut entity_commands,
+        //     variant,
+        //     &tile_size,
+        // );
+
+        if variant > 95 {
+            break;
+        }
     }
-
-    // commands.spawn(
-    //     Sprite {
-    //         ..Sprite::from_color(Color::WHITE, tile_border_length_scaled)
-    //     }
-    // );
-
-    return;
-    // info!("tile_size: {:?}", tile_size);
-    // info!(
-    //     "tile_size_ratio * tile_size_full: {:?}",
-    //     tile_size_ratio * tile_size_full
-    // );
-
-    // for (variant, pos) in position_generator.enumerate() {
-    //     let index = variant; // TODO: Have to enumerate them!!!
-    //     let layer = pos.z;
-    //     let order_offset_factor = Vec3::default().with_z(0.1);
-    //     let layer_offset_factor = Vec3::default().with_z(10.0);
-
-    //     let variant = variant as u32;
-    //     let mut entity_commands = spawn(
-    //         &mut commands,
-    //         (
-    //             tile::Tile {
-    //                 marker: tile::Marker::<0>,
-    //                 position: pos,
-    //                 variant: tile::Variant(variant),
-    //             },
-    //             Sprite {
-    //                 custom_size: Some(tile_size),
-    //                 ..Sprite::from_image(tile_texture.clone())
-    //             },
-    //             Transform {
-    //                 translation: (((pos.as_vec3() / tile_grid_size as f32)
-    //                     * tile_size.extend(1.0))
-    //                     + tile_pos_offset)
-    //                     - (order_offset_factor * index as f32)
-    //                     + (layer_offset_factor * layer as f32),
-    //                 ..default()
-    //             },
-    //         ),
-    //     );
-    //     entity_commands
-    //         // .with_child((
-    //         // Sprite {
-    //         //     custom_size: Some(tile_size_full),
-    //         //     ..Sprite::from_image(tile_texture.clone())
-    //         // },
-    //         //     Transform {
-    //         //         translation: Vec3 {
-    //         //             x: -tile_size_ratio.x / tile::asset::texture::TILE_WIDTH as f32,
-    //         //             y: -tile_size_ratio.y / tile::asset::texture::TILE_HEIGHT as f32,
-    //         //             ..default()
-    //         //         },
-    //         //         ..default()
-    //         //     },
-    //         // ))
-    //         .observe(tile_pressed);
-    //     // tile::Variant::insert_sprite_as_child(
-    //     //     &asset_server,
-    //     //     &mut entity_commands,
-    //     //     variant,
-    //     //     &tile_size,
-    //     // );
-
-    //     if variant > 95 {
-    //         break;
-    //     }
-    // }
 }
 
 pub fn tile_pressed(
