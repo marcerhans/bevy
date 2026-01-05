@@ -845,7 +845,7 @@ pub fn spawn_tiles(
 
     let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::TILE);
     let tile_size = Vec2::new(
-        (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.7,
+        (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.8,
         projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
     );
     let tile_grid_size = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
@@ -911,6 +911,7 @@ pub fn spawn_tiles(
                 },
                 Sprite {
                     custom_size: Some(tile_size_full),
+                    color: Color::hsl(0.0, 0.0, 1.25),
                     ..Sprite::from_image(tile_texture.clone())
                 },
                 Transform {
@@ -934,7 +935,7 @@ pub fn spawn_tiles(
             entity_commands.with_child((
                 Sprite {
                     custom_size: Some(tile_size_full),
-                    color: Color::hsla(0.0, 0.0, 0.0, 0.5),
+                    color: Color::hsla(0.0, 0.0, 0.0, 0.75),
                     ..Sprite::from_image(tile_texture.clone())
                 },
                 Transform {
