@@ -1093,7 +1093,7 @@ pub fn spawn_buttons(
         spawn(
             &mut commands,
             (
-                button::Marker::Undo,
+                button.marker,
                 Sprite {
                     custom_size: Some(button_size),
                     ..Sprite::from_atlas_image(
