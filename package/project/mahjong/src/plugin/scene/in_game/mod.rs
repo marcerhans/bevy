@@ -218,6 +218,7 @@ mod tile {
     #[derive(Component, Deref, DerefMut, Clone, Copy, Eq)]
     pub struct Variant(pub u32);
 
+    /// TODO: This is a bit hacky...
     impl PartialEq for Variant {
         fn eq(
             &self,
@@ -1120,6 +1121,12 @@ pub fn tile_pressed(
         selected_tile.0 = Some(pressed_entity);
         return;
     };
+
+    if selected_entity == pressed_entity {
+        let (_, _, _, mut pressed_sprite) = tiles.get_mut(pressed_entity).unwrap();
+        pressed_sprite.color = Color::default();
+        return;
+    }
 
     let [
         (pressed_entity, pressed_variant, pressed_position, mut pressed_sprite),
