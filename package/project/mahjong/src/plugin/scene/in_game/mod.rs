@@ -113,7 +113,7 @@ mod tile {
     #[derive(Component)]
     pub struct Marker<const DEPTH: u32>;
 
-    #[derive(Component, Deref, DerefMut, Clone, Copy)]
+    #[derive(Component, Deref, DerefMut, Clone, Copy, Debug)]
     pub struct Position(UVec3);
 
     pub struct Turtle;
@@ -1114,7 +1114,7 @@ pub fn valid_removal(
         const TGS: u32 = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
         const LIMIT: usize = 2;
 
-        let f = tiles
+        tiles
             .iter()
             .filter(
                 |(entity_other, _variant, position_other, _sprite, _visibility)| {
@@ -1124,18 +1124,18 @@ pub fn valid_removal(
                         && position.y <= position_other.y + TGS;
                     let blocked_on_both_sides =
                         position.x == position_other.x + 1 || position.x + 1 == position_other.x;
-                    not_self && same_layer && overlapping_row && blocked_on_both_sides
+                    let a = not_self && same_layer && overlapping_row && blocked_on_both_sides
+
+                    if a {
+                        info!("{position:?} and {position_other:?}")
+                    }
+
+                    a
                 },
             )
             .take(LIMIT)
             .count()
-            < LIMIT;
-
-        if !f {
-            info!("{:?} is not free horizontally!", **position)
-        }
-
-        f
+            < LIMIT
     }
 
     fn free_above(
@@ -1155,7 +1155,7 @@ pub fn valid_removal(
         const TGS: u32 = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
         const LIMIT: usize = 1;
 
-        let f = tiles
+        tiles
             .iter()
             .filter(
                 |(entity_other, _variant, position_other, _sprite, _visibility)| {
@@ -1165,18 +1165,18 @@ pub fn valid_removal(
                         && position.y <= position_other.y + TGS;
                     let overlapping_column = position.x + TGS >= position_other.x
                         && position.x <= position_other.x + TGS;
-                    not_self && on_above_layer && overlapping_row && overlapping_column
+                    let a = not_self && on_above_layer && overlapping_row && overlapping_column;
+
+                    if a {
+                        info!("{position:?} and {position_other:?}")
+                    }
+
+                    a
                 },
             )
             .take(LIMIT)
             .count()
-            < LIMIT;
-
-        if !f {
-            info!("{:?} is not free above!", **position)
-        }
-
-        f
+            < LIMIT
     }
 
     matching_variants(
