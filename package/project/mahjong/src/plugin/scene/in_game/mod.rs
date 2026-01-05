@@ -1022,14 +1022,15 @@ pub fn tile_pressed(
         ),
     ] = tiles.get_many([pressed_entity, selected_entity]).unwrap();
 
-    if *pressed_variant != *selected_variant
-        || valid_removal(
-            pressed_variant,
-            selected_variant,
-            pressed_position,
-            selected_position,
-            &tiles,
-        ) == false
+    if valid_removal(
+        pressed_entity,
+        selected_entity,
+        pressed_variant,
+        selected_variant,
+        pressed_position,
+        selected_position,
+        &tiles,
+    ) == false
     {
         let (_, _, _, mut pressed_sprite, _) = tiles.get_mut(pressed_entity).unwrap();
         pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
@@ -1064,6 +1065,8 @@ pub fn tile_pressed(
 }
 
 pub fn valid_removal(
+    pressed_entity: Entity,
+    selected_entity: Entity,
     pressed_variant: &tile::Variant,
     selected_variant: &tile::Variant,
     pressed_position: &tile::Position,
@@ -1080,10 +1083,12 @@ pub fn valid_removal(
     >,
 ) -> bool {
     fn matching_variants(
+        pressed_entity: Entity,
+        selected_entity: Entity,
         pressed_variant: &tile::Variant,
         selected_variant: &tile::Variant,
     ) -> bool {
-        let m = pressed_variant == selected_variant;
+        let m = pressed_entity != selected_entity && pressed_variant == selected_variant;
 
         if !m {
             info!("Tiles are not matching!");
@@ -1093,6 +1098,7 @@ pub fn valid_removal(
     }
 
     fn free_horizontally(
+        entity: Entity,
         position: &tile::Position,
         tiles: &Query<
             (
@@ -1111,13 +1117,14 @@ pub fn valid_removal(
         let f = tiles
             .iter()
             .filter(
-                |(_entity, _variant, position_other, _sprite, _visibility)| {
+                |(entity_other, _variant, position_other, _sprite, _visibility)| {
+                    let not_self = entity != *entity_other;
                     let same_layer = position.z == position_other.z;
                     let overlapping_row = position.y + TGS >= position_other.y
                         && position.y <= position_other.y + TGS;
                     let blocked_on_both_sides =
                         position.x == position_other.x + 1 || position.x + 1 == position_other.x;
-                    same_layer && overlapping_row && blocked_on_both_sides
+                    not_self && same_layer && overlapping_row && blocked_on_both_sides
                 },
             )
             .take(LIMIT)
@@ -1132,6 +1139,7 @@ pub fn valid_removal(
     }
 
     fn free_above(
+        entity: Entity,
         position: &tile::Position,
         tiles: &Query<
             (
@@ -1150,13 +1158,14 @@ pub fn valid_removal(
         let f = tiles
             .iter()
             .filter(
-                |(_entity, _variant, position_other, _sprite, _visibility)| {
+                |(entity_other, _variant, position_other, _sprite, _visibility)| {
+                    let not_self = entity != *entity_other;
                     let on_above_layer = position.z < position_other.z;
                     let overlapping_row = position.y + TGS >= position_other.y
                         && position.y <= position_other.y + TGS;
                     let overlapping_column = position.x + TGS >= position_other.x
                         && position.x <= position_other.x + TGS;
-                    on_above_layer && overlapping_row && overlapping_column
+                    not_self && on_above_layer && overlapping_row && overlapping_column
                 },
             )
             .take(LIMIT)
@@ -1170,11 +1179,15 @@ pub fn valid_removal(
         f
     }
 
-    matching_variants(pressed_variant, selected_variant)
-        && free_horizontally(pressed_position, tiles)
-        && free_horizontally(selected_position, tiles)
-        && free_above(pressed_position, tiles)
-        && free_above(selected_position, tiles)
+    matching_variants(
+        pressed_entity,
+        selected_entity,
+        pressed_variant,
+        selected_variant,
+    ) && free_horizontally(pressed_entity, pressed_position, tiles)
+        && free_horizontally(selected_entity, selected_position, tiles)
+        && free_above(pressed_entity, pressed_position, tiles)
+        && free_above(selected_entity, selected_position, tiles)
 }
 
 pub fn spawn_buttons(
