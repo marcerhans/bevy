@@ -988,6 +988,55 @@ pub fn tile_pressed(
         return;
     }
 
+    {
+        let [
+            (
+                pressed_entity,
+                pressed_variant,
+                pressed_position,
+                mut pressed_sprite,
+                mut pressed_visibility,
+            ),
+            (
+                selected_entity,
+                selected_variant,
+                selected_position,
+                mut selected_sprite,
+                mut selected_visibility,
+            ),
+        ] = tiles
+            .get_many_mut([pressed_entity, selected_entity])
+            .unwrap();
+
+        selected_sprite.color = Color::default();
+    }
+
+    let [
+        (pressed_entity, pressed_variant, pressed_position, pressed_sprite, pressed_visibility),
+        (
+            selected_entity,
+            selected_variant,
+            selected_position,
+            selected_sprite,
+            selected_visibility,
+        ),
+    ] = tiles.get_many([pressed_entity, selected_entity]).unwrap();
+
+    if *pressed_variant != *selected_variant
+        || valid_removal(
+            pressed_variant,
+            selected_variant,
+            pressed_position,
+            selected_position,
+            &tiles,
+        ) == false
+    {
+        let (_, _, _, mut pressed_sprite, _) = tiles.get_mut(pressed_entity).unwrap();
+        pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
+        selected_tile.0 = Some(pressed_entity);
+        return;
+    }
+
     let [
         (
             pressed_entity,
@@ -1007,46 +1056,125 @@ pub fn tile_pressed(
         .get_many_mut([pressed_entity, selected_entity])
         .unwrap();
 
-    selected_sprite.color = Color::default();
-
-    if *pressed_variant != *selected_variant || valid_removal() == false {
-        let (_, _, _, mut pressed_sprite, _) = tiles.get_mut(pressed_entity).unwrap();
-        pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
-        selected_tile.0 = Some(pressed_entity);
-        return;
-    }
-
     history.push_front(HistoryItem::ValidPair(pressed_entity, selected_entity));
     commands.entity(pressed_entity).insert(marker::Hidden);
     commands.entity(selected_entity).insert(marker::Hidden);
     *pressed_visibility = Visibility::Hidden;
     *selected_visibility = Visibility::Hidden;
-
-    // let Some(selected_entity) = selected_tile.0.take() else {
-    //     selected_tile.0 = Some(pressed_entity);
-    //     pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
-    //     return;
-    // };
-
-    // let (selected_entity, selected_variant, selected_position, mut selected_sprite) =
-    //     tiles.get_mut(selected_entity).unwrap();
-
-    // // if selected_variant != pressed_variant {
-    //     // selected_sprite.color = Color::hsl(1.0, 1.0, 1.0);
-    //     pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
-    // // }
-    // selected_sprite.color = Color::hsl(1.0, 1.0, 1.0);
-
-    // selected_color =
-
-    // if pressed_entity == selected_entity {
-    //     info!("Tile cannot be matched against itself!");
-    //     return;
-    // }
 }
 
-pub fn valid_removal() -> bool {
-    true
+pub fn valid_removal(
+    pressed_variant: &tile::Variant,
+    selected_variant: &tile::Variant,
+    pressed_position: &tile::Position,
+    selected_position: &tile::Position,
+    tiles: &Query<
+        (
+            Entity,
+            &tile::Variant,
+            &tile::Position,
+            &mut Sprite,
+            &mut Visibility,
+        ),
+        (With<tile::Marker<0>>, Without<marker::Hidden>),
+    >,
+) -> bool {
+    fn matching_variants(
+        pressed_variant: &tile::Variant,
+        selected_variant: &tile::Variant,
+    ) -> bool {
+        let m = pressed_variant == selected_variant;
+
+        if !m {
+            info!("Tiles are not matching!");
+        }
+
+        m
+    }
+
+    fn free_horizontally(
+        position: &tile::Position,
+        tiles: &Query<
+            (
+                Entity,
+                &tile::Variant,
+                &tile::Position,
+                &mut Sprite,
+                &mut Visibility,
+            ),
+            (With<tile::Marker<0>>, Without<marker::Hidden>),
+        >,
+    ) -> bool {
+        const TGS: u32 = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
+        const LIMIT: usize = 2;
+
+        let f = tiles
+            .iter()
+            .filter(
+                |(_entity, _variant, position_other, _sprite, _visibility)| {
+                    let same_layer = position.z == position_other.z;
+                    let overlapping_row = position.y + TGS >= position_other.y
+                        && position.y <= position_other.y + TGS;
+                    let blocked_on_both_sides =
+                        position.x == position_other.x + 1 || position.x + 1 == position_other.x;
+                    same_layer && overlapping_row && blocked_on_both_sides
+                },
+            )
+            .take(LIMIT)
+            .count()
+            < LIMIT;
+
+        if !f {
+            info!("{:?} is not free horizontally!", **position)
+        }
+
+        f
+    }
+
+    fn free_above(
+        position: &tile::Position,
+        tiles: &Query<
+            (
+                Entity,
+                &tile::Variant,
+                &tile::Position,
+                &mut Sprite,
+                &mut Visibility,
+            ),
+            (With<tile::Marker<0>>, Without<marker::Hidden>),
+        >,
+    ) -> bool {
+        const TGS: u32 = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
+        const LIMIT: usize = 1;
+
+        let f = tiles
+            .iter()
+            .filter(
+                |(_entity, _variant, position_other, _sprite, _visibility)| {
+                    let on_above_layer = position.z < position_other.z;
+                    let overlapping_row = position.y + TGS >= position_other.y
+                        && position.y <= position_other.y + TGS;
+                    let overlapping_column = position.x + TGS >= position_other.x
+                        && position.x <= position_other.x + TGS;
+                    on_above_layer && overlapping_row && overlapping_column
+                },
+            )
+            .take(LIMIT)
+            .count()
+            < LIMIT;
+
+        if !f {
+            info!("{:?} is not free above!", **position)
+        }
+
+        f
+    }
+
+    matching_variants(pressed_variant, selected_variant)
+        && free_horizontally(pressed_position, tiles)
+        && free_horizontally(selected_position, tiles)
+        && free_above(pressed_position, tiles)
+        && free_above(selected_position, tiles)
 }
 
 pub fn spawn_buttons(
