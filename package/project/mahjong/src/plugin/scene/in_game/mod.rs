@@ -257,13 +257,14 @@ mod tile {
             fn template(
                 x: f32,
                 y: f32,
+                z: f32,
                 size: Vec2,
                 image: Handle<Image>,
                 shading: Option<Color>,
             ) -> impl Bundle {
                 (
                     Transform {
-                        translation: Vec3 { x, y, ..default() },
+                        translation: Vec3 { x, y, z },
                         ..default()
                     },
                     Sprite {
@@ -285,7 +286,7 @@ mod tile {
                     };
                     entity_commands.with_child((
                         common,
-                        children![template(0.0, 0.0, large.clone(), image.clone(), None),],
+                        children![template(0.0, 0.0, 0.0, large.clone(), image.clone(), None),],
                     ));
                 },
                 4 | 5 | 6 | 7 => {
@@ -303,6 +304,7 @@ mod tile {
                             template(
                                 -max_size.x / 8.0 * inverted,
                                 max_size.y / 8.0,
+                                0.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -310,6 +312,7 @@ mod tile {
                             template(
                                 max_size.x / 8.0 * inverted,
                                 -max_size.y / 8.0,
+                                0.1,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -331,14 +334,16 @@ mod tile {
                             template(
                                 -max_size.x / 5.0 * inverted,
                                 max_size.y / 5.0,
+                                0.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, 0.0, size.clone(), image.clone(), None,),
+                            template(0.0, 0.0, 0.1, size.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 5.0 * inverted,
                                 -max_size.y / 5.0,
+                                0.3,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -360,6 +365,7 @@ mod tile {
                             template(
                                 -max_size.x / 7.0,
                                 -max_size.y / 7.0,
+                                0.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -367,6 +373,7 @@ mod tile {
                             template(
                                 -max_size.x / 7.0,
                                 max_size.y / 7.0,
+                                0.1,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -374,6 +381,7 @@ mod tile {
                             template(
                                 max_size.x / 7.0,
                                 -max_size.y / 7.0,
+                                0.2,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -381,6 +389,7 @@ mod tile {
                             template(
                                 max_size.x / 7.0,
                                 max_size.y / 7.0,
+                                0.3,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -390,8 +399,8 @@ mod tile {
                 },
                 16 | 17 | 18 | 19 => {
                     let (image, color, size) = match index {
-                        16 => (alliance, Color::hsl(0.0, 0.0, 1.0), small),
-                        17 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
+                        16 => (alliance, Color::BLACK, small),
+                        17 => (horde, Color::BLACK, small),
                         18 => (frostmourne, Color::BLACK, small),
                         19 => (ashbringer, Color::BLACK, small),
                         _ => unreachable!(),
@@ -402,6 +411,7 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 -max_size.y / 5.0,
+                                0.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -409,14 +419,16 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 max_size.y / 5.0,
+                                0.1,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, 0.0, size.clone(), image.clone(), Some(color),),
+                            template(0.0, 0.0, 0.2, size.clone(), image.clone(), Some(color),),
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
+                                0.3,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -424,6 +436,7 @@ mod tile {
                             template(
                                 max_size.x / 5.0,
                                 max_size.y / 5.0,
+                                0.4,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -433,8 +446,8 @@ mod tile {
                 },
                 20 | 21 | 22 | 23 => {
                     let (image, color, size) = match index {
-                        20 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
-                        21 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
+                        20 => (alliance, Color::BLACK, small),
+                        21 => (horde, Color::BLACK, small),
                         22 => (frostmourne, Color::BLACK, small),
                         23 => (ashbringer, Color::BLACK, small),
                         _ => unreachable!(),
@@ -445,14 +458,23 @@ mod tile {
                             template(
                                 -max_size.x / 6.0,
                                 -max_size.y / 5.0,
+                                0.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(-max_size.x / 6.0, 0.0, size.clone(), image.clone(), None,),
+                            template(
+                                -max_size.x / 6.0,
+                                0.0,
+                                0.1,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
                             template(
                                 -max_size.x / 6.0,
                                 max_size.y / 5.0,
+                                0.2,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -460,14 +482,23 @@ mod tile {
                             template(
                                 max_size.x / 6.0,
                                 -max_size.y / 5.0,
+                                0.3,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(max_size.x / 6.0, 0.0, size.clone(), image.clone(), None,),
+                            template(
+                                max_size.x / 6.0,
+                                0.0,
+                                0.4,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
                             template(
                                 max_size.x / 6.0,
                                 max_size.y / 5.0,
+                                0.5,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -477,8 +508,8 @@ mod tile {
                 },
                 24 | 25 | 26 | 27 => {
                     let (image, color, size) = match index {
-                        24 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
-                        25 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
+                        24 => (alliance, Color::BLACK, small),
+                        25 => (horde, Color::BLACK, small),
                         26 => (frostmourne, Color::BLACK, small),
                         27 => (ashbringer, Color::BLACK, small),
                         _ => unreachable!(),
@@ -489,24 +520,48 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 -max_size.y / 5.0,
+                                0.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, -max_size.y / 5.0, size.clone(), image.clone(), None,),
+                            template(
+                                0.0,
+                                -max_size.y / 5.0,
+                                0.1,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
+                                0.2,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(-max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
-                            template(0.0, 0.0, size.clone(), image.clone(), None,),
-                            template(max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
+                            template(
+                                -max_size.x / 5.0,
+                                0.0,
+                                0.3,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(0.0, 0.0, 0.4, size.clone(), image.clone(), None,),
+                            template(
+                                max_size.x / 5.0,
+                                0.0,
+                                0.5,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
                             template(
                                 0.0,
                                 max_size.y / 5.0,
+                                0.6,
                                 size.clone(),
                                 image.clone(),
                                 Some(color),
@@ -516,8 +571,8 @@ mod tile {
                 },
                 28 | 29 | 30 | 31 => {
                     let (image, color, size) = match index {
-                        28 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
-                        29 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
+                        28 => (alliance, Color::BLACK, small),
+                        29 => (horde, Color::BLACK, small),
                         30 => (frostmourne, Color::BLACK, small),
                         31 => (ashbringer, Color::BLACK, small),
                         _ => unreachable!(),
@@ -528,24 +583,48 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 max_size.y / 5.0,
+                                0.7,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, max_size.y / 5.0, size.clone(), image.clone(), None,),
+                            template(
+                                0.0,
+                                max_size.y / 5.0,
+                                0.6,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
                             template(
                                 max_size.x / 5.0,
                                 max_size.y / 5.0,
+                                0.5,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(-max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
-                            template(0.0, 0.0, size.clone(), image.clone(), None,),
-                            template(max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
+                            template(
+                                -max_size.x / 5.0,
+                                0.0,
+                                0.4,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(0.0, 0.0, 0.3, size.clone(), image.clone(), None,),
+                            template(
+                                max_size.x / 5.0,
+                                0.0,
+                                0.2,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
                             template(
                                 -max_size.x / 5.0,
                                 -max_size.y / 5.0,
+                                0.1,
                                 size.clone(),
                                 image.clone(),
                                 Some(color),
@@ -553,6 +632,7 @@ mod tile {
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
+                                0.0,
                                 size.clone(),
                                 image.clone(),
                                 Some(color),
@@ -562,8 +642,8 @@ mod tile {
                 },
                 32 | 33 | 34 | 35 => {
                     let (image, color, size) = match index {
-                        32 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
-                        33 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
+                        32 => (alliance, Color::BLACK, small),
+                        33 => (horde, Color::BLACK, small),
                         34 => (frostmourne, Color::BLACK, small),
                         35 => (ashbringer, Color::BLACK, small),
                         _ => unreachable!(),
@@ -574,32 +654,64 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 max_size.y / 5.0,
+                                0.6,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, max_size.y / 5.0, size.clone(), image.clone(), None,),
+                            template(
+                                0.0,
+                                max_size.y / 5.0,
+                                0.7,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
                             template(
                                 max_size.x / 5.0,
                                 max_size.y / 5.0,
+                                0.8,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(-max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
-                            template(0.0, 0.0, size.clone(), image.clone(), None,),
-                            template(max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
+                            template(
+                                -max_size.x / 5.0,
+                                0.0,
+                                0.3,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(0.0, 0.0, 0.4, size.clone(), image.clone(), None,),
+                            template(
+                                max_size.x / 5.0,
+                                0.0,
+                                0.5,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
                             template(
                                 -max_size.x / 5.0,
                                 -max_size.y / 5.0,
+                                0.0,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, -max_size.y / 5.0, size.clone(), image.clone(), None,),
+                            template(
+                                0.0,
+                                -max_size.y / 5.0,
+                                0.1,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
+                                0.2,
                                 size.clone(),
                                 image.clone(),
                                 None,
