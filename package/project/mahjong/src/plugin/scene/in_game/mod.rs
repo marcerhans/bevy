@@ -1,5 +1,6 @@
 use crate::plugin::scene::main_menu::MainMenu;
-use bevy::{prelude::*, sprite::Anchor};
+use bevy::{input::keyboard::KeyCode, prelude::*, sprite::Anchor};
+use std::collections::VecDeque;
 
 pub struct Plugin;
 
@@ -10,11 +11,13 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_sub_state::<InGame>()
             .insert_resource(SelectedTile::default())
+            .insert_resource(History::default())
             .add_systems(
                 OnEnter(InGame::Root),
                 (spawn_background, spawn_tiles, spawn_buttons),
             )
-            .add_systems(Update, resize_background.run_if(in_state(InGame::Root)));
+            .add_systems(Update, resize_background.run_if(in_state(InGame::Root)))
+            .add_systems(Update, undo.run_if(in_state(InGame::Root)));
     }
 }
 
@@ -38,6 +41,32 @@ pub enum InGame {
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct SelectedTile(Option<Entity>);
 
+pub enum HistoryItem {
+    ValidPair(Entity, Entity),
+    Shuffle(Vec<(Entity, tile::Variant)>),
+}
+
+#[derive(Resource, Deref, DerefMut, Default)]
+pub struct History(VecDeque<HistoryItem>);
+
+impl History {
+    const MAX: usize = 32;
+
+    pub fn push_front(
+        &mut self,
+        item: HistoryItem,
+    ) {
+        if self.0.len() >= Self::MAX {
+            self.0.pop_back();
+        }
+        self.0.push_front(item);
+    }
+
+    pub fn pop_front(&mut self) -> Option<HistoryItem> {
+        self.0.pop_front()
+    }
+}
+
 mod marker {
     use bevy::prelude::*;
 
@@ -46,6 +75,9 @@ mod marker {
 
     #[derive(Component)]
     pub struct Button;
+
+    #[derive(Component)]
+    pub struct Hidden;
 }
 
 mod tile {
@@ -905,27 +937,49 @@ pub fn spawn_tiles(
 pub fn tile_pressed(
     on_press: On<Pointer<Press>>,
     mut commands: Commands,
-    mut tiles: Query<(Entity, &tile::Variant, &tile::Position, &mut Sprite), With<tile::Marker<0>>>,
+    mut tiles: Query<
+        (
+            Entity,
+            &tile::Variant,
+            &tile::Position,
+            &mut Sprite,
+            &mut Visibility,
+        ),
+        (With<tile::Marker<0>>, Without<marker::Hidden>),
+    >,
     mut selected_tile: ResMut<SelectedTile>,
+    mut history: ResMut<History>,
 ) {
-    let (pressed_entity, _, _, _) = tiles.iter().find(|tile| tile.0 == on_press.entity).unwrap();
+    let (pressed_entity, _, _, _, _) = tiles.iter().find(|tile| tile.0 == on_press.entity).unwrap();
 
     let Some(selected_entity) = selected_tile.0.take() else {
-        let (_, _, _, mut pressed_sprite) = tiles.get_mut(pressed_entity).unwrap();
+        let (_, _, _, mut pressed_sprite, _) = tiles.get_mut(pressed_entity).unwrap();
         pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
         selected_tile.0 = Some(pressed_entity);
         return;
     };
 
     if selected_entity == pressed_entity {
-        let (_, _, _, mut pressed_sprite) = tiles.get_mut(pressed_entity).unwrap();
+        let (_, _, _, mut pressed_sprite, _) = tiles.get_mut(pressed_entity).unwrap();
         pressed_sprite.color = Color::default();
         return;
     }
 
     let [
-        (pressed_entity, pressed_variant, pressed_position, mut pressed_sprite),
-        (selected_entity, selected_variant, selected_position, mut selected_sprite),
+        (
+            pressed_entity,
+            pressed_variant,
+            pressed_position,
+            mut pressed_sprite,
+            mut pressed_visibility,
+        ),
+        (
+            selected_entity,
+            selected_variant,
+            selected_position,
+            mut selected_sprite,
+            mut selected_visibility,
+        ),
     ] = tiles
         .get_many_mut([pressed_entity, selected_entity])
         .unwrap();
@@ -933,14 +987,17 @@ pub fn tile_pressed(
     selected_sprite.color = Color::default();
 
     if *pressed_variant != *selected_variant || valid_removal() == false {
-        let (_, _, _, mut pressed_sprite) = tiles.get_mut(pressed_entity).unwrap();
+        let (_, _, _, mut pressed_sprite, _) = tiles.get_mut(pressed_entity).unwrap();
         pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
         selected_tile.0 = Some(pressed_entity);
         return;
     }
 
-    commands.entity(pressed_entity).despawn();
-    commands.entity(selected_entity).despawn();
+    history.push_front(HistoryItem::ValidPair(pressed_entity, selected_entity));
+    commands.entity(pressed_entity).insert(marker::Hidden);
+    commands.entity(selected_entity).insert(marker::Hidden);
+    *pressed_visibility = Visibility::Hidden;
+    *selected_visibility = Visibility::Hidden;
 
     // let Some(selected_entity) = selected_tile.0.take() else {
     //     selected_tile.0 = Some(pressed_entity);
@@ -999,5 +1056,32 @@ fn resize_background(
             x: projection.area.width(),
             y: projection.area.height(),
         });
+    }
+}
+
+fn undo(
+    key: Res<ButtonInput<KeyCode>>,
+    mut commands: Commands,
+    mut history_valid_pair_tiles: Query<
+        &mut Visibility,
+        (With<tile::Marker<0>>, With<marker::Hidden>),
+    >,
+    mut history: ResMut<History>,
+) {
+    if key.just_pressed(KeyCode::KeyU) {
+        if let Some(history_item) = history.pop_front() {
+            match history_item {
+                HistoryItem::ValidPair(entity0, entity1) => {
+                    let [mut a, mut b] = history_valid_pair_tiles
+                        .get_many_mut([entity0, entity1])
+                        .unwrap();
+                    commands.entity(entity0).remove::<marker::Hidden>();
+                    commands.entity(entity1).remove::<marker::Hidden>();
+                    *a = Visibility::Inherited;
+                    *b = Visibility::Inherited;
+                },
+                HistoryItem::Shuffle(items) => todo!(),
+            }
+        }
     }
 }
