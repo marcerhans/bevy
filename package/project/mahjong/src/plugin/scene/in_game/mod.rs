@@ -1,5 +1,9 @@
 use crate::plugin::scene::main_menu::MainMenu;
-use bevy::{input::keyboard::KeyCode, prelude::*, sprite::Anchor};
+use bevy::{
+    input::keyboard::KeyCode,
+    prelude::*,
+    sprite::{Anchor, Text2dShadow},
+};
 use std::collections::VecDeque;
 
 pub struct Plugin;
@@ -17,7 +21,7 @@ impl bevy::prelude::Plugin for Plugin {
                 (spawn_background, spawn_tiles, spawn_buttons),
             )
             .add_systems(Update, resize_background.run_if(in_state(InGame::Root)))
-            .add_systems(Update, undo.run_if(in_state(InGame::Root)));
+            .add_systems(Update, undo_keyboard.run_if(in_state(InGame::Root)));
     }
 }
 
@@ -72,9 +76,6 @@ mod marker {
 
     #[derive(Component)]
     pub struct Background;
-
-    #[derive(Component)]
-    pub struct Button;
 
     #[derive(Component)]
     pub struct Hidden;
@@ -779,8 +780,25 @@ mod tile {
 }
 
 mod button {
+    use bevy::prelude::*;
+
     pub mod asset {
         pub const BUTTON: &'static str = "misc/rev2/button-atlas_1998x429.png";
+    }
+
+    #[derive(Component)]
+    pub enum Marker {
+        Undo,
+    }
+
+    impl Marker {
+        pub fn as_string(&self) -> &'static str {
+            use Marker::*;
+
+            match self {
+                Undo => "[U]ndo",
+            }
+        }
     }
 }
 
@@ -1045,55 +1063,74 @@ pub fn spawn_buttons(
     let texture_atlas = TextureAtlasLayout::from_grid(UVec2::new(666, 429), 3, 1, None, None);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
-    let font = TextFont {
-        font_size: projection.area.width() / 8.0,
-        ..default()
-    };
-
-    commands.spawn((
-        Node {
-            display: Display::Grid,
-            left: Val::Px(0.0),
-            bottom: Val::Px(0.0),
-            width: Val::Percent(10.0),
-            height: Val::Percent(10.0),
-            align_items: AlignItems::Center,
-            justify_items: JustifyItems::Center,
-            overflow: Overflow {
-                x: OverflowAxis::Clip,
-                y: OverflowAxis::Clip,
-            },
+    let button_size = Vec2::new(
+        (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) / 0.7,
+        projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
+    );
+    let font = (
+        TextFont {
+            font_size: button_size.y / 5.0,
             ..default()
         },
-        children![
+        Text2dShadow {
+            offset: Vec2 { x: 5.0, y: -5.0 },
+            color: Color::srgba(0.0, 0.0, 0.0, 0.95),
+        },
+        TextColor(Color::srgb_u8(239, 191, 4)),
+    );
+
+    struct Button {
+        marker: button::Marker,
+        offset: Vec3,
+    }
+
+    let buttons = [Button {
+        marker: button::Marker::Undo,
+        offset: Vec3::default(),
+    }];
+
+    for button in buttons {
+        spawn(
+            &mut commands,
             (
-                Button,
-                Text("hej".to_owned()),
-                font.clone(),
-                ImageNode {
-                    image: texture_handle.clone(),
-                    texture_atlas: Some(TextureAtlas {
-                        layout: texture_atlas_handle.clone(),
-                        index: 0
-                    }),
+                button::Marker::Undo,
+                Sprite {
+                    custom_size: Some(button_size),
+                    ..Sprite::from_atlas_image(
+                        texture_handle.clone(),
+                        TextureAtlas {
+                            layout: texture_atlas_handle.clone(),
+                            index: 0,
+                        },
+                    )
+                },
+                Transform {
+                    translation: Vec3 {
+                        x: -projection.area.width() / 2.0,
+                        y: -projection.area.height() / 2.0,
+                        ..default()
+                    } + button.offset,
                     ..default()
                 },
+                Anchor::BOTTOM_LEFT,
+                children![(
+                    Text2d(button.marker.as_string().to_owned()),
+                    font.clone(),
+                    Transform {
+                        translation: button_size.extend(0.0) / 2.0,
+                        ..default()
+                    },
+                )],
             ),
-            (
-                Button,
-                Text("hej".to_owned()),
-                font.clone(),
-                ImageNode {
-                    image: texture_handle.clone(),
-                    texture_atlas: Some(TextureAtlas {
-                        layout: texture_atlas_handle.clone(),
-                        index: 0
-                    }),
-                    ..default()
-                },
-            ),
-        ],
-    ));
+        )
+        .observe(mouse_over)
+        .observe(mouse_out)
+        .observe(mouse_press)
+        .observe(mouse_release)
+        .observe(match button.marker {
+            button::Marker::Undo => undo_mouse,
+        });
+    }
 }
 
 fn resize_background(
@@ -1118,7 +1155,59 @@ fn resize_background(
     }
 }
 
-fn undo(
+fn mouse_activity(
+    entity: Entity,
+    buttons: &mut Query<(Entity, &button::Marker, &mut Sprite)>,
+    new_index: usize,
+) {
+    let (_entity, _marker, mut sprite) = buttons
+        .iter_mut()
+        .find(|(entity_, marker, _)| *entity_ == entity && matches!(marker, button::Marker::Undo))
+        .unwrap();
+    sprite.texture_atlas.as_mut().unwrap().index = new_index;
+}
+
+fn mouse_over(
+    on_over: On<Pointer<Over>>,
+    mut buttons: Query<(Entity, &button::Marker, &mut Sprite)>,
+) {
+    mouse_activity(on_over.entity, &mut buttons, 1);
+}
+
+fn mouse_out(
+    on_out: On<Pointer<Out>>,
+    mut buttons: Query<(Entity, &button::Marker, &mut Sprite)>,
+) {
+    mouse_activity(on_out.entity, &mut buttons, 0);
+}
+
+fn mouse_press(
+    on_press: On<Pointer<Press>>,
+    mut buttons: Query<(Entity, &button::Marker, &mut Sprite)>,
+) {
+    mouse_activity(on_press.entity, &mut buttons, 2);
+}
+
+fn mouse_release(
+    on_release: On<Pointer<Release>>,
+    mut buttons: Query<(Entity, &button::Marker, &mut Sprite)>,
+) {
+    mouse_activity(on_release.entity, &mut buttons, 1);
+}
+
+fn undo_mouse(
+    _on_press: On<Pointer<Press>>,
+    mut commands: Commands,
+    mut history_valid_pair_tiles: Query<
+        &mut Visibility,
+        (With<tile::Marker<0>>, With<marker::Hidden>),
+    >,
+    mut history: ResMut<History>,
+) {
+    undo(&mut commands, &mut history_valid_pair_tiles, &mut history)
+}
+
+fn undo_keyboard(
     key: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
     mut history_valid_pair_tiles: Query<
@@ -1128,19 +1217,30 @@ fn undo(
     mut history: ResMut<History>,
 ) {
     if key.just_pressed(KeyCode::KeyU) {
-        if let Some(history_item) = history.pop_front() {
-            match history_item {
-                HistoryItem::ValidPair(entity0, entity1) => {
-                    let [mut a, mut b] = history_valid_pair_tiles
-                        .get_many_mut([entity0, entity1])
-                        .unwrap();
-                    commands.entity(entity0).remove::<marker::Hidden>();
-                    commands.entity(entity1).remove::<marker::Hidden>();
-                    *a = Visibility::Inherited;
-                    *b = Visibility::Inherited;
-                },
-                HistoryItem::Shuffle(items) => todo!(),
-            }
+        undo(&mut commands, &mut history_valid_pair_tiles, &mut history)
+    }
+}
+
+fn undo(
+    commands: &mut Commands,
+    history_valid_pair_tiles: &mut Query<
+        &mut Visibility,
+        (With<tile::Marker<0>>, With<marker::Hidden>),
+    >,
+    history: &mut ResMut<History>,
+) {
+    if let Some(history_item) = history.pop_front() {
+        match history_item {
+            HistoryItem::ValidPair(entity0, entity1) => {
+                let [mut a, mut b] = history_valid_pair_tiles
+                    .get_many_mut([entity0, entity1])
+                    .unwrap();
+                commands.entity(entity0).remove::<marker::Hidden>();
+                commands.entity(entity1).remove::<marker::Hidden>();
+                *a = Visibility::Inherited;
+                *b = Visibility::Inherited;
+            },
+            HistoryItem::Shuffle(items) => todo!(),
         }
     }
 }
