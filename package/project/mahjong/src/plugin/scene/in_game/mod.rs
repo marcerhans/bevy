@@ -1124,17 +1124,17 @@ pub fn valid_removal(
                 continue;
             }
 
-            let vertical_overlap = position.y + TGS > other_pos.y && position.y < other_pos.y + TGS;
+            let overlapping_row = position.y + TGS > other_pos.y && position.y < other_pos.y + TGS;
 
-            if !vertical_overlap {
+            if !overlapping_row {
                 continue;
             }
 
-            if other_pos.x < position.x && other_pos.x + TGS > position.x {
+            if position.x == other_pos.x + TGS {
                 blocked_left = true;
             }
 
-            if other_pos.x < position.x + TGS && other_pos.x + TGS > position.x + TGS {
+            if position.x + TGS == other_pos.x {
                 blocked_right = true;
             }
         }
