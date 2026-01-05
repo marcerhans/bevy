@@ -786,7 +786,7 @@ mod button {
         pub const BUTTON: &'static str = "misc/rev2/button-atlas_1998x429.png";
     }
 
-    #[derive(Component)]
+    #[derive(Component, Clone)]
     pub enum Marker {
         Undo,
     }
@@ -1093,7 +1093,7 @@ pub fn spawn_buttons(
         spawn(
             &mut commands,
             (
-                button.marker,
+                button.marker.clone(),
                 Sprite {
                     custom_size: Some(button_size),
                     ..Sprite::from_atlas_image(
