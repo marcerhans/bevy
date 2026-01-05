@@ -1112,30 +1112,34 @@ pub fn valid_removal(
         >,
     ) -> bool {
         const TGS: u32 = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
-        const LIMIT: usize = 2;
 
-        tiles
-            .iter()
-            .filter(
-                |(entity_other, _variant, position_other, _sprite, _visibility)| {
-                    let not_self = entity != *entity_other;
-                    let same_layer = position.z == position_other.z;
-                    let overlapping_row = position.y + TGS >= position_other.y
-                        && position.y <= position_other.y + TGS;
-                    let blocked_on_both_sides =
-                        position.x == position_other.x + 1 || position.x + 1 == position_other.x;
-                    let a = not_self && same_layer && overlapping_row && blocked_on_both_sides
+        let mut blocked_left = false;
+        let mut blocked_right = false;
 
-                    if a {
-                        info!("{position:?} and {position_other:?}")
-                    }
+        for (other, _, other_pos, _, _) in tiles.iter() {
+            if other == entity {
+                continue;
+            }
+            if position.z != other_pos.z {
+                continue;
+            }
 
-                    a
-                },
-            )
-            .take(LIMIT)
-            .count()
-            < LIMIT
+            let vertical_overlap = position.y + TGS > other_pos.y && position.y < other_pos.y + TGS;
+
+            if !vertical_overlap {
+                continue;
+            }
+
+            if other_pos.x < position.x && other_pos.x + TGS > position.x {
+                blocked_left = true;
+            }
+
+            if other_pos.x < position.x + TGS && other_pos.x + TGS > position.x + TGS {
+                blocked_right = true;
+            }
+        }
+
+        !(blocked_left && blocked_right)
     }
 
     fn free_above(
@@ -1153,30 +1157,15 @@ pub fn valid_removal(
         >,
     ) -> bool {
         const TGS: u32 = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
-        const LIMIT: usize = 1;
 
-        tiles
-            .iter()
-            .filter(
-                |(entity_other, _variant, position_other, _sprite, _visibility)| {
-                    let not_self = entity != *entity_other;
-                    let on_above_layer = position.z < position_other.z;
-                    let overlapping_row = position.y + TGS >= position_other.y
-                        && position.y <= position_other.y + TGS;
-                    let overlapping_column = position.x + TGS >= position_other.x
-                        && position.x <= position_other.x + TGS;
-                    let a = not_self && on_above_layer && overlapping_row && overlapping_column;
-
-                    if a {
-                        info!("{position:?} and {position_other:?}")
-                    }
-
-                    a
-                },
-            )
-            .take(LIMIT)
-            .count()
-            < LIMIT
+        !tiles.iter().any(|(other, _, other_pos, _, _)| {
+            other != entity
+                && other_pos.z > position.z
+                && position.y + TGS > other_pos.y
+                && position.y < other_pos.y + TGS
+                && position.x + TGS > other_pos.x
+                && position.x < other_pos.x + TGS
+        })
     }
 
     matching_variants(
