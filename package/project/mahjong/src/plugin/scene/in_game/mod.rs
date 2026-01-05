@@ -1,5 +1,5 @@
 use crate::plugin::scene::main_menu::MainMenu;
-use bevy::prelude::*;
+use bevy::{prelude::*, sprite::Anchor};
 
 pub struct Plugin;
 
@@ -1005,8 +1005,10 @@ pub fn spawn_tiles(
     );
 
     for (variant, pos) in position_generator.enumerate() {
-        let index = variant; // TODO: Have to enumerate them!!!
-        let order_depth_offset_factor = Vec3::default().with_z(0.1);
+        let default_depth = Vec3::default().with_z(100.0);
+        let column_depth_offset_factor = Vec3::default().with_z(-0.1);
+        let row_depth_offset_factor =
+            column_depth_offset_factor * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32;
         let layer_depth_offset_factor = Vec3::default().with_z(10.0);
         let layer_offset_factor = Vec3 {
             x: tile_border_length_scaled,
@@ -1014,6 +1016,18 @@ pub fn spawn_tiles(
             ..default()
         };
         let variant = variant as u32;
+
+        let special = match pos.x / tile_grid_size {
+            0 => Vec3::default().with_z(
+                -column_depth_offset_factor.z
+                    * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32,
+            ),
+            13 | 14 => Vec3::default().with_z(
+                column_depth_offset_factor.z
+                    * (tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32),
+            ),
+            _ => Vec3::default(),
+        };
 
         let mut entity_commands = spawn(
             &mut commands,
@@ -1031,29 +1045,44 @@ pub fn spawn_tiles(
                     translation: (((pos.as_vec3() / tile_grid_size as f32)
                         * tile_size.extend(1.0))
                         + tile_pos_offset)
+                        + default_depth
                         + (layer_offset_factor * pos.z as f32)
-                        - (order_depth_offset_factor * index as f32)
-                        + (layer_depth_offset_factor * pos.z as f32),
+                        + (column_depth_offset_factor * pos.x as f32)
+                        + (row_depth_offset_factor * pos.y as f32)
+                        + (layer_depth_offset_factor * pos.z as f32)
+                        + special,
                     ..default()
                 },
             ),
         );
-        entity_commands
-            // .with_child((
-            // Sprite {
-            //     custom_size: Some(tile_size_full),
-            //     ..Sprite::from_image(tile_texture.clone())
-            // },
-            //     Transform {
-            //         translation: Vec3 {
-            //             x: -tile_size_ratio.x / tile::asset::texture::TILE_WIDTH as f32,
-            //             y: -tile_size_ratio.y / tile::asset::texture::TILE_HEIGHT as f32,
-            //             ..default()
-            //         },
-            //         ..default()
-            //     },
-            // ))
-            .observe(tile_pressed);
+
+        entity_commands.observe(tile_pressed);
+
+        if pos.z != 0 {
+            entity_commands.with_child((
+                Sprite {
+                    custom_size: Some(tile_size_full),
+                    color: Color::hsla(0.0, 0.0, 0.0, 0.5),
+                    ..Sprite::from_image(tile_texture.clone())
+                },
+                Transform {
+                    scale: Vec3 {
+                        x: 1.2,
+                        y: 1.05,
+                        ..Vec3::splat(1.0)
+                    },
+                    translation: Vec3 {
+                        x: -tile_size_full.x / 2.0,
+                        y: -tile_size_full.y / 2.0,
+                        z: column_depth_offset_factor.z * pos.x as f32,
+                        ..default()
+                    },
+                    ..default()
+                },
+                Anchor::BOTTOM_LEFT,
+            ));
+        }
+
         // tile::Variant::insert_sprite_as_child(
         //     &asset_server,
         //     &mut entity_commands,
@@ -1061,9 +1090,9 @@ pub fn spawn_tiles(
         //     &tile_size,
         // );
 
-        if variant > 95 {
-            break;
-        }
+        // if variant > 95 {
+        //     break;
+        // }
     }
 }
 
