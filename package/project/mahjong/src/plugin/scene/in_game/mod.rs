@@ -778,6 +778,12 @@ mod tile {
     }
 }
 
+mod button {
+    pub mod asset {
+        pub const BUTTON: &'static str = "misc/rev2/button-atlas_1998x429.png";
+    }
+}
+
 pub fn spawn_background(
     mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
@@ -813,7 +819,6 @@ pub fn spawn_tiles(
     mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
@@ -1035,6 +1040,60 @@ pub fn spawn_buttons(
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
     };
+
+    let texture_handle: Handle<Image> = asset_server.load(button::asset::BUTTON);
+    let texture_atlas = TextureAtlasLayout::from_grid(UVec2::new(666, 429), 3, 1, None, None);
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+    let font = TextFont {
+        font_size: projection.area.width() / 8.0,
+        ..default()
+    };
+
+    commands.spawn((
+        Node {
+            display: Display::Grid,
+            left: Val::Px(0.0),
+            bottom: Val::Px(0.0),
+            width: Val::Percent(10.0),
+            height: Val::Percent(10.0),
+            align_items: AlignItems::Center,
+            justify_items: JustifyItems::Center,
+            overflow: Overflow {
+                x: OverflowAxis::Clip,
+                y: OverflowAxis::Clip,
+            },
+            ..default()
+        },
+        children![
+            (
+                Button,
+                Text("hej".to_owned()),
+                font.clone(),
+                ImageNode {
+                    image: texture_handle.clone(),
+                    texture_atlas: Some(TextureAtlas {
+                        layout: texture_atlas_handle.clone(),
+                        index: 0
+                    }),
+                    ..default()
+                },
+            ),
+            (
+                Button,
+                Text("hej".to_owned()),
+                font.clone(),
+                ImageNode {
+                    image: texture_handle.clone(),
+                    texture_atlas: Some(TextureAtlas {
+                        layout: texture_atlas_handle.clone(),
+                        index: 0
+                    }),
+                    ..default()
+                },
+            ),
+        ],
+    ));
 }
 
 fn resize_background(
