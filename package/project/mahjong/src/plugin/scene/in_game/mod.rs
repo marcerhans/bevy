@@ -215,8 +215,18 @@ mod tile {
         }
     }
 
-    #[derive(Component, Deref, DerefMut, Clone, Copy, PartialEq, Eq)]
+    #[derive(Component, Deref, DerefMut, Clone, Copy, Eq)]
     pub struct Variant(pub u32);
+
+    impl PartialEq for Variant {
+        fn eq(
+            &self,
+            other: &Self,
+        ) -> bool {
+            self.0 / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32
+                == other.0 / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32
+        }
+    }
 
     impl Variant {
         pub fn insert_sprite_as_child(
@@ -1093,10 +1103,6 @@ pub fn spawn_tiles(
             &tile_size,
             &offset,
         );
-
-        // if variant > 95 {
-        //     break;
-        // }
     }
 }
 
@@ -1106,20 +1112,45 @@ pub fn tile_pressed(
     mut tiles: Query<(Entity, &tile::Variant, &tile::Position, &mut Sprite), With<tile::Marker<0>>>,
     mut selected_tile: ResMut<SelectedTile>,
 ) {
-    let (pressed_entity, pressed_variant, pressed_position, mut pressed_sprite) = tiles
-        .iter_mut()
-        .find(|tile| tile.0 == on_press.entity)
-        .unwrap();
+    let (pressed_entity, _, _, _) = tiles.iter().find(|tile| tile.0 == on_press.entity).unwrap();
 
     let Some(selected_entity) = selected_tile.0.take() else {
+        let (_, _, _, mut pressed_sprite) = tiles.get_mut(pressed_entity).unwrap();
+        pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
         selected_tile.0 = Some(pressed_entity);
-        // pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5); // TODO!
         return;
     };
 
-    let (selected_entity, selected_variant, selected_position, mut selected_sprite) =
-        tiles.get_mut(selected_entity).unwrap();
-    // selected_sprite.color = Color::hsl(1.0, 1.0, 1.0); // TODO!
+    let [
+        (pressed_entity, pressed_variant, pressed_position, mut pressed_sprite),
+        (selected_entity, selected_variant, selected_position, mut selected_sprite),
+    ] = tiles
+        .get_many_mut([pressed_entity, selected_entity])
+        .unwrap();
+
+    selected_sprite.color = Color::default();
+
+    if *pressed_variant != *selected_variant {
+        let (_, _, _, mut pressed_sprite) = tiles.get_mut(pressed_entity).unwrap();
+        pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
+        selected_tile.0 = Some(pressed_entity);
+        return;
+    }
+
+    // let Some(selected_entity) = selected_tile.0.take() else {
+    //     selected_tile.0 = Some(pressed_entity);
+    //     pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
+    //     return;
+    // };
+
+    // let (selected_entity, selected_variant, selected_position, mut selected_sprite) =
+    //     tiles.get_mut(selected_entity).unwrap();
+
+    // // if selected_variant != pressed_variant {
+    //     // selected_sprite.color = Color::hsl(1.0, 1.0, 1.0);
+    //     pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
+    // // }
+    // selected_sprite.color = Color::hsl(1.0, 1.0, 1.0);
 
     // selected_color =
 
