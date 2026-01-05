@@ -58,8 +58,8 @@ mod tile {
             pub const TILE: &'static str = "misc/rev2/Tile.png";
             pub const ALLIANCE: &'static str = "misc/rev2/Alliance.png";
             pub const HORDE: &'static str = "misc/rev2/Horde.png";
-            pub const BLADE: &'static str = "misc/rev2/Frostmourne.png";
-            pub const HEARTHSTONE: &'static str = "misc/rev2/Hearthstone.png";
+            pub const FROSTMOURNE: &'static str = "misc/rev2/Frostmourne.png";
+            pub const ASHBRINGER: &'static str = "misc/rev2/Ashbringer.png";
 
             pub const TILE_WIDTH: u32 = 962;
             pub const TILE_HEIGHT: u32 = 1238;
@@ -250,8 +250,8 @@ mod tile {
 
             let alliance: Handle<Image> = asset_server.load(asset::texture::ALLIANCE);
             let horde: Handle<Image> = asset_server.load(asset::texture::HORDE);
-            let blades: Handle<Image> = asset_server.load(asset::texture::BLADE);
-            let hs: Handle<Image> = asset_server.load(asset::texture::HEARTHSTONE);
+            let blades: Handle<Image> = asset_server.load(asset::texture::FROSTMOURNE);
+            let hs: Handle<Image> = asset_server.load(asset::texture::ASHBRINGER);
 
             let common = (
                 Transform::default().with_translation(Vec3::default().with_z(0.1) + offset),
