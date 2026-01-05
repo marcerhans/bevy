@@ -563,367 +563,53 @@ mod tile {
                         ],
                     ));
                 },
-                //     1 => {
-                //         size = &medium;
-                //         positions.append(&mut vec![
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 5.0,
-                //                     y: max_size.y / 5.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 5.0,
-                //                     y: -max_size.y / 5.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //         ]);
-                //     },
-                //     2 => {
-                //         size = &small;
-                //         positions.append(&mut vec![
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     y: max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (Vec3 { ..default() }, ImageType::Regular),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     y: -max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //         ]);
-                //     },
-                //     3 => {
-                //         size = &small;
-                //         positions.append(&mut vec![
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 5.0,
-                //                     y: -max_size.y / 5.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 5.0,
-                //                     y: -max_size.y / 5.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 5.0,
-                //                     y: max_size.y / 5.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 5.0,
-                //                     y: max_size.y / 5.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //         ]);
-                //     },
-                //     4 => {
-                //         size = &small;
-                //         positions.append(&mut vec![
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 5.0,
-                //                     y: -max_size.y / 5.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 5.0,
-                //                     y: -max_size.y / 5.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 5.0,
-                //                     y: max_size.y / 5.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 5.0,
-                //                     y: max_size.y / 5.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (Vec3 { ..default() }, ImageType::Regular),
-                //         ]);
-                //     },
-                //     5 => {
-                //         size = &small;
-                //         positions.append(&mut vec![
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     y: -max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     y: max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     y: -max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     y: max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //         ]);
-                //     },
-                //     6 => {
-                //         size = &small;
-                //         positions.append(&mut vec![
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     y: -max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     y: max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     y: -max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     y: max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (Vec3 { ..default() }, ImageType::Regular),
-                //         ]);
-                //     },
-                //     7 => {
-                //         size = &small;
-                //         positions.append(&mut vec![
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     y: -max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     y: max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     y: -max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     y: max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     y: -max_size.y / 7.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     y: max_size.y / 7.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //         ]);
-                //     },
-                //     8 => {
-                //         size = &small;
-                //         positions.append(&mut vec![
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     y: -max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: -max_size.x / 4.0,
-                //                     y: max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     y: -max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     x: max_size.x / 4.0,
-                //                     y: max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (
-                //                 Vec3 {
-                //                     y: -max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //             (Vec3 { ..default() }, ImageType::Regular),
-                //             (
-                //                 Vec3 {
-                //                     y: max_size.y / 4.0,
-                //                     ..default()
-                //                 },
-                //                 ImageType::Regular,
-                //             ),
-                //         ]);
-                //     },
-                //     9 => (),
-                //     10 => (),
-                //     11 => (),
-                //     12 => (),
-                //     13 => (),
-                //     14 => (),
-                //     15 => (),
-                //     16 => (),
-                //     17 => (),
+                32 | 33 | 34 | 35 => {
+                    let (image, color, size) = match index {
+                        32 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
+                        33 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
+                        34 => (blades, Color::BLACK, small),
+                        35 => (hs, Color::BLACK, small),
+                        _ => unreachable!(),
+                    };
+                    entity_commands.with_child((
+                        common,
+                        children![
+                            template(
+                                -max_size.x / 5.0,
+                                max_size.y / 5.0,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(0.0, max_size.y / 5.0, size.clone(), image.clone(), None,),
+                            template(
+                                max_size.x / 5.0,
+                                max_size.y / 5.0,
+                                size.clone(),
+                                image.clone(),
+                                None,
+                            ),
+                            template(-max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
+                            template(0.0, 0.0, size.clone(), image.clone(), None,),
+                            template(max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
+                            template(
+                                -max_size.x / 5.0,
+                                -max_size.y / 5.0,
+                                size.clone(),
+                                image.clone(),
+                                Some(color),
+                            ),
+                            template(0.0, -max_size.y / 5.0, size.clone(), image.clone(), None,),
+                            template(
+                                max_size.x / 5.0,
+                                -max_size.y / 5.0,
+                                size.clone(),
+                                image.clone(),
+                                Some(color),
+                            ),
+                        ],
+                    ));
+                },
                 _ => warn!("Unsupported variant!"),
             };
 
