@@ -278,13 +278,7 @@ mod tile {
                     };
                     entity_commands.with_child((
                         common,
-                        children![template(
-                            0.0,
-                            0.0,
-                            large.clone(),
-                            image.clone(),
-                            None
-                        ),],
+                        children![template(0.0, 0.0, large.clone(), image.clone(), None),],
                     ));
                 },
                 4 | 5 | 6 | 7 => {
@@ -447,13 +441,7 @@ mod tile {
                                 image.clone(),
                                 None,
                             ),
-                            template(
-                                -max_size.x / 6.0,
-                                0.0,
-                                size.clone(),
-                                image.clone(),
-                                None,
-                            ),
+                            template(-max_size.x / 6.0, 0.0, size.clone(), image.clone(), None,),
                             template(
                                 -max_size.x / 6.0,
                                 max_size.y / 5.0,
@@ -468,13 +456,7 @@ mod tile {
                                 image.clone(),
                                 None,
                             ),
-                            template(
-                                max_size.x / 6.0,
-                                0.0,
-                                size.clone(),
-                                image.clone(),
-                                None,
-                            ),
+                            template(max_size.x / 6.0, 0.0, size.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 6.0,
                                 max_size.y / 5.0,
@@ -503,13 +485,7 @@ mod tile {
                                 image.clone(),
                                 None,
                             ),
-                            template(
-                                0.0,
-                                -max_size.y / 5.0,
-                                size.clone(),
-                                image.clone(),
-                                None,
-                            ),
+                            template(0.0, -max_size.y / 5.0, size.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
@@ -517,21 +493,9 @@ mod tile {
                                 image.clone(),
                                 None,
                             ),
-                            template(
-                                -max_size.x / 5.0,
-                                0.0,
-                                size.clone(),
-                                image.clone(),
-                                None,
-                            ),
+                            template(-max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
                             template(0.0, 0.0, size.clone(), image.clone(), None,),
-                            template(
-                                max_size.x / 5.0,
-                                0.0,
-                                size.clone(),
-                                image.clone(),
-                                None,
-                            ),
+                            template(max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
                             template(
                                 0.0,
                                 max_size.y / 5.0,
@@ -560,13 +524,7 @@ mod tile {
                                 image.clone(),
                                 None,
                             ),
-                            template(
-                                0.0,
-                                max_size.y / 5.0,
-                                size.clone(),
-                                image.clone(),
-                                None,
-                            ),
+                            template(0.0, max_size.y / 5.0, size.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 5.0,
                                 max_size.y / 5.0,
@@ -574,21 +532,9 @@ mod tile {
                                 image.clone(),
                                 None,
                             ),
-                            template(
-                                -max_size.x / 5.0,
-                                0.0,
-                                size.clone(),
-                                image.clone(),
-                                None,
-                            ),
+                            template(-max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
                             template(0.0, 0.0, size.clone(), image.clone(), None,),
-                            template(
-                                max_size.x / 5.0,
-                                0.0,
-                                size.clone(),
-                                image.clone(),
-                                None,
-                            ),
+                            template(max_size.x / 5.0, 0.0, size.clone(), image.clone(), None,),
                             template(
                                 -max_size.x / 5.0,
                                 -max_size.y / 5.0,
@@ -1054,7 +1000,8 @@ pub fn spawn_tiles(
         tile::asset::texture::TILE_BORDER_LENGTH as f32 * tile_size_ratio;
     let tile_pos_offset = Vec3::new(
         -(tile_size.x * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32 / 2.0)
-            + tile_size.x * 1.0,
+            + tile_size.x * 1.0
+            - tile_border_length_scaled / 2.0,
         -projection.area.height() / 2.0 + tile_size_full.y * 0.5 - tile_border_length_scaled,
         0.0,
     );
