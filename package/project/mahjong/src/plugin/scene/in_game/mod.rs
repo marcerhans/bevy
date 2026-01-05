@@ -103,7 +103,7 @@ mod tile {
 
     impl PositionGenerator<Turtle> {
         pub const TILES: usize = 144;
-        pub const TILE_VARIANT_SIZE: usize = 4;
+        pub const TILE_VARIANT_GROUP_SIZE: usize = 4;
         pub const ROWS: usize = 8;
         pub const COLUMNS: usize = 15;
         pub const LAYERS: usize = 5;
@@ -224,8 +224,8 @@ mod tile {
             &self,
             other: &Self,
         ) -> bool {
-            self.0 / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32
-                == other.0 / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32
+            self.0 / PositionGenerator::<Turtle>::TILE_VARIANT_GROUP_SIZE as u32
+                == other.0 / PositionGenerator::<Turtle>::TILE_VARIANT_GROUP_SIZE as u32
         }
     }
 
@@ -237,11 +237,7 @@ mod tile {
             max_size: &Vec2,
             offset: &Vec3,
         ) {
-            const MAX_VARIANTS: u32 = (PositionGenerator::<Turtle>::TILES
-                / PositionGenerator::<Turtle>::TILE_VARIANT_SIZE)
-                as u32;
-            const MAX_VARIANTS_HALF: u32 = MAX_VARIANTS / 2;
-            const TVR: u32 = PositionGenerator::<Turtle>::TILE_VARIANT_SIZE as u32;
+            const TVR: u32 = PositionGenerator::<Turtle>::TILE_VARIANT_GROUP_SIZE as u32;
             let index = variant / TVR;
             let large = max_size * 0.8;
             let medium = large * 0.5;
@@ -250,8 +246,8 @@ mod tile {
 
             let alliance: Handle<Image> = asset_server.load(asset::texture::ALLIANCE);
             let horde: Handle<Image> = asset_server.load(asset::texture::HORDE);
-            let blades: Handle<Image> = asset_server.load(asset::texture::FROSTMOURNE);
-            let hs: Handle<Image> = asset_server.load(asset::texture::ASHBRINGER);
+            let frostmourne: Handle<Image> = asset_server.load(asset::texture::FROSTMOURNE);
+            let ashbringer: Handle<Image> = asset_server.load(asset::texture::ASHBRINGER);
 
             let common = (
                 Transform::default().with_translation(Vec3::default().with_z(0.1) + offset),
@@ -283,8 +279,8 @@ mod tile {
                     let image = match index {
                         0 => alliance,
                         1 => horde,
-                        2 => blades,
-                        3 => hs,
+                        2 => frostmourne,
+                        3 => ashbringer,
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -296,8 +292,8 @@ mod tile {
                     let (image, size) = match index {
                         4 => (alliance, medium),
                         5 => (horde, medium),
-                        6 => (blades, medium),
-                        7 => (hs, medium),
+                        6 => (frostmourne, medium),
+                        7 => (ashbringer, medium),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -324,8 +320,8 @@ mod tile {
                     let (image, size) = match index {
                         8 => (alliance, small),
                         9 => (horde, small),
-                        10 => (blades, medium),
-                        11 => (hs, medium),
+                        10 => (frostmourne, medium),
+                        11 => (ashbringer, medium),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -353,8 +349,8 @@ mod tile {
                     let (image, size) = match index {
                         12 => (alliance, small2),
                         13 => (horde, small2),
-                        14 => (blades, small),
-                        15 => (hs, small),
+                        14 => (frostmourne, small),
+                        15 => (ashbringer, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -395,8 +391,8 @@ mod tile {
                     let (image, color, size) = match index {
                         16 => (alliance, Color::hsl(0.0, 0.0, 1.0), small),
                         17 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
-                        18 => (blades, Color::BLACK, small),
-                        19 => (hs, Color::BLACK, small),
+                        18 => (frostmourne, Color::BLACK, small),
+                        19 => (ashbringer, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -438,8 +434,8 @@ mod tile {
                     let (image, color, size) = match index {
                         20 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
                         21 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
-                        22 => (blades, Color::BLACK, small),
-                        23 => (hs, Color::BLACK, small),
+                        22 => (frostmourne, Color::BLACK, small),
+                        23 => (ashbringer, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -482,8 +478,8 @@ mod tile {
                     let (image, color, size) = match index {
                         24 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
                         25 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
-                        26 => (blades, Color::BLACK, small),
-                        27 => (hs, Color::BLACK, small),
+                        26 => (frostmourne, Color::BLACK, small),
+                        27 => (ashbringer, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -521,8 +517,8 @@ mod tile {
                     let (image, color, size) = match index {
                         28 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
                         29 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
-                        30 => (blades, Color::BLACK, small),
-                        31 => (hs, Color::BLACK, small),
+                        30 => (frostmourne, Color::BLACK, small),
+                        31 => (ashbringer, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -567,8 +563,8 @@ mod tile {
                     let (image, color, size) = match index {
                         32 => (alliance, Color::hsl(0.0, 1.0, 0.5), small),
                         33 => (horde, Color::hsl(240.0, 1.0, 0.5), small),
-                        34 => (blades, Color::BLACK, small),
-                        35 => (hs, Color::BLACK, small),
+                        34 => (frostmourne, Color::BLACK, small),
+                        35 => (ashbringer, Color::BLACK, small),
                         _ => unreachable!(),
                     };
                     entity_commands.with_child((
@@ -823,7 +819,7 @@ pub fn tile_pressed(
 
     selected_sprite.color = Color::default();
 
-    if *pressed_variant != *selected_variant {
+    if *pressed_variant != *selected_variant || valid_removal() {
         let (_, _, _, mut pressed_sprite) = tiles.get_mut(pressed_entity).unwrap();
         pressed_sprite.color = Color::hsl(0.5, 1.0, 1.5);
         selected_tile.0 = Some(pressed_entity);
@@ -854,7 +850,7 @@ pub fn tile_pressed(
 }
 
 pub fn valid_removal() -> bool {
-    false
+    true
 }
 
 pub fn spawn_buttons(
