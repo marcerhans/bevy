@@ -4,6 +4,7 @@ use bevy::{
     prelude::*,
     sprite::{Anchor, Text2dShadow},
 };
+use rand::seq::SliceRandom;
 use std::collections::VecDeque;
 
 pub struct Plugin;
@@ -867,7 +868,16 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    for (variant, pos) in position_generator.enumerate() {
+    let mut positions: Vec<tile::Position> = position_generator.collect();
+    let mut rng = rand::rng();
+    positions.shuffle(&mut rng);
+    let positions: Vec<(tile::Position, u32)> = positions
+        .into_iter()
+        .enumerate()
+        .map(|(index, position)| (position, index as u32))
+        .collect();
+
+    for (pos, variant) in positions {
         let default_depth = Vec3::default().with_z(100.0);
         let column_depth_offset_factor = Vec3::default().with_z(-0.1);
         let row_depth_offset_factor =
@@ -878,7 +888,6 @@ pub fn spawn_tiles(
             y: tile_border_length_scaled,
             ..default()
         };
-        let variant = variant as u32;
 
         let special = match pos.x / tile_grid_size {
             0 => Vec3::default().with_z(
