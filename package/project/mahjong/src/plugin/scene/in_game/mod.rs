@@ -243,21 +243,20 @@ mod tile {
             let hs: Handle<Image> = asset_server.load(asset::texture::HEARTHSTONE);
 
             let common = (
-                Transform::default().with_translation(Vec3::default().with_z(0.1)),
+                Transform::default().with_translation(Vec3::default().with_z(0.1) + offset),
                 Visibility::Inherited,
             );
 
             fn template(
                 x: f32,
                 y: f32,
-                offset: &Vec3,
                 size: Vec2,
                 image: Handle<Image>,
                 shading: Option<Color>,
             ) -> impl Bundle {
                 (
                     Transform {
-                        translation: Vec3 { x, y, ..default() } + offset,
+                        translation: Vec3 { x, y, ..default() },
                         ..default()
                     },
                     Sprite {
@@ -282,7 +281,6 @@ mod tile {
                         children![template(
                             0.0,
                             0.0,
-                            offset,
                             large.clone(),
                             image.clone(),
                             None
@@ -303,7 +301,6 @@ mod tile {
                             template(
                                 -max_size.x / 8.0,
                                 max_size.y / 8.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -311,7 +308,6 @@ mod tile {
                             template(
                                 max_size.x / 8.0,
                                 -max_size.y / 8.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -333,16 +329,14 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, 0.0, offset, size.clone(), image.clone(), None,),
+                            template(0.0, 0.0, size.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -364,7 +358,6 @@ mod tile {
                             template(
                                 -max_size.x / 7.0,
                                 -max_size.y / 7.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -372,7 +365,6 @@ mod tile {
                             template(
                                 -max_size.x / 7.0,
                                 max_size.y / 7.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -380,7 +372,6 @@ mod tile {
                             template(
                                 max_size.x / 7.0,
                                 -max_size.y / 7.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -388,7 +379,6 @@ mod tile {
                             template(
                                 max_size.x / 7.0,
                                 max_size.y / 7.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -410,7 +400,6 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -418,16 +407,14 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, 0.0, offset, size.clone(), image.clone(), Some(color),),
+                            template(0.0, 0.0, size.clone(), image.clone(), Some(color),),
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -435,7 +422,6 @@ mod tile {
                             template(
                                 max_size.x / 5.0,
                                 max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -457,7 +443,6 @@ mod tile {
                             template(
                                 -max_size.x / 6.0,
                                 -max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -465,7 +450,6 @@ mod tile {
                             template(
                                 -max_size.x / 6.0,
                                 0.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -473,7 +457,6 @@ mod tile {
                             template(
                                 -max_size.x / 6.0,
                                 max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -481,7 +464,6 @@ mod tile {
                             template(
                                 max_size.x / 6.0,
                                 -max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -489,7 +471,6 @@ mod tile {
                             template(
                                 max_size.x / 6.0,
                                 0.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -497,7 +478,6 @@ mod tile {
                             template(
                                 max_size.x / 6.0,
                                 max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -519,7 +499,6 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -527,7 +506,6 @@ mod tile {
                             template(
                                 0.0,
                                 -max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -535,7 +513,6 @@ mod tile {
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -543,16 +520,14 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 0.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, 0.0, offset, size.clone(), image.clone(), None,),
+                            template(0.0, 0.0, size.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 5.0,
                                 0.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -560,7 +535,6 @@ mod tile {
                             template(
                                 0.0,
                                 max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 Some(color),
@@ -582,7 +556,6 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -590,7 +563,6 @@ mod tile {
                             template(
                                 0.0,
                                 max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -598,7 +570,6 @@ mod tile {
                             template(
                                 max_size.x / 5.0,
                                 max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -606,16 +577,14 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 0.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, 0.0, offset, size.clone(), image.clone(), None,),
+                            template(0.0, 0.0, size.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 5.0,
                                 0.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 None,
@@ -623,7 +592,6 @@ mod tile {
                             template(
                                 -max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 Some(color),
@@ -631,7 +599,6 @@ mod tile {
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
-                                offset,
                                 size.clone(),
                                 image.clone(),
                                 Some(color),
