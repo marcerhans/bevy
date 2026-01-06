@@ -1610,45 +1610,57 @@ fn help(
     help_enabled: Res<HelpEnabled>,
     mut prev_selection: Local<Option<Entity>>,
 ) {
-    if !**help_enabled || selected_tile.is_none() {
-        return;
-    }
+    match selected_tile.0 {
+        Some(selected_tile) => {
+            if !**help_enabled {
+                *prev_selection = None;
+                return;
+            }
 
-    if let Some(prev_selection) = *prev_selection {
-        if prev_selection == selected_tile.unwrap() {
-            return;
-        }
-    }
+            if let Some(prev_selection) = *prev_selection {
+                if prev_selection == selected_tile {
+                    return;
+                }
+            }
 
-    *prev_selection = Some(selected_tile.unwrap());
+            *prev_selection = Some(selected_tile);
 
-    let (
-        selected_entity,
-        selected_variant,
-        _selected_position,
-        _selected_sprite,
-        _selected_visiblity,
-    ) = tiles.get(selected_tile.unwrap()).unwrap();
+            let (
+                selected_entity,
+                selected_variant,
+                _selected_position,
+                _selected_sprite,
+                _selected_visiblity,
+            ) = tiles.get(selected_tile).unwrap();
 
-    let mut entities_to_update = vec![];
-    let mut entities_to_reset = vec![];
+            let mut entities_to_update = vec![];
+            let mut entities_to_reset = vec![];
 
-    for (entity, variant, _position, _sprite, _visibility) in &tiles {
-        if selected_entity != entity && *selected_variant == *variant {
-            entities_to_update.push(entity);
-        } else if selected_entity != entity {
-            entities_to_reset.push(entity);
-        }
-    }
+            for (entity, variant, _position, _sprite, _visibility) in &tiles {
+                if selected_entity != entity && *selected_variant == *variant {
+                    entities_to_update.push(entity);
+                } else if selected_entity != entity {
+                    entities_to_reset.push(entity);
+                }
+            }
 
-    for entity in entities_to_update {
-        let (_entity, _variant, _position, mut sprite, _visiblity) = tiles.get_mut(entity).unwrap();
-        sprite.color = Color::hsl(120.0, 1.0, 0.5);
-    }
+            for entity in entities_to_update {
+                let (_entity, _variant, _position, mut sprite, _visiblity) =
+                    tiles.get_mut(entity).unwrap();
+                sprite.color = Color::hsl(120.0, 1.0, 0.5);
+            }
 
-    for entity in entities_to_reset {
-        let (_entity, _variant, _position, mut sprite, _visiblity) = tiles.get_mut(entity).unwrap();
-        sprite.color = tile::DEFAULT_COLOR;
+            for entity in entities_to_reset {
+                let (_entity, _variant, _position, mut sprite, _visiblity) =
+                    tiles.get_mut(entity).unwrap();
+                sprite.color = tile::DEFAULT_COLOR;
+            }
+        },
+        None => {
+            for (_entity, _variant, _position, mut sprite, _visibility) in &mut tiles {
+                sprite.color = tile::DEFAULT_COLOR;
+            }
+        },
     }
 }
 
