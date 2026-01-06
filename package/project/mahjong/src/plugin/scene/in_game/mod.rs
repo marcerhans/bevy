@@ -1277,12 +1277,12 @@ pub fn spawn_buttons(
             },
         },
         Button {
-            marker: button::Marker::Undo,
+            marker: button::Marker::NewGame,
             flip_x: true,
             offset: Vec3::default(),
         },
         Button {
-            marker: button::Marker::Redo,
+            marker: button::Marker::Help,
             flip_x: true,
             offset: Vec3 {
                 y: button_size.y,
@@ -1315,12 +1315,29 @@ pub fn spawn_buttons(
                     } + button.offset,
                     ..default()
                 },
-                Anchor::BOTTOM_LEFT,
+                if button.flip_x {
+                    Anchor::BOTTOM_RIGHT
+                } else {
+                    Anchor::BOTTOM_LEFT
+                },
                 children![(
                     Text2d(button.marker.as_string().to_owned()),
                     font.clone(),
                     Transform {
-                        translation: button_size.extend(0.0) / 2.0,
+                        translation: button_size.extend(0.0) / 2.0
+                            * if button.flip_x {
+                                Vec3 {
+                                    x: -1.0,
+                                    y: 1.0,
+                                    z: 1.0,
+                                }
+                            } else {
+                                Vec3 {
+                                    x: 1.0,
+                                    y: 1.0,
+                                    z: 1.0,
+                                }
+                            },
                         ..default()
                     },
                 )],
@@ -1365,42 +1382,40 @@ fn resize_background(
 
 fn mouse_activity(
     entity: Entity,
-    buttons: &mut Query<(Entity, &button::Marker, &mut Sprite)>,
+    buttons: &mut Query<(Entity, &mut Sprite)>,
     new_index: usize,
 ) {
-    let (_entity, _marker, mut sprite) = buttons
+    let (_entity, mut sprite) = buttons
         .iter_mut()
-        .find(|(entity_, marker, _)| {
-            *entity_ == entity && matches!(marker, button::Marker::Undo | button::Marker::Redo)
-        })
+        .find(|(entity_, _)| *entity_ == entity)
         .unwrap();
     sprite.texture_atlas.as_mut().unwrap().index = new_index;
 }
 
 fn mouse_over(
     on_over: On<Pointer<Over>>,
-    mut buttons: Query<(Entity, &button::Marker, &mut Sprite)>,
+    mut buttons: Query<(Entity, &mut Sprite)>,
 ) {
     mouse_activity(on_over.entity, &mut buttons, 1);
 }
 
 fn mouse_out(
     on_out: On<Pointer<Out>>,
-    mut buttons: Query<(Entity, &button::Marker, &mut Sprite)>,
+    mut buttons: Query<(Entity, &mut Sprite)>,
 ) {
     mouse_activity(on_out.entity, &mut buttons, 0);
 }
 
 fn mouse_press(
     on_press: On<Pointer<Press>>,
-    mut buttons: Query<(Entity, &button::Marker, &mut Sprite)>,
+    mut buttons: Query<(Entity, &mut Sprite)>,
 ) {
     mouse_activity(on_press.entity, &mut buttons, 2);
 }
 
 fn mouse_release(
     on_release: On<Pointer<Release>>,
-    mut buttons: Query<(Entity, &button::Marker, &mut Sprite)>,
+    mut buttons: Query<(Entity, &mut Sprite)>,
 ) {
     mouse_activity(on_release.entity, &mut buttons, 1);
 }
@@ -1503,7 +1518,7 @@ fn help_mouse(
     mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
     mut history: ResMut<History>,
 ) {
-    redo(&mut commands, &mut history_valid_pair_tiles, &mut history)
+    help();
 }
 
 fn help_keyboard(
