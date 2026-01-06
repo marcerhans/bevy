@@ -1429,8 +1429,14 @@ fn undo_mouse(
         (With<tile::Marker<0>>, With<marker::Hidden>),
     >,
     mut history: ResMut<History>,
+    mut selected_tile: ResMut<SelectedTile>,
 ) {
-    undo(&mut commands, &mut history_valid_pair_tiles, &mut history)
+    undo(
+        &mut commands,
+        &mut history_valid_pair_tiles,
+        &mut history,
+        &mut selected_tile,
+    )
 }
 
 fn undo_keyboard(
@@ -1441,9 +1447,15 @@ fn undo_keyboard(
         (With<tile::Marker<0>>, With<marker::Hidden>),
     >,
     mut history: ResMut<History>,
+    mut selected_tile: ResMut<SelectedTile>,
 ) {
     if key.just_pressed(KeyCode::KeyU) {
-        undo(&mut commands, &mut history_valid_pair_tiles, &mut history)
+        undo(
+            &mut commands,
+            &mut history_valid_pair_tiles,
+            &mut history,
+            &mut selected_tile,
+        )
     }
 }
 
@@ -1454,8 +1466,11 @@ fn undo(
         (With<tile::Marker<0>>, With<marker::Hidden>),
     >,
     history: &mut ResMut<History>,
+    selected_tile: &mut ResMut<SelectedTile>,
 ) {
     if let Some(history_item) = history.pop_front() {
+        ***selected_tile = None;
+
         match history_item {
             HistoryItem::ValidPair(entity0, entity1) => {
                 let [mut a, mut b] = history_valid_pair_tiles
@@ -1476,8 +1491,14 @@ fn redo_mouse(
     mut commands: Commands,
     mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
     mut history: ResMut<History>,
+    mut selected_tile: ResMut<SelectedTile>,
 ) {
-    redo(&mut commands, &mut history_valid_pair_tiles, &mut history)
+    redo(
+        &mut commands,
+        &mut history_valid_pair_tiles,
+        &mut history,
+        &mut selected_tile,
+    )
 }
 
 fn redo_keyboard(
@@ -1485,9 +1506,15 @@ fn redo_keyboard(
     mut commands: Commands,
     mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
     mut history: ResMut<History>,
+    mut selected_tile: ResMut<SelectedTile>,
 ) {
     if key.just_pressed(KeyCode::KeyR) {
-        redo(&mut commands, &mut history_valid_pair_tiles, &mut history)
+        redo(
+            &mut commands,
+            &mut history_valid_pair_tiles,
+            &mut history,
+            &mut selected_tile,
+        )
     }
 }
 
@@ -1495,8 +1522,11 @@ fn redo(
     commands: &mut Commands,
     history_valid_pair_tiles: &mut Query<&mut Visibility, With<tile::Marker<0>>>,
     history: &mut ResMut<History>,
+    selected_tile: &mut ResMut<SelectedTile>,
 ) {
     if let Some(history_item) = history.pop_front_redo() {
+        ***selected_tile = None;
+
         match history_item {
             HistoryItem::ValidPair(entity0, entity1) => {
                 let [mut a, mut b] = history_valid_pair_tiles
