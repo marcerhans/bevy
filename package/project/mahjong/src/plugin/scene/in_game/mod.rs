@@ -85,6 +85,13 @@ impl History {
         item
     }
 
+    pub fn push_front_redo(
+        &mut self,
+        item: HistoryItem,
+    ) {
+        self.undo.push_front(item);
+    }
+
     pub fn pop_front_redo(&mut self) -> Option<HistoryItem> {
         self.redo.pop_front()
     }
@@ -1431,7 +1438,7 @@ fn redo(
                 let [mut a, mut b] = history_valid_pair_tiles
                     .get_many_mut([entity0, entity1])
                     .unwrap();
-                history.push_front(HistoryItem::ValidPair(entity0, entity1));
+                history.push_front_redo(HistoryItem::ValidPair(entity0, entity1));
                 commands.entity(entity0).insert(marker::Hidden);
                 commands.entity(entity1).insert(marker::Hidden);
                 *a = Visibility::Hidden;
