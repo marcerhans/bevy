@@ -1269,7 +1269,7 @@ pub fn spawn_buttons(
     ];
 
     for button in buttons {
-        spawn(
+        let mut ec = spawn(
             &mut commands,
             (
                 button.marker.clone(),
@@ -1301,15 +1301,17 @@ pub fn spawn_buttons(
                     },
                 )],
             ),
-        )
-        .observe(mouse_over)
-        .observe(mouse_out)
-        .observe(mouse_press)
-        .observe(mouse_release)
-        .observe(match button.marker {
-            button::Marker::Undo => undo_mouse,
-            button::Marker::Redo => redo_mouse,
-        });
+        );
+
+        ec.observe(mouse_over)
+            .observe(mouse_out)
+            .observe(mouse_press)
+            .observe(mouse_release);
+
+        match button.marker {
+            button::Marker::Undo => ec.observe(undo_mouse),
+            button::Marker::Redo => ec.observe(redo_mouse),
+        };
     }
 }
 
