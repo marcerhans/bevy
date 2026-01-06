@@ -1020,17 +1020,16 @@ pub fn spawn_tiles(
 }
 
 pub fn generate_solvable_board(
-    tiles: u32,
     possible_positions: Vec<tile::Position>,
     mut seed: Option<u64>,
 ) -> Vec<(tile::Position, tile::Variant)> {
-    if tiles % 2 != 0 {
+    if possible_positions.len() % 2 != 0 {
         panic!();
     }
 
     const TILE_CATEGORY_SIZE: u32 = 4;
     const TILE_LAYERS: u32 = 4;
-    let tile_categories = tiles / TILE_CATEGORY_SIZE;
+    let tile_categories = possible_positions.len() as u32 / TILE_CATEGORY_SIZE;
     let tile_pairs = tile_categories / 2;
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
         .map(|variant| (tile::Variant(variant), tile::Variant(variant)))
@@ -1055,6 +1054,7 @@ pub fn generate_solvable_board(
     fn place_position_variant_pair(
         positions_by_layer: &mut [Vec<&tile::Position>; TILE_LAYERS as usize],
         variant: tile::Variant,
+        occupied_positions:
     ) -> tile::Position {
         todo!()
     }
