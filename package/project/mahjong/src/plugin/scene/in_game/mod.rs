@@ -821,6 +821,7 @@ mod button {
     #[derive(Component, Clone)]
     pub enum Marker {
         Undo,
+        Redo,
     }
 
     impl Marker {
@@ -829,6 +830,7 @@ mod button {
 
             match self {
                 Undo => "[U]ndo",
+                Redo => "[R]edo",
             }
         }
     }
@@ -1255,10 +1257,16 @@ pub fn spawn_buttons(
         offset: Vec3,
     }
 
-    let buttons = [Button {
-        marker: button::Marker::Undo,
-        offset: Vec3::default(),
-    }];
+    let buttons = [
+        Button {
+            marker: button::Marker::Undo,
+            offset: Vec3::default(),
+        },
+        Button {
+            marker: button::Marker::Redo,
+            offset: Vec3::default(),
+        },
+    ];
 
     for button in buttons {
         spawn(
@@ -1300,6 +1308,7 @@ pub fn spawn_buttons(
         .observe(mouse_release)
         .observe(match button.marker {
             button::Marker::Undo => undo_mouse,
+            button::Marker::Redo => redo_mouse,
         });
     }
 }
@@ -1414,6 +1423,15 @@ fn undo(
             HistoryItem::Shuffle(items) => todo!(),
         }
     }
+}
+
+fn redo_mouse(
+    _on_press: On<Pointer<Press>>,
+    mut commands: Commands,
+    mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
+    mut history: ResMut<History>,
+) {
+    redo(&mut commands, &mut history_valid_pair_tiles, &mut history)
 }
 
 fn redo_keyboard(
