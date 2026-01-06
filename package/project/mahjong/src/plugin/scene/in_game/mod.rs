@@ -464,7 +464,7 @@ mod tile {
                                 image.clone(),
                                 None,
                             ),
-                            template(0.0, 0.0, 0.2, size.clone(), image.clone(), Some(color),),
+                            template(0.0, 0.0, 0.2, size.clone(), image.clone(), None,),
                             template(
                                 max_size.x / 5.0,
                                 -max_size.y / 5.0,
