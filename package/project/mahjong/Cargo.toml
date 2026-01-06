@@ -25,4 +25,6 @@ getrandom = { version = "0.3.4" }
 getrandom = { version = "0.3.4", features = ["wasm_js"] }
 
 [features]
-debug = ["bevy/dynamic_linking"] # Use for debug/dev builds. Faster compile times.
+debug = [
+    "bevy/dynamic_linking",
+] # Use for debug/dev builds. Faster compile times.

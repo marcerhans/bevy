@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
     sprite::{Anchor, Text2dShadow},
 };
-use rand::seq::SliceRandom;
+use rand::{SeedableRng, rngs::StdRng, seq::SliceRandom};
 use std::collections::VecDeque;
 
 pub struct Plugin;
@@ -1017,6 +1017,24 @@ pub fn spawn_tiles(
             &offset,
         );
     }
+}
+
+pub fn generate_solvable_board(
+    tiles: u32,
+    mut possible_positions: Vec<tile::Position>,
+    mut seed: Option<u64>,
+) -> Vec<(tile::Position, tile::Variant)> {
+    const TILE_PAIR_SIZE: u32 = 4;
+    let tile_pairs = tiles / TILE_PAIR_SIZE;
+    let mut available_tile_variants: Vec<u32> = (0..tile_pairs).map(|_| TILE_PAIR_SIZE).collect();
+
+    if seed.is_none() {
+        seed = Some(0);
+    }
+    let seed = seed.unwrap();
+    let mut rng = StdRng::seed_from_u64(seed);
+
+    todo!()
 }
 
 pub fn tile_pressed(
