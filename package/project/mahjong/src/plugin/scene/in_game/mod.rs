@@ -24,7 +24,7 @@ impl bevy::prelude::Plugin for Plugin {
             .add_systems(Update, resize_background.run_if(in_state(InGame::Root)))
             .add_systems(
                 Update,
-                (undo_keyboard, redo_keyboard).run_if(in_state(InGame::Root)),
+                (undo_keyboard, redo_keyboard, help_keyboard).run_if(in_state(InGame::Root)),
             );
     }
 }
@@ -822,6 +822,8 @@ mod button {
     pub enum Marker {
         Undo,
         Redo,
+        Help,
+        NewGame,
     }
 
     impl Marker {
@@ -831,6 +833,8 @@ mod button {
             match self {
                 Undo => "[U]ndo",
                 Redo => "[R]edo",
+                Help => "[H]elp",
+                NewGame => "NewGame",
             }
         }
     }
@@ -1254,17 +1258,36 @@ pub fn spawn_buttons(
 
     struct Button {
         marker: button::Marker,
+        flip_x: bool,
         offset: Vec3,
     }
 
     let buttons = [
         Button {
             marker: button::Marker::Undo,
+            flip_x: false,
             offset: Vec3::default(),
         },
         Button {
             marker: button::Marker::Redo,
+            flip_x: false,
+            offset: Vec3 {
+                y: button_size.y,
+                ..default()
+            },
+        },
+        Button {
+            marker: button::Marker::Undo,
+            flip_x: true,
             offset: Vec3::default(),
+        },
+        Button {
+            marker: button::Marker::Redo,
+            flip_x: true,
+            offset: Vec3 {
+                y: button_size.y,
+                ..default()
+            },
         },
     ];
 
@@ -1285,7 +1308,8 @@ pub fn spawn_buttons(
                 },
                 Transform {
                     translation: Vec3 {
-                        x: -projection.area.width() / 2.0,
+                        x: (-projection.area.width() / 2.0)
+                            * if button.flip_x { -1.0 } else { 1.0 },
                         y: -projection.area.height() / 2.0,
                         ..default()
                     } + button.offset,
@@ -1311,6 +1335,8 @@ pub fn spawn_buttons(
         match button.marker {
             button::Marker::Undo => ec.observe(undo_mouse),
             button::Marker::Redo => ec.observe(redo_mouse),
+            button::Marker::Help => ec.observe(help_mouse),
+            button::Marker::NewGame => ec.observe(new_game_mouse),
         };
     }
 }
@@ -1469,4 +1495,37 @@ fn redo(
             HistoryItem::Shuffle(items) => todo!(),
         }
     }
+}
+
+fn help_mouse(
+    _on_press: On<Pointer<Press>>,
+    mut commands: Commands,
+    mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
+    mut history: ResMut<History>,
+) {
+    redo(&mut commands, &mut history_valid_pair_tiles, &mut history)
+}
+
+fn help_keyboard(
+    key: Res<ButtonInput<KeyCode>>,
+    mut commands: Commands,
+    mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
+    mut history: ResMut<History>,
+) {
+    if key.just_pressed(KeyCode::KeyH) {
+        help();
+    }
+}
+
+fn help() {
+    info!("help");
+}
+
+fn new_game_mouse(
+    _on_press: On<Pointer<Press>>,
+    mut commands: Commands,
+    mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
+    mut history: ResMut<History>,
+) {
+    info!("new game");
 }
