@@ -22,7 +22,10 @@ impl bevy::prelude::Plugin for Plugin {
                 (spawn_background, spawn_tiles, spawn_buttons),
             )
             .add_systems(Update, resize_background.run_if(in_state(InGame::Root)))
-            .add_systems(Update, undo_keyboard.run_if(in_state(InGame::Root)));
+            .add_systems(
+                Update,
+                (undo_keyboard, redo_keyboard).run_if(in_state(InGame::Root)),
+            );
     }
 }
 
@@ -46,13 +49,17 @@ pub enum InGame {
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct SelectedTile(Option<Entity>);
 
+#[derive(Clone)]
 pub enum HistoryItem {
     ValidPair(Entity, Entity),
     Shuffle(Vec<(Entity, tile::Variant)>),
 }
 
-#[derive(Resource, Deref, DerefMut, Default)]
-pub struct History(VecDeque<HistoryItem>);
+#[derive(Resource, Default)]
+pub struct History {
+    undo: VecDeque<HistoryItem>,
+    redo: VecDeque<HistoryItem>,
+}
 
 impl History {
     const MAX: usize = 32;
@@ -61,14 +68,25 @@ impl History {
         &mut self,
         item: HistoryItem,
     ) {
-        if self.0.len() >= Self::MAX {
-            self.0.pop_back();
+        if self.undo.len() >= Self::MAX {
+            self.undo.pop_back();
         }
-        self.0.push_front(item);
+        self.undo.push_front(item);
+        self.redo.clear();
     }
 
     pub fn pop_front(&mut self) -> Option<HistoryItem> {
-        self.0.pop_front()
+        let item = self.undo.pop_front();
+
+        if let Some(item) = item.clone() {
+            self.redo.push_front(item);
+        }
+
+        item
+    }
+
+    pub fn pop_front_redo(&mut self) -> Option<HistoryItem> {
+        self.redo.pop_front()
     }
 }
 
@@ -1385,6 +1403,39 @@ fn undo(
                 commands.entity(entity1).remove::<marker::Hidden>();
                 *a = Visibility::Inherited;
                 *b = Visibility::Inherited;
+            },
+            HistoryItem::Shuffle(items) => todo!(),
+        }
+    }
+}
+
+fn redo_keyboard(
+    key: Res<ButtonInput<KeyCode>>,
+    mut commands: Commands,
+    mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
+    mut history: ResMut<History>,
+) {
+    if key.just_pressed(KeyCode::KeyR) {
+        redo(&mut commands, &mut history_valid_pair_tiles, &mut history)
+    }
+}
+
+fn redo(
+    commands: &mut Commands,
+    history_valid_pair_tiles: &mut Query<&mut Visibility, With<tile::Marker<0>>>,
+    history: &mut ResMut<History>,
+) {
+    if let Some(history_item) = history.pop_front_redo() {
+        match history_item {
+            HistoryItem::ValidPair(entity0, entity1) => {
+                let [mut a, mut b] = history_valid_pair_tiles
+                    .get_many_mut([entity0, entity1])
+                    .unwrap();
+                history.push_front(HistoryItem::ValidPair(entity0, entity1));
+                commands.entity(entity0).insert(marker::Hidden);
+                commands.entity(entity1).insert(marker::Hidden);
+                *a = Visibility::Hidden;
+                *b = Visibility::Hidden;
             },
             HistoryItem::Shuffle(items) => todo!(),
         }
