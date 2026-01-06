@@ -1533,21 +1533,6 @@ fn help_toggle(
     mut help_msg: MessageReader<HelpMsg>,
     mut buttons: Query<(Entity, &button::Marker, &mut Sprite)>,
     mut help_enabled: ResMut<HelpEnabled>,
-    mut tiles: Query<
-        (
-            Entity,
-            &tile::Variant,
-            &tile::Position,
-            &mut Sprite,
-            &mut Visibility,
-        ),
-        (
-            With<tile::Marker<0>>,
-            Without<marker::Hidden>,
-            Without<button::Marker>,
-        ),
-    >,
-    selected_tile: Res<SelectedTile>,
 ) {
     if help_msg.is_empty() {
         return;
@@ -1563,35 +1548,7 @@ fn help_toggle(
 
     match **help_enabled {
         true => button_sprite.color = Color::hsl(120.0, 1.0, 0.5),
-        false => {
-            button_sprite.color = Color::default();
-
-            if selected_tile.is_none() {
-                return;
-            }
-
-            let (
-                selected_entity,
-                selected_variant,
-                _selected_position,
-                _selected_sprite,
-                _selected_visiblity,
-            ) = tiles.get(selected_tile.unwrap()).unwrap();
-
-            let mut entities_to_reset = vec![];
-
-            for (entity, variant, _position, _sprite, _visibility) in &tiles {
-                if selected_entity != entity && *selected_variant == *variant {
-                    entities_to_reset.push(entity);
-                }
-            }
-
-            for entity in entities_to_reset {
-                let (_entity, _variant, _position, mut sprite, _visiblity) =
-                    tiles.get_mut(entity).unwrap();
-                sprite.color = tile::DEFAULT_COLOR;
-            }
-        },
+        false => button_sprite.color = Color::default(),
     }
 }
 
@@ -1614,6 +1571,28 @@ fn help(
         Some(selected_tile) => {
             if !**help_enabled {
                 *prev_selection = None;
+
+                let (
+                    selected_entity,
+                    selected_variant,
+                    _selected_position,
+                    _selected_sprite,
+                    _selected_visiblity,
+                ) = tiles.get(selected_tile).unwrap();
+
+                let mut entities_to_reset = vec![];
+
+                for (entity, variant, _position, _sprite, _visibility) in &tiles {
+                    if selected_entity != entity && *selected_variant == *variant {
+                        entities_to_reset.push(entity);
+                    }
+                }
+
+                for entity in entities_to_reset {
+                    let (_entity, _variant, _position, mut sprite, _visiblity) =
+                        tiles.get_mut(entity).unwrap();
+                    sprite.color = tile::DEFAULT_COLOR;
+                }
                 return;
             }
 
