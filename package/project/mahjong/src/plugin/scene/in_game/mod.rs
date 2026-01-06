@@ -1021,13 +1021,18 @@ pub fn spawn_tiles(
 
 pub fn generate_solvable_board(
     tiles: u32,
-    mut possible_positions: Vec<tile::Position>,
+    possible_positions: Vec<tile::Position>,
     mut seed: Option<u64>,
 ) -> Vec<(tile::Position, tile::Variant)> {
-    const TILE_PAIR_SIZE: u32 = 4;
+    if tiles % 2 != 0 {
+        panic!();
+    }
+
+    const TILE_CATEGORY_SIZE: u32 = 4;
     const TILE_LAYERS: u32 = 4;
-    let tile_pairs = tiles / TILE_PAIR_SIZE;
-    let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..(tile_pairs / 2))
+    let tile_categories = tiles / TILE_CATEGORY_SIZE;
+    let tile_pairs = tile_categories / 2;
+    let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
         .map(|variant| (tile::Variant(variant), tile::Variant(variant)))
         .collect();
     if seed.is_none() {
@@ -1035,8 +1040,7 @@ pub fn generate_solvable_board(
     }
     let seed = seed.unwrap();
     let mut rng = StdRng::seed_from_u64(seed);
-
-    let result: Vec<(tile::Position, tile::Variant)> = vec![];
+    let mut result: Vec<(tile::Position, tile::Variant)> = vec![];
 
     // Categorize positions.
     let mut positions_by_layer: [Vec<&tile::Position>; TILE_LAYERS as usize] =
@@ -1048,15 +1052,28 @@ pub fn generate_solvable_board(
             .for_each(|pos| positions_by_layer[i as usize].push(pos));
     }
 
-    // Place 3 (random) seed tile pairs on random rows/cols on bottom layer.
-    let seed_tiles: Vec<((tile::Position, tile::Variant))> = vec![];
-    // for i in 0..3*2 {
-    //     let variant_pair = available_tile_variants.pop().unwrap();
-    //     seed_tiles.push(
-    //         (),
-    //     );
-    // }
-    // rng.random_range(0..)
+    fn place_position_variant_pair(
+        positions_by_layer: &mut [Vec<&tile::Position>; TILE_LAYERS as usize],
+        variant: tile::Variant,
+    ) -> tile::Position {
+        todo!()
+    }
+
+    fn place_on_random_row() {}
+    fn place_on_column() {}
+
+    // Place tiles
+    for i in 0..tile_pairs {
+        let variant_pair = available_tile_variants.pop().unwrap();
+        let variant_pair = [variant_pair.0, variant_pair.1];
+
+        for j in 0..2 {
+            result.push((
+                place_position_variant_pair(&mut positions_by_layer, variant_pair[j]),
+                variant_pair[j],
+            ));
+        }
+    }
 
     result
 }
