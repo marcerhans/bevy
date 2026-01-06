@@ -1636,6 +1636,7 @@ fn help(
             }
         },
         None => {
+            *prev_selection = None;
             for (_entity, _variant, _position, mut sprite, _visibility) in &mut tiles {
                 sprite.color = tile::DEFAULT_COLOR;
             }
