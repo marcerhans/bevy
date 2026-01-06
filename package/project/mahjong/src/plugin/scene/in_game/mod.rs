@@ -83,9 +83,8 @@ mod marker {
 }
 
 mod tile {
-    use std::marker::PhantomData;
-
     use bevy::prelude::*;
+    use std::marker::PhantomData;
 
     pub mod asset {
         pub mod texture {
@@ -102,6 +101,13 @@ mod tile {
             pub const TILE_BORDER_LENGTH: u32 = 90;
         }
     }
+
+    pub const DEFAULT_COLOR: Color = Color::Hsla(Hsla {
+        hue: 0.0,
+        saturation: 0.0,
+        lightness: 1.1,
+        alpha: 1.0,
+    });
 
     #[derive(Bundle)]
     pub struct Tile {
@@ -911,7 +917,7 @@ pub fn spawn_tiles(
                 },
                 Sprite {
                     custom_size: Some(tile_size_full),
-                    color: Color::hsl(0.0, 0.0, 1.25),
+                    color: tile::DEFAULT_COLOR,
                     ..Sprite::from_image(tile_texture.clone())
                 },
                 Transform {
@@ -994,7 +1000,7 @@ pub fn tile_pressed(
 
     if selected_entity == pressed_entity {
         let (_, _, _, mut pressed_sprite, _) = tiles.get_mut(pressed_entity).unwrap();
-        pressed_sprite.color = Color::default();
+        pressed_sprite.color = tile::DEFAULT_COLOR;
         return;
     }
 
@@ -1018,7 +1024,7 @@ pub fn tile_pressed(
             .get_many_mut([pressed_entity, selected_entity])
             .unwrap();
 
-        selected_sprite.color = Color::default();
+        selected_sprite.color = tile::DEFAULT_COLOR;
     }
 
     let [
