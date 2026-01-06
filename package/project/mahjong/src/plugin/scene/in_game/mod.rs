@@ -1344,7 +1344,9 @@ fn mouse_activity(
 ) {
     let (_entity, _marker, mut sprite) = buttons
         .iter_mut()
-        .find(|(entity_, marker, _)| *entity_ == entity && matches!(marker, button::Marker::Undo))
+        .find(|(entity_, marker, _)| {
+            *entity_ == entity && matches!(marker, button::Marker::Undo | button::Marker::Redo)
+        })
         .unwrap();
     sprite.texture_atlas.as_mut().unwrap().index = new_index;
 }
