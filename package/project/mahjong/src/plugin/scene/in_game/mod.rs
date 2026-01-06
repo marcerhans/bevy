@@ -1020,16 +1020,16 @@ pub fn spawn_tiles(
 }
 
 pub fn generate_solvable_board(
-    possible_positions: Vec<tile::Position>,
+    mut available_positions: Vec<tile::Position>,
     mut seed: Option<u64>,
 ) -> Vec<(tile::Position, tile::Variant)> {
-    if possible_positions.len() % 2 != 0 {
+    if available_positions.len() % 2 != 0 {
         panic!();
     }
 
     const TILE_CATEGORY_SIZE: u32 = 4;
     const TILE_LAYERS: u32 = 4;
-    let tile_categories = possible_positions.len() as u32 / TILE_CATEGORY_SIZE;
+    let tile_categories = available_positions.len() as u32 / TILE_CATEGORY_SIZE;
     let tile_pairs = tile_categories / 2;
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
         .map(|variant| (tile::Variant(variant), tile::Variant(variant)))
@@ -1041,37 +1041,37 @@ pub fn generate_solvable_board(
     let mut rng = StdRng::seed_from_u64(seed);
     let mut result: Vec<(tile::Position, tile::Variant)> = vec![];
 
-    // Categorize positions.
-    let mut positions_by_layer: [Vec<&tile::Position>; TILE_LAYERS as usize] =
-        [vec![], vec![], vec![], vec![]];
-    for i in 0..TILE_LAYERS {
-        possible_positions
-            .iter()
-            .filter(|pos| pos.z == i)
-            .for_each(|pos| positions_by_layer[i as usize].push(pos));
-    }
+    // // Categorize positions.
+    // let mut positions_by_layer: [Vec<&tile::Position>; TILE_LAYERS as usize] =
+    //     [vec![], vec![], vec![], vec![]];
+    // for i in 0..TILE_LAYERS {
+    //     available_positions
+    //         .iter()
+    //         .filter(|pos| pos.z == i)
+    //         .for_each(|pos| positions_by_layer[i as usize].push(pos));
+    // }
 
     fn place_position_variant_pair(
-        positions_by_layer: &mut [Vec<&tile::Position>; TILE_LAYERS as usize],
+        available_positions: &mut Vec<tile::Position>,
         variant: tile::Variant,
-        occupied_positions:
+        occupied_positions: &mut Vec<(tile::Position, tile::Variant)>,
     ) -> tile::Position {
+        // Filter all (still) available rows
+        // Pick random row
+        // Find the lowest non-filled layer (for picked row)
+        // Determine "the gap"
+        // Place a block on either on top of an existing block OR in a free column spot (which is next to an occupied space)
+
         todo!()
     }
 
-    fn place_on_random_row() {}
-    fn place_on_column() {}
-
-    // Place tiles
+    // Place tiles (in pairs)
     for i in 0..tile_pairs {
         let variant_pair = available_tile_variants.pop().unwrap();
         let variant_pair = [variant_pair.0, variant_pair.1];
 
         for j in 0..2 {
-            result.push((
-                place_position_variant_pair(&mut positions_by_layer, variant_pair[j]),
-                variant_pair[j],
-            ));
+            place_position_variant_pair(&mut available_positions, variant_pair[j], &mut result);
         }
     }
 
