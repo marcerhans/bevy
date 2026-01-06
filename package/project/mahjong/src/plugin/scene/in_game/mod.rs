@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
     sprite::{Anchor, Text2dShadow},
 };
-use rand::{SeedableRng, rngs::StdRng, seq::SliceRandom};
+use rand::{Rng, SeedableRng, rngs::StdRng, seq::SliceRandom};
 use std::collections::VecDeque;
 
 pub struct Plugin;
@@ -1025,16 +1025,40 @@ pub fn generate_solvable_board(
     mut seed: Option<u64>,
 ) -> Vec<(tile::Position, tile::Variant)> {
     const TILE_PAIR_SIZE: u32 = 4;
+    const TILE_LAYERS: u32 = 4;
     let tile_pairs = tiles / TILE_PAIR_SIZE;
-    let mut available_tile_variants: Vec<u32> = (0..tile_pairs).map(|_| TILE_PAIR_SIZE).collect();
-
+    let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..(tile_pairs / 2))
+        .map(|variant| (tile::Variant(variant), tile::Variant(variant)))
+        .collect();
     if seed.is_none() {
         seed = Some(0);
     }
     let seed = seed.unwrap();
     let mut rng = StdRng::seed_from_u64(seed);
 
-    todo!()
+    let result: Vec<(tile::Position, tile::Variant)> = vec![];
+
+    // Categorize positions.
+    let mut positions_by_layer: [Vec<&tile::Position>; TILE_LAYERS as usize] =
+        [vec![], vec![], vec![], vec![]];
+    for i in 0..TILE_LAYERS {
+        possible_positions
+            .iter()
+            .filter(|pos| pos.z == i)
+            .for_each(|pos| positions_by_layer[i as usize].push(pos));
+    }
+
+    // Place 3 (random) seed tile pairs on random rows/cols on bottom layer.
+    let seed_tiles: Vec<((tile::Position, tile::Variant))> = vec![];
+    // for i in 0..3*2 {
+    //     let variant_pair = available_tile_variants.pop().unwrap();
+    //     seed_tiles.push(
+    //         (),
+    //     );
+    // }
+    // rng.random_range(0..)
+
+    result
 }
 
 pub fn tile_pressed(
@@ -1269,7 +1293,7 @@ pub fn spawn_buttons(
             ..default()
         },
         Text2dShadow {
-            offset: Vec2 { x: 5.0, y: -5.0 },
+            offset: Vec2 { x: 3.0, y: -3.0 },
             color: Color::srgba(0.0, 0.0, 0.0, 0.95),
         },
         TextColor(Color::srgb_u8(239, 191, 4)),
