@@ -89,7 +89,7 @@ mod tile {
 
     pub mod asset {
         pub mod texture {
-            pub const TILE: &'static str = "misc/rev2/Tile.png";
+            pub const TILE: &'static str = "misc/rev2/Tile2.png";
             pub const ALLIANCE: &'static str = "misc/rev2/Alliance.png";
             pub const HORDE: &'static str = "misc/rev2/Horde.png";
             pub const FROSTMOURNE: &'static str = "misc/rev2/Frostmourne.png";
@@ -941,7 +941,7 @@ pub fn spawn_tiles(
                 Transform {
                     scale: Vec3 {
                         x: 1.2,
-                        y: 1.05,
+                        y: 1.03,
                         ..Vec3::splat(1.0)
                     },
                     translation: Vec3 {
