@@ -26,7 +26,14 @@ impl bevy::prelude::Plugin for Plugin {
             .add_systems(Update, resize_background.run_if(in_state(InGame::Root)))
             .add_systems(
                 Update,
-                (undo_keyboard, redo_keyboard, help_keyboard, help).run_if(in_state(InGame::Root)),
+                (
+                    undo_keyboard,
+                    redo_keyboard,
+                    help_keyboard,
+                    help_toggle,
+                    help,
+                )
+                    .run_if(in_state(InGame::Root)),
             );
     }
 }
@@ -1027,7 +1034,6 @@ pub fn tile_pressed(
     >,
     mut selected_tile: ResMut<SelectedTile>,
     mut history: ResMut<History>,
-    help_enabled: Res<HelpEnabled>,
 ) {
     let (pressed_entity, _, _, _, _) = tiles.iter().find(|tile| tile.0 == on_press.entity).unwrap();
 
@@ -1523,7 +1529,7 @@ fn help_keyboard(
     }
 }
 
-fn help(
+fn help_toggle(
     mut help_msg: MessageReader<HelpMsg>,
     mut buttons: Query<(Entity, &button::Marker, &mut Sprite)>,
     mut help_enabled: ResMut<HelpEnabled>,
@@ -1543,6 +1549,54 @@ fn help(
     match **help_enabled {
         true => button_sprite.color = Color::hsl(120.0, 1.0, 0.5),
         false => button_sprite.color = Color::default(),
+    }
+}
+
+fn help(
+    mut tiles: Query<
+        (
+            Entity,
+            &tile::Variant,
+            &tile::Position,
+            &mut Sprite,
+            &mut Visibility,
+        ),
+        (With<tile::Marker<0>>, Without<marker::Hidden>),
+    >,
+    selected_tile: Res<SelectedTile>,
+    help_enabled: Res<HelpEnabled>,
+) {
+    if !**help_enabled || selected_tile.is_none() {
+        return;
+    }
+
+    let (
+        selected_entity,
+        selected_variant,
+        _selected_position,
+        _selected_sprite,
+        _selected_visiblity,
+    ) = tiles.get(selected_tile.unwrap()).unwrap();
+
+    let mut entities_to_update = vec![];
+    let mut entities_to_reset = vec![];
+
+    for (entity, variant, _position, _sprite, _visibility) in &tiles {
+        if selected_entity != entity && *selected_variant == *variant {
+            entities_to_update.push(entity);
+        } else if selected_entity != entity {
+            entities_to_reset.push(entity);
+        }
+    }
+
+    for entity in entities_to_update {
+        let (_entity, _variant, _position, mut sprite, _visiblity) = tiles.get_mut(entity).unwrap();
+        sprite.color = Color::BLACK;
+    }
+
+    for entity in entities_to_reset {
+        let (_entity, _variant, _position, mut sprite, _visiblity) = tiles.get_mut(entity).unwrap();
+        sprite.color = tile::DEFAULT_COLOR;
     }
 }
 
