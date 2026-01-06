@@ -15,8 +15,10 @@ impl bevy::prelude::Plugin for Plugin {
         app: &mut App,
     ) {
         app.add_sub_state::<InGame>()
+            .add_message::<HelpMsg>()
             .insert_resource(SelectedTile::default())
             .insert_resource(History::default())
+            .insert_resource(HelpEnabled::default())
             .add_systems(
                 OnEnter(InGame::Root),
                 (spawn_background, spawn_tiles, spawn_buttons),
@@ -24,7 +26,7 @@ impl bevy::prelude::Plugin for Plugin {
             .add_systems(Update, resize_background.run_if(in_state(InGame::Root)))
             .add_systems(
                 Update,
-                (undo_keyboard, redo_keyboard, help_keyboard).run_if(in_state(InGame::Root)),
+                (undo_keyboard, redo_keyboard, help_keyboard, help).run_if(in_state(InGame::Root)),
             );
     }
 }
@@ -48,6 +50,12 @@ pub enum InGame {
 
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct SelectedTile(Option<Entity>);
+
+#[derive(Resource, Default, Deref, DerefMut, PartialEq, Eq)]
+pub struct HelpEnabled(bool);
+
+#[derive(Message)]
+pub struct HelpMsg;
 
 #[derive(Clone)]
 pub enum HistoryItem {
@@ -818,7 +826,7 @@ mod button {
         pub const BUTTON: &'static str = "misc/rev2/button-atlas_1998x429.png";
     }
 
-    #[derive(Component, Clone)]
+    #[derive(Component, Clone, PartialEq)]
     pub enum Marker {
         Undo,
         Redo,
@@ -1019,6 +1027,7 @@ pub fn tile_pressed(
     >,
     mut selected_tile: ResMut<SelectedTile>,
     mut history: ResMut<History>,
+    help_enabled: Res<HelpEnabled>,
 ) {
     let (pressed_entity, _, _, _, _) = tiles.iter().find(|tile| tile.0 == on_press.entity).unwrap();
 
@@ -1035,28 +1044,14 @@ pub fn tile_pressed(
         return;
     }
 
-    {
-        let [
-            (
-                pressed_entity,
-                pressed_variant,
-                pressed_position,
-                mut pressed_sprite,
-                mut pressed_visibility,
-            ),
-            (
-                selected_entity,
-                selected_variant,
-                selected_position,
-                mut selected_sprite,
-                mut selected_visibility,
-            ),
-        ] = tiles
-            .get_many_mut([pressed_entity, selected_entity])
-            .unwrap();
-
-        selected_sprite.color = tile::DEFAULT_COLOR;
-    }
+    let (
+        _selected_entity,
+        _selected_variant,
+        _selected_position,
+        mut selected_sprite,
+        _selected_visibility,
+    ) = tiles.get_mut(selected_entity).unwrap();
+    selected_sprite.color = tile::DEFAULT_COLOR;
 
     let [
         (pressed_entity, pressed_variant, pressed_position, pressed_sprite, pressed_visibility),
@@ -1064,8 +1059,8 @@ pub fn tile_pressed(
             selected_entity,
             selected_variant,
             selected_position,
-            selected_sprite,
-            selected_visibility,
+            _selected_sprite,
+            _selected_visibility,
         ),
     ] = tiles.get_many([pressed_entity, selected_entity]).unwrap();
 
@@ -1514,26 +1509,41 @@ fn redo(
 
 fn help_mouse(
     _on_press: On<Pointer<Press>>,
-    mut commands: Commands,
-    mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
-    mut history: ResMut<History>,
+    mut help_msg: MessageWriter<HelpMsg>,
 ) {
-    help();
+    help_msg.write(HelpMsg);
 }
 
 fn help_keyboard(
     key: Res<ButtonInput<KeyCode>>,
-    mut commands: Commands,
-    mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
-    mut history: ResMut<History>,
+    mut help_msg: MessageWriter<HelpMsg>,
 ) {
     if key.just_pressed(KeyCode::KeyH) {
-        help();
+        help_msg.write(HelpMsg);
     }
 }
 
-fn help() {
-    info!("help");
+fn help(
+    mut help_msg: MessageReader<HelpMsg>,
+    mut buttons: Query<(Entity, &button::Marker, &mut Sprite)>,
+    mut help_enabled: ResMut<HelpEnabled>,
+) {
+    if help_msg.is_empty() {
+        return;
+    }
+    help_msg.clear();
+
+    **help_enabled = !(**help_enabled);
+
+    let (_, _, mut button_sprite) = buttons
+        .iter_mut()
+        .find(|(_entity, marker, _sprite)| **marker == button::Marker::Help)
+        .unwrap();
+
+    match **help_enabled {
+        true => button_sprite.color = Color::hsl(120.0, 1.0, 0.5),
+        false => button_sprite.color = Color::default(),
+    }
 }
 
 fn new_game_mouse(
