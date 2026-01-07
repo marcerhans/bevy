@@ -1053,8 +1053,6 @@ pub fn generate_solvable_board(
 
     fn place_position_variant_pair(
         layers: u32,
-        rows: u32,
-        columns: u32,
         available_positions: &mut Vec<tile::Position>,
         variant_pair_to_place: (tile::Variant, tile::Variant),
         occupied_positions: &mut Vec<(tile::Position, tile::Variant)>,
@@ -1065,28 +1063,27 @@ pub fn generate_solvable_board(
         available_positions.iter().for_each(|pos| {
             available_rows.insert(pos.y);
         });
-        let mut available_rows: Vec<u32> = available_rows.into_iter().collect();
+        let available_rows: Vec<u32> = available_rows.into_iter().collect();
 
         // Pick random row
-        available_rows.shuffle(rng);
-        let random_row = available_rows.first().unwrap();
+        let random_row = available_rows[rng.random_range(0..available_rows.len())];
 
         // Categorize columns by layer (for selected random row)
         let mut available_columns_by_layer = vec![Vec::<tile::Position>::new(); layers as usize];
         available_positions.iter().for_each(|pos| {
-            if pos.y == *random_row {
+            if pos.y == random_row {
                 available_columns_by_layer[pos.z as usize].push(*pos);
             }
         });
         let mut occupied_columns_by_layer = vec![Vec::<tile::Position>::new(); layers as usize];
         occupied_positions.iter().for_each(|(pos, _variant)| {
-            if pos.y == *random_row {
+            if pos.y == random_row {
                 occupied_columns_by_layer[pos.z as usize].push(*pos);
             }
         });
 
         // Try to make placement on row OR (by random chance) try next layer
-        for layer in 0..occupied_columns_by_layer.len() {
+        for layer in 0..layers as usize {
             if available_columns_by_layer[layer].is_empty() {
                 // No tiles left to place on this layer.
                 continue;
@@ -1094,6 +1091,7 @@ pub fn generate_solvable_board(
 
             if occupied_columns_by_layer[layer].is_empty() {
                 // Tile MUST be placed on current layer
+                // Place tile
                 available_columns_by_layer[layer].shuffle(rng);
                 available_positions
                     .retain(|pos| *pos != *available_columns_by_layer[layer].first().unwrap());
@@ -1104,8 +1102,76 @@ pub fn generate_solvable_board(
                 break;
             }
 
-            // The row is neither fully empty or fully filled
-            if 
+            // The row is neither fully empty nor fully filled
+            // By random chance, decide if the tile should be placed on current layer or next.
+            // (Given that we are not ALREADY on the last/top layer)
+            let on_top_layer = layer != layers as usize - 1;
+            let go_for_next_layer = rng.random_bool(0.5);
+            if !on_top_layer && go_for_next_layer {
+                todo!()
+            } else {
+                // Place tile
+                // Decide, by chance, which side to place on.
+                let mut place_to_the_left = rng.random_bool(0.5);
+                let mut tile_to_place = None;
+
+                if place_to_the_left {
+                    let left_most_occupied_column = occupied_columns_by_layer[layer]
+                        .iter()
+                        .min_by_key(|pos| pos.x)
+                        .unwrap();
+                    let possible_tile_position = available_columns_by_layer[layer]
+                        .iter()
+                        .position(|pos| pos.x == left_most_occupied_column.x - 1)
+                        .map(|i| available_columns_by_layer[layer].swap_remove(i));
+
+                    if let Some(possible_tile_position) = possible_tile_position {
+                        tile_to_place = Some(possible_tile_position);
+                    } else {
+                        // There is not available "left" tile. Pick from right side instead.
+                        place_to_the_left = false;
+                    }
+                }
+
+                if !place_to_the_left {
+                    let left_most_occupied_column = occupied_columns_by_layer[layer]
+                        .iter()
+                        .max_by_key(|pos| pos.x)
+                        .unwrap();
+                    let possible_tile_position = available_columns_by_layer[layer]
+                        .iter()
+                        .position(|pos| pos.x == left_most_occupied_column.x - 1)
+                        .map(|i| available_columns_by_layer[layer].swap_remove(i));
+
+                    if let Some(possible_tile_position) = possible_tile_position {
+                        tile_to_place = Some(possible_tile_position);
+                    }
+                }
+
+                if tile_to_place.is_none() {
+                    // We tried from right, try from left :)))))
+                    let left_most_occupied_column = occupied_columns_by_layer[layer]
+                        .iter()
+                        .min_by_key(|pos| pos.x)
+                        .unwrap();
+                    tile_to_place = available_columns_by_layer[layer]
+                        .iter()
+                        .position(|pos| pos.x == left_most_occupied_column.x - 1)
+                        .map(|i| available_columns_by_layer[layer].swap_remove(i));
+                }
+
+                occupied_positions.push((tile_to_place.unwrap(), variant_pair_to_place.0));
+
+                // by finding the left- and right-most tiles
+                // available_columns_by_layer[layer].shuffle(rng);
+                // available_positions
+                //     .retain(|pos| *pos != *available_columns_by_layer[layer].first().unwrap());
+                // occupied_positions.push((
+                //     *available_columns_by_layer[layer].first().unwrap(),
+                //     variant_pair_to_place.0,
+                // ));
+                break;
+            }
         }
 
         // if available_columns
