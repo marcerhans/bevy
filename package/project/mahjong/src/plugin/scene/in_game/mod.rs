@@ -1093,8 +1093,9 @@ pub fn generate_solvable_board(
             if occupied_columns_by_layer[layer].is_empty() {
                 // Tile MUST be placed on current layer
                 // Place tile
+                let len = available_columns_by_layer[layer].len();
                 let random_column = available_columns_by_layer[layer]
-                    [rng.random_range(0..available_columns_by_layer[layer].len())];
+                    .swap_remove(rng.random_range(0..len));
                 available_positions.retain(|pos| *pos != random_column);
                 occupied_positions.push((random_column, variant_pair_to_place.0));
                 forbidden_position = Some(random_column);
