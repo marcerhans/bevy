@@ -1083,6 +1083,7 @@ pub fn generate_solvable_board(
         });
 
         // Try to make placement on row OR (by random chance) try next layer
+        let mut forbidden_position = None;
         for layer in 0..layers as usize {
             if available_columns_by_layer[layer].is_empty() {
                 // No tiles left to place on this layer.
@@ -1092,13 +1093,11 @@ pub fn generate_solvable_board(
             if occupied_columns_by_layer[layer].is_empty() {
                 // Tile MUST be placed on current layer
                 // Place tile
-                available_columns_by_layer[layer].shuffle(rng);
-                available_positions
-                    .retain(|pos| *pos != *available_columns_by_layer[layer].first().unwrap());
-                occupied_positions.push((
-                    *available_columns_by_layer[layer].first().unwrap(),
-                    variant_pair_to_place.0,
-                ));
+                let random_column = available_columns_by_layer[layer]
+                    [rng.random_range(0..available_columns_by_layer[layer].len())];
+                available_positions.retain(|pos| *pos != random_column);
+                occupied_positions.push((random_column, variant_pair_to_place.0));
+                forbidden_position = Some(random_column);
                 break;
             }
 
@@ -1108,7 +1107,7 @@ pub fn generate_solvable_board(
             let on_top_layer = layer != layers as usize - 1;
             let go_for_next_layer = rng.random_bool(0.5);
             if !on_top_layer && go_for_next_layer {
-                todo!()
+                continue;
             } else {
                 // Place tile
                 // Decide, by chance, which side to place on.
@@ -1161,37 +1160,22 @@ pub fn generate_solvable_board(
                 }
 
                 occupied_positions.push((tile_to_place.unwrap(), variant_pair_to_place.0));
-
-                // by finding the left- and right-most tiles
-                // available_columns_by_layer[layer].shuffle(rng);
-                // available_positions
-                //     .retain(|pos| *pos != *available_columns_by_layer[layer].first().unwrap());
-                // occupied_positions.push((
-                //     *available_columns_by_layer[layer].first().unwrap(),
-                //     variant_pair_to_place.0,
-                // ));
+                forbidden_position = Some(tile_to_place.unwrap());
                 break;
             }
         }
-
-        // if available_columns
-
-        // // Filter available layers
-        // let mut available_layers = HashSet::<u32>::new();
-        // available_positions.iter().for_each(|pos| { available_layers.insert(pos.z); });
-        // let mut available_layers: Vec<u32> = available_layers.into_iter().collect();
-
-        // Pick random
-
-        // Find the lowest non-filled layer (for picked row)
-        // Determine "the gap"
-        // Place a block on either on top of an existing block OR in a free column spot (which is next to an occupied space)
     }
 
-    // Place tiles (in pairs)
-    for i in 0..tile_pairs {
+    // Place tiles
+    for _ in 0..tile_pairs {
         let variant_pair = available_tile_variants.pop().unwrap();
-        // place_position_variant_pair(&mut available_positions, variant_pair, &mut result);
+        place_position_variant_pair(
+            TILE_LAYERS,
+            &mut available_positions,
+            variant_pair,
+            &mut result,
+            &mut rng,
+        );
     }
 
     result
