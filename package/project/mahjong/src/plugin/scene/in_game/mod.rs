@@ -5,7 +5,7 @@ use bevy::{
     sprite::{Anchor, Text2dShadow},
 };
 use rand::{Rng, SeedableRng, rngs::StdRng, seq::SliceRandom};
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 pub struct Plugin;
 
@@ -1052,27 +1052,69 @@ pub fn generate_solvable_board(
     // }
 
     fn place_position_variant_pair(
+        layers: u32,
+        rows: u32,
+        columns: u32,
         available_positions: &mut Vec<tile::Position>,
-        variant: tile::Variant,
+        variant_pair_to_place: (tile::Variant, tile::Variant),
         occupied_positions: &mut Vec<(tile::Position, tile::Variant)>,
-    ) -> tile::Position {
-        // Filter all (still) available rows
+        rng: &mut StdRng,
+    ) {
+        // Filter available rows
+        let mut available_rows = HashSet::<u32>::new();
+        available_positions.iter().for_each(|pos| {
+            available_rows.insert(pos.y);
+        });
+        let mut available_rows: Vec<u32> = available_rows.into_iter().collect();
+
         // Pick random row
+        available_rows.shuffle(rng);
+        let random_row = available_rows.first().unwrap();
+
+        // Categorize columns by layer (for selected random row)
+        let mut available_columns_by_layer = vec![Vec::<&tile::Position>::new(); layers as usize];
+        available_positions.iter().for_each(|pos| {
+            available_columns_by_layer[pos.z as usize].push(pos);
+        });
+        let mut occupied_columns_by_layer = vec![Vec::<&tile::Position>::new(); layers as usize];
+        occupied_positions.iter().for_each(|(pos, _variant)| {
+            if pos.y == *random_row {
+                occupied_columns_by_layer[pos.z as usize].push(pos);
+            }
+        });
+
+        // Try to make placement on row OR (by random chance) try next layer
+        for layer in 0..occupied_columns_by_layer.len() {
+            if available_columns_by_layer[layer].is_empty() {
+                // No tiles left to place on this layer.
+                continue;
+            }
+
+            if occupied_columns_by_layer[layer].is_empty() {
+                // Tile MUST be placed on current layer
+                occupied_columns_by_layer[layer].shuffle(rng);
+                // occupied_positions.push()
+            }
+        }
+
+        // if available_columns
+
+        // // Filter available layers
+        // let mut available_layers = HashSet::<u32>::new();
+        // available_positions.iter().for_each(|pos| { available_layers.insert(pos.z); });
+        // let mut available_layers: Vec<u32> = available_layers.into_iter().collect();
+
+        // Pick random
+
         // Find the lowest non-filled layer (for picked row)
         // Determine "the gap"
         // Place a block on either on top of an existing block OR in a free column spot (which is next to an occupied space)
-
-        todo!()
     }
 
     // Place tiles (in pairs)
     for i in 0..tile_pairs {
         let variant_pair = available_tile_variants.pop().unwrap();
-        let variant_pair = [variant_pair.0, variant_pair.1];
-
-        for j in 0..2 {
-            place_position_variant_pair(&mut available_positions, variant_pair[j], &mut result);
-        }
+        // place_position_variant_pair(&mut available_positions, variant_pair, &mut result);
     }
 
     result
