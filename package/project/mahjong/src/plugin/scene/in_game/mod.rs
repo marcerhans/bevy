@@ -1074,7 +1074,9 @@ pub fn generate_solvable_board(
         // Categorize columns by layer (for selected random row)
         let mut available_columns_by_layer = vec![Vec::<tile::Position>::new(); layers as usize];
         available_positions.iter().for_each(|pos| {
-            available_columns_by_layer[pos.z as usize].push(*pos);
+            if pos.y == *random_row {
+                available_columns_by_layer[pos.z as usize].push(*pos);
+            }
         });
         let mut occupied_columns_by_layer = vec![Vec::<tile::Position>::new(); layers as usize];
         occupied_positions.iter().for_each(|(pos, _variant)| {
@@ -1099,7 +1101,11 @@ pub fn generate_solvable_board(
                     *available_columns_by_layer[layer].first().unwrap(),
                     variant_pair_to_place.0,
                 ));
+                break;
             }
+
+            // The row is neither fully empty or fully filled
+            if 
         }
 
         // if available_columns
