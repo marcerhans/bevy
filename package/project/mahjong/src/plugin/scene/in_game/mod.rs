@@ -921,13 +921,7 @@ pub fn spawn_tiles(
     );
 
     let mut positions: Vec<tile::Position> = position_generator.collect();
-    let mut rng = rand::rng();
-    positions.shuffle(&mut rng);
-    let positions: Vec<(tile::Position, u32)> = positions
-        .into_iter()
-        .enumerate()
-        .map(|(index, position)| (position, index as u32))
-        .collect();
+    let positions = generate_solvable_board(positions, None);
 
     for (pos, variant) in positions {
         let default_depth = Vec3::default().with_z(100.0);
@@ -959,7 +953,7 @@ pub fn spawn_tiles(
                 tile::Tile {
                     marker: tile::Marker::<0>,
                     position: pos,
-                    variant: tile::Variant(variant),
+                    variant: variant,
                 },
                 Sprite {
                     custom_size: Some(tile_size_full),
@@ -1012,7 +1006,7 @@ pub fn spawn_tiles(
         tile::Variant::insert_sprite_as_child(
             &asset_server,
             &mut entity_commands,
-            variant,
+            variant.0,
             &tile_size,
             &offset,
         );
@@ -1028,7 +1022,7 @@ pub fn generate_solvable_board(
     }
 
     const TILE_CATEGORY_SIZE: u32 = 4;
-    const TILE_LAYERS: u32 = 4;
+    const TILE_LAYERS: u32 = 5;
     let tile_categories = available_positions.len() as u32 / TILE_CATEGORY_SIZE;
     let tile_pairs = tile_categories / 2;
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
@@ -1129,6 +1123,7 @@ pub fn generate_solvable_board(
                 let mut tile_to_place = None;
 
                 if place_to_the_left {
+                    dbg!(forbidden_position);
                     let left_most_occupied_column = occupied_columns_by_layer[layer]
                         .iter()
                         .min_by_key(|pos| pos.x)
@@ -1147,21 +1142,19 @@ pub fn generate_solvable_board(
                 }
 
                 if !place_to_the_left {
+                    dbg!(forbidden_position);
                     let left_most_occupied_column = occupied_columns_by_layer[layer]
                         .iter()
                         .max_by_key(|pos| pos.x)
                         .unwrap();
-                    let possible_tile_position = available_columns_by_layer[layer]
+                    tile_to_place = available_columns_by_layer[layer]
                         .iter()
                         .position(|pos| pos.x == left_most_occupied_column.x - 1)
                         .map(|i| available_columns_by_layer[layer].swap_remove(i));
-
-                    if let Some(possible_tile_position) = possible_tile_position {
-                        tile_to_place = Some(possible_tile_position);
-                    }
                 }
 
                 if tile_to_place.is_none() {
+                    dbg!(forbidden_position);
                     // We tried from right, try from left :)))))
                     let left_most_occupied_column = occupied_columns_by_layer[layer]
                         .iter()
@@ -1187,6 +1180,7 @@ pub fn generate_solvable_board(
         let variant_pair = available_tile_variants.pop().unwrap();
         let variant_pair = [variant_pair.0, variant_pair.1];
 
+        dbg!(1);
         let forbidden = place_position_variant_pair(
             TILE_LAYERS,
             &mut available_positions,
@@ -1196,10 +1190,11 @@ pub fn generate_solvable_board(
             None,
         );
 
+        dbg!(2);
         place_position_variant_pair(
             TILE_LAYERS,
             &mut available_positions,
-            variant_pair[0],
+            variant_pair[1],
             &mut result,
             &mut rng,
             forbidden,
