@@ -160,7 +160,7 @@ mod tile {
     #[derive(Component)]
     pub struct Marker<const DEPTH: u32>;
 
-    #[derive(Component, Deref, DerefMut, Clone, Copy, Debug)]
+    #[derive(Component, Deref, DerefMut, Clone, Copy, Debug, PartialEq)]
     pub struct Position(UVec3);
 
     pub struct Turtle;
@@ -1072,14 +1072,14 @@ pub fn generate_solvable_board(
         let random_row = available_rows.first().unwrap();
 
         // Categorize columns by layer (for selected random row)
-        let mut available_columns_by_layer = vec![Vec::<&tile::Position>::new(); layers as usize];
+        let mut available_columns_by_layer = vec![Vec::<tile::Position>::new(); layers as usize];
         available_positions.iter().for_each(|pos| {
-            available_columns_by_layer[pos.z as usize].push(pos);
+            available_columns_by_layer[pos.z as usize].push(*pos);
         });
-        let mut occupied_columns_by_layer = vec![Vec::<&tile::Position>::new(); layers as usize];
+        let mut occupied_columns_by_layer = vec![Vec::<tile::Position>::new(); layers as usize];
         occupied_positions.iter().for_each(|(pos, _variant)| {
             if pos.y == *random_row {
-                occupied_columns_by_layer[pos.z as usize].push(pos);
+                occupied_columns_by_layer[pos.z as usize].push(*pos);
             }
         });
 
@@ -1092,8 +1092,13 @@ pub fn generate_solvable_board(
 
             if occupied_columns_by_layer[layer].is_empty() {
                 // Tile MUST be placed on current layer
-                occupied_columns_by_layer[layer].shuffle(rng);
-                // occupied_positions.push()
+                available_columns_by_layer[layer].shuffle(rng);
+                available_positions
+                    .retain(|pos| *pos != *available_columns_by_layer[layer].first().unwrap());
+                occupied_positions.push((
+                    *available_columns_by_layer[layer].first().unwrap(),
+                    variant_pair_to_place.0,
+                ));
             }
         }
 
