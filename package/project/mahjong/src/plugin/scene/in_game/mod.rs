@@ -1054,13 +1054,20 @@ pub fn generate_solvable_board(
     fn place_position_variant_pair(
         layers: u32,
         available_positions: &mut Vec<tile::Position>,
-        variant_pair_to_place: (tile::Variant, tile::Variant),
+        variant: tile::Variant,
         occupied_positions: &mut Vec<(tile::Position, tile::Variant)>,
         rng: &mut StdRng,
-    ) {
+        forbidden_position: Option<tile::Position>,
+    ) -> Option<tile::Position> {
         // Filter available rows
         let mut available_rows = HashSet::<u32>::new();
         available_positions.iter().for_each(|pos| {
+            if let Some(f_pos) = forbidden_position {
+                if f_pos.x == pos.x && f_pos.y == pos.y {
+                    return;
+                }
+            }
+
             available_rows.insert(pos.y);
         });
         let available_rows: Vec<u32> = available_rows.into_iter().collect();
@@ -1071,6 +1078,12 @@ pub fn generate_solvable_board(
         // Categorize columns by layer (for selected random row)
         let mut available_columns_by_layer = vec![Vec::<tile::Position>::new(); layers as usize];
         available_positions.iter().for_each(|pos| {
+            if let Some(f_pos) = forbidden_position {
+                if f_pos.x == pos.x && f_pos.y == pos.y {
+                    return;
+                }
+            }
+
             if pos.y == random_row {
                 available_columns_by_layer[pos.z as usize].push(*pos);
             }
@@ -1083,7 +1096,7 @@ pub fn generate_solvable_board(
         });
 
         // Try to make placement on row OR (by random chance) try next layer
-        let mut forbidden_position = None;
+        let mut new_forbidden_position = None;
         for layer in 0..layers as usize {
             if available_columns_by_layer[layer].is_empty() {
                 // No tiles left to place on this layer.
@@ -1094,11 +1107,11 @@ pub fn generate_solvable_board(
                 // Tile MUST be placed on current layer
                 // Place tile
                 let len = available_columns_by_layer[layer].len();
-                let random_column = available_columns_by_layer[layer]
-                    .swap_remove(rng.random_range(0..len));
+                let random_column =
+                    available_columns_by_layer[layer].swap_remove(rng.random_range(0..len));
                 available_positions.retain(|pos| *pos != random_column);
-                occupied_positions.push((random_column, variant_pair_to_place.0));
-                forbidden_position = Some(random_column);
+                occupied_positions.push((random_column, variant));
+                new_forbidden_position = Some(random_column);
                 break;
             }
 
@@ -1160,22 +1173,36 @@ pub fn generate_solvable_board(
                         .map(|i| available_columns_by_layer[layer].swap_remove(i));
                 }
 
-                occupied_positions.push((tile_to_place.unwrap(), variant_pair_to_place.0));
-                forbidden_position = Some(tile_to_place.unwrap());
+                occupied_positions.push((tile_to_place.unwrap(), variant));
+                new_forbidden_position = Some(tile_to_place.unwrap());
                 break;
             }
         }
+
+        new_forbidden_position
     }
 
     // Place tiles
     for _ in 0..tile_pairs {
         let variant_pair = available_tile_variants.pop().unwrap();
+        let variant_pair = [variant_pair.0, variant_pair.1];
+
+        let forbidden = place_position_variant_pair(
+            TILE_LAYERS,
+            &mut available_positions,
+            variant_pair[0],
+            &mut result,
+            &mut rng,
+            None,
+        );
+
         place_position_variant_pair(
             TILE_LAYERS,
             &mut available_positions,
-            variant_pair,
+            variant_pair[0],
             &mut result,
             &mut rng,
+            forbidden,
         );
     }
 
