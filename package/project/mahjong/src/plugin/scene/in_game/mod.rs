@@ -1076,7 +1076,7 @@ pub fn generate_solvable_board(
     //  1 Pick random row
     //  2 For each layer, starting at the the smallest still available layer:
     //      2.1 Row empty? Place tile! NEXT
-    //      2.2 Decide if tile should go on this row or one above
+    //      2.2 Decide if tile should go on this layer or one above
     //              2.2.1 Above? Repeat 2 but one layer above.
     //
     // NOTE: After placing the one of the two tiles in the variant pair,
@@ -1101,6 +1101,7 @@ pub fn generate_solvable_board(
             }
 
             let start_layer = available_layer_pos_capacity.keys().min().unwrap();
+            let top_layer = available_layer_pos_capacity.keys().max().unwrap();
             let layer_pos_capacity = available_layer_pos_capacity.get_mut(start_layer).unwrap();
             if *layer_pos_capacity == 1 {
                 available_layer_pos_capacity.remove(start_layer);
@@ -1109,7 +1110,7 @@ pub fn generate_solvable_board(
             }
 
             let position_to_add;
-            for layer in *start_layer..max_layers {
+            for layer in *start_layer..*top_layer {
                 let mut columns_in_row_and_layer: Vec<&tile::Position> = available_positions
                     .iter()
                     .filter(|pos| {
@@ -1130,6 +1131,9 @@ pub fn generate_solvable_board(
                         .swap_remove(rng.random_range(0..columns_in_row_and_layer.len()));
                     break;
                 }
+
+                let on_last_layer
+                let go_for_next_layer
             }
 
             available_positions.swap_remove(
