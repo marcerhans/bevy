@@ -1057,12 +1057,14 @@ pub fn generate_solvable_board(
     //              2.2.1 Above? Repeat 2 but one layer above.
     //
     // NOTE: After placing the one of the two tiles in the variant pair, 
-    // the first position has to restrict some positions for it's matching pair variant.
-    // Specificall, it has to deny positions that would place the second variant directly above/on top of the first.
+    // the first position has to restrict some positions of its (soon to be placed) matching pair variant.
+    // Specifically, it has to deny positions that would place the second variant directly above/on top of the first.
     //
     // NOTE:2: Since a tile is 2 spaces in (grid) size, a "Row check" needs to include tiles +-1 in the y axis .
     
+    let 
     while available_positions.len() > 0 {
+
         result.push(todo!());
     }
 
