@@ -1,6 +1,7 @@
 use crate::plugin::scene::main_menu::MainMenu;
 use bevy::{
     input::keyboard::KeyCode,
+    platform::collections::HashMap,
     prelude::*,
     sprite::{Anchor, Text2dShadow},
 };
@@ -1027,27 +1028,40 @@ pub fn generate_solvable_board(
     let seed = seed.unwrap_or(0);
     let mut rng = StdRng::seed_from_u64(seed);
 
-    // Determine board dimensions
-    let mut layers = 0;
-    available_positions
-        .iter()
-        .for_each(|pos| layers = u32::max(pos.z, layers));
+    {
+        // Determine board dimensions
+        // Not necessary?
+        let mut layers = 0;
+        available_positions
+            .iter()
+            .for_each(|pos| layers = u32::max(pos.z, layers));
 
-    let mut rows = 0;
-    available_positions
-        .iter()
-        .for_each(|pos| rows = u32::max(pos.y, rows));
+        let mut rows = 0;
+        available_positions
+            .iter()
+            .for_each(|pos| rows = u32::max(pos.y, rows));
 
-    let mut columns = 0;
-    available_positions
-        .iter()
-        .for_each(|pos| layers = u32::max(pos.x, columns));
+        let mut columns = 0;
+        available_positions
+            .iter()
+            .for_each(|pos| layers = u32::max(pos.x, columns));
+    }
 
     // Generate [tile::Variant] pairs
     let tile_pairs = available_positions.len() as u32 / 2;
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
         .map(|variant| (tile::Variant(variant), tile::Variant(variant)))
         .collect();
+
+    // Generate hashmap of still position capacity per row
+    let mut available_row_pos_capacity: HashMap<u32, u32> = HashMap::new();
+    available_positions.iter().for_each(|pos| {
+        if let Some(capacity) = available_row_pos_capacity.get_mut(&pos.y) {
+            *capacity += 1;
+        } else {
+            available_row_pos_capacity.insert(pos.y, 1);
+        }
+    });
 
     // Of still available positions, pop a variant pair. For each variant in the pair, determine two valid positions following the steps:
     //  1 Pick random row
@@ -1056,14 +1070,15 @@ pub fn generate_solvable_board(
     //      2.2 Decide if tile should go on this row or one above
     //              2.2.1 Above? Repeat 2 but one layer above.
     //
-    // NOTE: After placing the one of the two tiles in the variant pair, 
+    // NOTE: After placing the one of the two tiles in the variant pair,
     // the first position has to restrict some positions of its (soon to be placed) matching pair variant.
     // Specifically, it has to deny positions that would place the second variant directly above/on top of the first.
     //
     // NOTE:2: Since a tile is 2 spaces in (grid) size, a "Row check" needs to include tiles +-1 in the y axis .
-    
-    let 
+
+    let banned_position: Option<tile::Position> = None;
     while available_positions.len() > 0 {
+        let available_rows: HashSet<u32> = HashSet::new();
 
         result.push(todo!());
     }
