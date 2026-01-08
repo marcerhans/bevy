@@ -1053,7 +1053,7 @@ pub fn generate_solvable_board(
         .map(|variant| (tile::Variant(variant), tile::Variant(variant)))
         .collect();
 
-    // Generate hashmap of still position capacity per row and layer
+    // Generate hashmap of position capacity per row and layer
     let mut available_row_pos_capacity: HashMap<u32, u32> = HashMap::new();
     available_positions.iter().for_each(|pos| {
         if let Some(capacity) = available_row_pos_capacity.get_mut(&pos.y) {
