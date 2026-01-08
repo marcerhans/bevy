@@ -1028,24 +1028,24 @@ pub fn generate_solvable_board(
     let seed = seed.unwrap_or(0);
     let mut rng = StdRng::seed_from_u64(seed);
 
-    {
-        // Determine board dimensions
-        // Not necessary?
-        let mut layers = 0;
-        available_positions
-            .iter()
-            .for_each(|pos| layers = u32::max(pos.z, layers));
+    // Determine board dimensions
+    let mut max_layers = 0;
+    available_positions
+        .iter()
+        .for_each(|pos| max_layers = u32::max(pos.z, max_layers));
+    let max_layers = max_layers;
 
-        let mut rows = 0;
-        available_positions
-            .iter()
-            .for_each(|pos| rows = u32::max(pos.y, rows));
+    let mut max_rows = 0;
+    available_positions
+        .iter()
+        .for_each(|pos| max_rows = u32::max(pos.y, max_rows));
+    let mut max_rows = max_rows;
 
-        let mut columns = 0;
-        available_positions
-            .iter()
-            .for_each(|pos| layers = u32::max(pos.x, columns));
-    }
+    let mut max_columns = 0;
+    available_positions
+        .iter()
+        .for_each(|pos| max_columns = u32::max(pos.x, max_columns));
+    let mut max_columns = max_columns;
 
     // Generate [tile::Variant] pairs
     let tile_pairs = available_positions.len() as u32 / 2;
@@ -1053,7 +1053,7 @@ pub fn generate_solvable_board(
         .map(|variant| (tile::Variant(variant), tile::Variant(variant)))
         .collect();
 
-    // Generate hashmap of still position capacity per row
+    // Generate hashmap of still position capacity per row and layer
     let mut available_row_pos_capacity: HashMap<u32, u32> = HashMap::new();
     available_positions.iter().for_each(|pos| {
         if let Some(capacity) = available_row_pos_capacity.get_mut(&pos.y) {
@@ -1081,6 +1081,17 @@ pub fn generate_solvable_board(
         let available_rows: Vec<&u32> = available_row_pos_capacity.keys().collect();
         let random_row = available_rows[rng.random_range(0..available_rows.len())];
         *available_row_pos_capacity.get_mut(random_row).unwrap() -= 1;
+
+        let mut available_layers_by_row = vec![Vec::<tile::Position>::new(); rows as usize];
+        available_positions.iter().for_each(|pos| {
+            if pos.y == random_row {
+                available_columns_by_layer[pos.z as usize].push(*pos);
+            }
+        });
+
+        // let available_layers
+
+        // for layer
 
         result.push(todo!());
     }
