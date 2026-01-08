@@ -1142,6 +1142,16 @@ pub fn generate_solvable_board(
                 let go_to_the_left = rng.random_bool(0.5);
                 let position_to_the_left = columns_in_row_and_layer.iter().min_by_key(|pos| pos.x);
                 let position_to_the_right = columns_in_row_and_layer.iter().max_by_key(|pos| pos.x);
+
+                if go_to_the_left && position_to_the_left.is_some() {
+                    position_to_add = Some((*position_to_the_left.unwrap()).to_owned());
+                    break;
+                } else {
+                    position_to_add = Some((*position_to_the_right.unwrap()).to_owned());
+                    break;
+                }
+
+                }
             }
 
             let layer_pos_capacity = available_layer_pos_capacity.get_mut(&(final_layer.unwrap())).unwrap();
@@ -1159,9 +1169,9 @@ pub fn generate_solvable_board(
             );
             result.push((position_to_add.unwrap(), variant));
         }
-    }
 
     return result;
+}
 
     // // Categorize positions.
     // let mut positions_by_layer: [Vec<&tile::Position>; TILE_LAYERS as usize] =
