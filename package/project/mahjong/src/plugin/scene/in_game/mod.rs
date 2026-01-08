@@ -921,7 +921,7 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    let positions: Vec<tile::Position> = position_generator.collect();
+    let positions: Vec<tile::Position> = position_generator.take(4).collect();
     let positions = generate_solvable_board(positions, None);
 
     for (pos, variant) in positions {
@@ -1109,7 +1109,7 @@ pub fn generate_solvable_board(
             for layer in *start_layer_index..=*top_layer_index {
                 final_layer = Some(layer);
 
-                let mut columns_in_row_and_layer: Vec<&tile::Position> = available_positions
+                let available_columns_in_row_and_layer: Vec<&tile::Position> = available_positions
                     .iter()
                     .filter(|pos| {
                         let at_zero = random_row == 0;
@@ -1124,12 +1124,28 @@ pub fn generate_solvable_board(
                     })
                     .collect();
 
-                if columns_in_row_and_layer.is_empty() {
+                let occupied_columns_in_row_and_layer: Vec<&(tile::Position, tile::Variant)> =
+                    result
+                        .iter()
+                        .filter(|(pos, _variant)| {
+                            let at_zero = random_row == 0;
+                            if at_zero {
+                                (pos.y == random_row || pos.y == random_row + 1) && pos.z == layer
+                            } else {
+                                (pos.y == random_row
+                                    || pos.y == random_row + 1
+                                    || pos.y == random_row - 1)
+                                    && pos.z == layer
+                            }
+                        })
+                        .collect();
+
+                if occupied_columns_in_row_and_layer.is_empty() {
                     // A position can be added without any restrictions.
                     position_to_add = Some(
-                        columns_in_row_and_layer
-                            .swap_remove(rng.random_range(0..columns_in_row_and_layer.len()))
-                            .to_owned(),
+                        available_columns_in_row_and_layer
+                            [rng.random_range(0..available_columns_in_row_and_layer.len())]
+                        .to_owned(),
                     );
                     break;
                 }
@@ -1143,8 +1159,12 @@ pub fn generate_solvable_board(
 
                 // Add position to either left or right of existing tiles on row and layer.
                 let go_to_the_left = rng.random_bool(0.5);
-                let position_to_the_left = columns_in_row_and_layer.iter().min_by_key(|pos| pos.x);
-                let position_to_the_right = columns_in_row_and_layer.iter().max_by_key(|pos| pos.x);
+                let position_to_the_left = available_columns_in_row_and_layer
+                    .iter()
+                    .min_by_key(|pos| pos.x);
+                let position_to_the_right = available_columns_in_row_and_layer
+                    .iter()
+                    .max_by_key(|pos| pos.x);
 
                 if go_to_the_left && position_to_the_left.is_some() {
                     position_to_add = Some((*position_to_the_left.unwrap()).to_owned());
