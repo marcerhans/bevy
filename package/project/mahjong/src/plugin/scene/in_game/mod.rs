@@ -1102,6 +1102,8 @@ pub fn generate_solvable_board(
 
             let start_layer = available_layer_pos_capacity.keys().min().unwrap();
             let top_layer = available_layer_pos_capacity.keys().max().unwrap();
+
+            // TODO: THIS SHOULD NOT BE HERE! REMOVE WHEN LAYER IS FINAL!
             let layer_pos_capacity = available_layer_pos_capacity.get_mut(start_layer).unwrap();
             if *layer_pos_capacity == 1 {
                 available_layer_pos_capacity.remove(start_layer);
