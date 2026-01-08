@@ -1090,7 +1090,7 @@ pub fn generate_solvable_board(
         let available_rows: Vec<&u32> = available_row_pos_capacity.keys().collect();
         let random_row = available_rows[rng.random_range(0..available_rows.len())];
         let row_pos_capacity = available_row_pos_capacity.get_mut(random_row).unwrap();
-        if *row_pos_capacity == 0 {
+        if *row_pos_capacity == 1 {
             available_row_pos_capacity.remove(random_row);
         } else {
             *row_pos_capacity -= 1;
@@ -1098,8 +1098,8 @@ pub fn generate_solvable_board(
 
         let start_layer = available_layer_pos_capacity.keys().min().unwrap();
         let layer_pos_capacity = available_layer_pos_capacity.get_mut(start_layer).unwrap();
-        if *row_pos_capacity == 0 {
-            available_row_pos_capacity.remove(random_row);
+        if *layer_pos_capacity == 1 {
+            available_layer_pos_capacity.remove(start_layer);
         } else {
             *layer_pos_capacity -= 1;
         }
@@ -1108,8 +1108,8 @@ pub fn generate_solvable_board(
             let columns_in_row_and_layer: Vec<&tile::Position> = available_positions
                 .iter()
                 .filter(|pos| {
-                    let odd_row = *random_row % 2 != 0;
-                    if odd_row {
+                    let at_zero = *random_row == 0;
+                    if at_zero {
                         (pos.y == *random_row || pos.y == *random_row + 1) && pos.z == layer
                     } else {
                         (pos.y == *random_row
