@@ -165,7 +165,7 @@ mod tile {
     #[derive(Component)]
     pub struct Marker<const DEPTH: u32>;
 
-    #[derive(Component, Deref, DerefMut, Clone, Copy, Debug, PartialEq)]
+    #[derive(Component, Deref, DerefMut, Clone, Copy, Debug, PartialEq, Eq, Hash)]
     pub struct Position(pub UVec3);
 
     pub struct Turtle;
@@ -1043,6 +1043,7 @@ pub fn generate_solvable_board(
     for variant_pair in available_tile_variants {
         let (v0, v1) = variant_pair;
 
+        let occupied: HashSet<tile::Position> = result.iter().map(|(pos, _variant)| *pos).collect();
         let mut free_positions: HashMap<UVec2, tile::Position> = HashMap::new();
         available_positions.iter().for_each(|pos| {
             let key = pos.truncate();
@@ -1054,8 +1055,51 @@ pub fn generate_solvable_board(
                 free_positions.insert(key, pos.to_owned());
             }
         });
+        let free_positions: Vec<&tile::Position> = free_positions
+            .values()
+            .filter(|p| {
+                let mut left_blocked = p.x > 1
+                    && occupied.contains(&tile::Position(UVec3 {
+                        x: p.x - 2,
+                        y: p.y,
+                        z: p.z,
+                    }))
+                    || occupied.contains(&tile::Position(UVec3 {
+                        x: p.x - 2,
+                        y: p.y + 1,
+                        z: p.z,
+                    }));
 
-        let free_positions: Vec<&tile::Position> = free_positions.values().collect();
+                let mut right_blocked = p.x < u32::MAX - 2 &&
+                    occupied.contains(&tile::Position(UVec3 {
+                        x: p.x + 2,
+                        y: p.y,
+                        z: p.z,
+                    })) || occupied.contains(&tile::Position(UVec3 {
+                        x: p.x + 2,
+                        y: p.y + 1,
+                        z: p.z,
+                    }));
+
+                if p.y > 0 {
+                    left_blocked = left_blocked
+                        || occupied.contains(&tile::Position(UVec3 {
+                            x: p.x - 2,
+                            y: p.y - 1,
+                            z: p.z,
+                        }));
+
+                    right_blocked = right_blocked
+                        || occupied.contains(&tile::Position(UVec3 {
+                            x: p.x + 2,
+                            y: p.y - 1,
+                            z: p.z,
+                        }));
+                }
+
+                !left_blocked || !right_blocked
+            })
+            .collect();
         let selected_positions: Vec<&&tile::Position> =
             free_positions.choose_multiple(&mut rng, 2).collect();
 
