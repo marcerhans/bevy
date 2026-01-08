@@ -1138,7 +1138,10 @@ pub fn generate_solvable_board(
                     continue;
                 }
 
-                // Try to pick a position on current 
+                // Add position to either left or right of existing tiles on row and layer.
+                let go_to_the_left = rng.random_bool(0.5);
+                let position_to_the_left = columns_in_row_and_layer.iter().min_by_key(|pos| pos.x);
+                let position_to_the_right = columns_in_row_and_layer.iter().max_by_key(|pos| pos.x);
             }
 
             let layer_pos_capacity = available_layer_pos_capacity.get_mut(&(final_layer.unwrap())).unwrap();
