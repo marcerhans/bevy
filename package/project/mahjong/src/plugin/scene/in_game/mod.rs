@@ -921,7 +921,7 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    let mut positions: Vec<tile::Position> = position_generator.collect();
+    let positions: Vec<tile::Position> = position_generator.collect();
     let positions = generate_solvable_board(positions, None);
 
     for (pos, variant) in positions {
