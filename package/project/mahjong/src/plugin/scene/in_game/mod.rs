@@ -1078,7 +1078,9 @@ pub fn generate_solvable_board(
 
     let banned_position: Option<tile::Position> = None;
     while available_positions.len() > 0 {
-        let available_rows: HashSet<u32> = HashSet::new();
+        let available_rows: Vec<&u32> = available_row_pos_capacity.keys().collect();
+        let random_row = available_rows[rng.random_range(0..available_rows.len())];
+        *available_row_pos_capacity.get_mut(random_row).unwrap() -= 1;
 
         result.push(todo!());
     }
