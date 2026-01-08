@@ -1089,15 +1089,24 @@ pub fn generate_solvable_board(
     while available_positions.len() > 0 {
         let available_rows: Vec<&u32> = available_row_pos_capacity.keys().collect();
         let random_row = available_rows[rng.random_range(0..available_rows.len())];
-        *available_row_pos_capacity.get_mut(random_row).unwrap() -= 1;
+        let row_pos_capacity = available_row_pos_capacity.get_mut(random_row).unwrap();
+        if *row_pos_capacity == 0 {
+            available_row_pos_capacity.remove(random_row);
+        } else {
+            *row_pos_capacity -= 1;
+        }
 
-        let mut available_layers_by_row = vec![Vec::<tile::Position>::new(); max_rows as usize];
-        available_positions.iter().for_each(|pos| {
-            if pos.y == *random_row {
-                available_layers_by_row[pos. as usize].push(*pos);
-            }
-        });
+        let start_layer = available_layer_pos_capacity.keys().min().unwrap();
+        let layer_pos_capacity = available_layer_pos_capacity.get_mut(start_layer).unwrap();
+        if *row_pos_capacity == 0 {
+            available_row_pos_capacity.remove(random_row);
+        } else {
+            *layer_pos_capacity -= 1;
+        }
 
+        for layer in *start_layer..max_layers {
+
+        }
         // let available_layers
 
         // for layer
