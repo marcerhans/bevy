@@ -1065,10 +1065,10 @@ pub fn generate_solvable_board(
 
     let mut available_layer_pos_capacity: HashMap<u32, u32> = HashMap::new();
     available_positions.iter().for_each(|pos| {
-        if let Some(capacity) = available_row_pos_capacity.get_mut(&pos.z) {
+        if let Some(capacity) = available_layer_pos_capacity.get_mut(&pos.z) {
             *capacity += 1;
         } else {
-            available_row_pos_capacity.insert(pos.z, 1);
+            available_layer_pos_capacity.insert(pos.z, 1);
         }
     });
 
@@ -1102,17 +1102,12 @@ pub fn generate_solvable_board(
 
             let start_layer = available_layer_pos_capacity.keys().min().unwrap();
             let top_layer = available_layer_pos_capacity.keys().max().unwrap();
-
-            // TODO: THIS SHOULD NOT BE HERE! REMOVE WHEN LAYER IS FINAL!
-            let layer_pos_capacity = available_layer_pos_capacity.get_mut(start_layer).unwrap();
-            if *layer_pos_capacity == 1 {
-                available_layer_pos_capacity.remove(start_layer);
-            } else {
-                *layer_pos_capacity -= 1;
-            }
-
             let position_to_add;
+            let mut final_layer;
+
             for layer in *start_layer..*top_layer {
+                final_layer = layer;
+
                 let mut columns_in_row_and_layer: Vec<&tile::Position> = available_positions
                     .iter()
                     .filter(|pos| {
@@ -1134,8 +1129,15 @@ pub fn generate_solvable_board(
                     break;
                 }
 
-                let on_last_layer
-                let go_for_next_layer
+                // let on_last_layer
+                // let go_for_next_layer
+            }
+
+            let layer_pos_capacity = available_layer_pos_capacity.get_mut(&final_layer).unwrap();
+            if *layer_pos_capacity == 1 {
+                available_layer_pos_capacity.remove(&final_layer);
+            } else {
+                *layer_pos_capacity -= 1;
             }
 
             available_positions.swap_remove(
