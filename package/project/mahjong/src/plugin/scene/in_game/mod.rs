@@ -5,7 +5,11 @@ use bevy::{
     prelude::*,
     sprite::{Anchor, Text2dShadow},
 };
-use rand::{Rng, SeedableRng, rngs::StdRng, seq::SliceRandom};
+use rand::{
+    Rng, SeedableRng,
+    rngs::StdRng,
+    seq::{IndexedRandom, SliceRandom},
+};
 use std::collections::{HashSet, VecDeque};
 
 pub struct Plugin;
@@ -921,7 +925,7 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    let positions: Vec<tile::Position> = position_generator.take(4).collect();
+    let positions: Vec<tile::Position> = position_generator.take(80).collect();
     let positions = generate_solvable_board(positions, None);
 
     for (pos, variant) in positions {
@@ -1028,171 +1032,38 @@ pub fn generate_solvable_board(
     let seed = seed.unwrap_or(0);
     let mut rng = StdRng::seed_from_u64(seed);
 
-    // Determine board dimensions
-    let mut max_layers = 0;
-    available_positions
-        .iter()
-        .for_each(|pos| max_layers = u32::max(pos.z, max_layers));
-    let max_layers = max_layers;
-
-    let mut max_rows = 0;
-    available_positions
-        .iter()
-        .for_each(|pos| max_rows = u32::max(pos.y, max_rows));
-    let mut max_rows = max_rows;
-
-    let mut max_columns = 0;
-    available_positions
-        .iter()
-        .for_each(|pos| max_columns = u32::max(pos.x, max_columns));
-    let mut max_columns = max_columns;
-
     // Generate [tile::Variant] pairs
     let tile_pairs = available_positions.len() as u32 / 2;
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
         .map(|variant| (tile::Variant(variant), tile::Variant(variant)))
         .collect();
+    available_tile_variants.shuffle(&mut rng);
 
-    // Generate hashmap of position capacity per row and layer
-    let mut available_row_pos_capacity: HashMap<u32, u32> = HashMap::new();
-    available_positions.iter().for_each(|pos| {
-        if let Some(capacity) = available_row_pos_capacity.get_mut(&pos.y) {
-            *capacity += 1;
-        } else {
-            available_row_pos_capacity.insert(pos.y, 1);
-        }
-    });
+    // Place tiles
+    for variant_pair in available_tile_variants {
+        let (v0, v1) = variant_pair;
 
-    let mut available_layer_pos_capacity: HashMap<u32, u32> = HashMap::new();
-    available_positions.iter().for_each(|pos| {
-        if let Some(capacity) = available_layer_pos_capacity.get_mut(&pos.z) {
-            *capacity += 1;
-        } else {
-            available_layer_pos_capacity.insert(pos.z, 1);
-        }
-    });
-
-    // Of still available positions, pop a variant pair. For each variant in the pair, determine two valid positions following the steps:
-    //  1 Pick random row
-    //  2 For each layer, starting at the the smallest still available layer:
-    //      2.1 Row empty? Place tile! NEXT
-    //      2.2 Decide if tile should go on this layer or one above
-    //              2.2.1 Above? Repeat 2 but one layer above.
-    //              2.2.2 Place to either the left or right of existing tiles on row and layer.
-    //
-    // NOTE: After placing the one of the two tiles in the variant pair,
-    // the first position has to restrict some positions of its (soon to be placed) matching pair variant.
-    // Specifically, it has to deny positions that would place the second variant directly above/on top of the first.
-    //
-    // NOTE:2: Since a tile is 2 spaces in (grid) size, a "Row check" needs to also include tiles +1 in the y axis.
-
-    while available_positions.len() > 0 {
-        let mut banned_position: Option<tile::Position> = None;
-        let tile_variant_pair = available_tile_variants.pop().unwrap();
-        let tile_variant_pair = [tile_variant_pair.0, tile_variant_pair.1];
-
-        for variant in tile_variant_pair {
-            let available_rows: Vec<u32> = available_row_pos_capacity.keys().cloned().collect();
-            let random_row = available_rows[rng.random_range(0..available_rows.len())];
-            let row_pos_capacity = available_row_pos_capacity.get_mut(&random_row).unwrap();
-            if *row_pos_capacity == 1 {
-                available_row_pos_capacity.remove(&random_row);
+        let mut free_positions: HashMap<UVec2, tile::Position> = HashMap::new();
+        available_positions.iter().for_each(|pos| {
+            let key = pos.truncate();
+            if let Some(hashed_pos) = free_positions.get_mut(&key) {
+                if hashed_pos.z > pos.z {
+                    *hashed_pos = *pos;
+                }
             } else {
-                *row_pos_capacity -= 1;
+                free_positions.insert(key, pos.to_owned());
             }
+        });
 
-            let start_layer_index = available_layer_pos_capacity.keys().min().unwrap();
-            let top_layer_index = available_layer_pos_capacity.keys().max().unwrap();
-            let mut position_to_add = None;
-            let mut final_layer = None;
+        let free_positions: Vec<&tile::Position> = free_positions.values().collect();
+        let selected_positions: Vec<&&tile::Position> =
+            free_positions.choose_multiple(&mut rng, 2).collect();
 
-            for layer in *start_layer_index..=*top_layer_index {
-                final_layer = Some(layer);
+        result.push((**selected_positions[0], v0));
+        result.push((**selected_positions[1], v1));
 
-                let available_columns_in_row_and_layer: Vec<&tile::Position> = available_positions
-                    .iter()
-                    .filter(|pos| {
-                        let at_zero = random_row == 0;
-                        if at_zero {
-                            (pos.y == random_row || pos.y == random_row + 1) && pos.z == layer
-                        } else {
-                            (pos.y == random_row
-                                || pos.y == random_row + 1
-                                || pos.y == random_row - 1)
-                                && pos.z == layer
-                        }
-                    })
-                    .collect();
-
-                let occupied_columns_in_row_and_layer: Vec<&(tile::Position, tile::Variant)> =
-                    result
-                        .iter()
-                        .filter(|(pos, _variant)| {
-                            let at_zero = random_row == 0;
-                            if at_zero {
-                                (pos.y == random_row || pos.y == random_row + 1) && pos.z == layer
-                            } else {
-                                (pos.y == random_row
-                                    || pos.y == random_row + 1
-                                    || pos.y == random_row - 1)
-                                    && pos.z == layer
-                            }
-                        })
-                        .collect();
-
-                if occupied_columns_in_row_and_layer.is_empty() {
-                    // A position can be added without any restrictions.
-                    position_to_add = Some(
-                        available_columns_in_row_and_layer
-                            [rng.random_range(0..available_columns_in_row_and_layer.len())]
-                        .to_owned(),
-                    );
-                    break;
-                }
-
-                let on_last_layer = layer == *top_layer_index;
-                let go_for_next_layer = rng.random_bool(0.5);
-
-                if !on_last_layer && go_for_next_layer {
-                    continue;
-                }
-
-                // Add position to either left or right of existing tiles on row and layer.
-                let go_to_the_left = rng.random_bool(0.5);
-                let position_to_the_left = available_columns_in_row_and_layer
-                    .iter()
-                    .min_by_key(|pos| pos.x);
-                let position_to_the_right = available_columns_in_row_and_layer
-                    .iter()
-                    .max_by_key(|pos| pos.x);
-
-                if go_to_the_left && position_to_the_left.is_some() {
-                    position_to_add = Some((*position_to_the_left.unwrap()).to_owned());
-                } else {
-                    position_to_add = Some((*position_to_the_right.unwrap()).to_owned());
-                }
-
-                break;
-            }
-
-            let layer_pos_capacity = available_layer_pos_capacity
-                .get_mut(&(final_layer.unwrap()))
-                .unwrap();
-            if *layer_pos_capacity == 1 {
-                available_layer_pos_capacity.remove(&(final_layer.unwrap()));
-            } else {
-                *layer_pos_capacity -= 1;
-            }
-
-            available_positions.swap_remove(
-                available_positions
-                    .iter()
-                    .position(|pos| *pos == position_to_add.unwrap())
-                    .unwrap(),
-            );
-            result.push((position_to_add.unwrap(), variant));
-            banned_position = Some(position_to_add.unwrap());
-        }
+        available_positions
+            .retain(|pos| !(*pos == **selected_positions[0] || *pos == **selected_positions[1]));
     }
 
     return result;
