@@ -1039,6 +1039,32 @@ pub fn generate_solvable_board(
         .collect();
     available_tile_variants.shuffle(&mut rng);
 
+    fn overlaps_xy(
+        a: &tile::Position,
+        b: &tile::Position,
+    ) -> bool {
+        let ax1 = a.x;
+        let ax2 = a.x + 1;
+        let ay1 = a.y;
+        let ay2 = a.y + 1;
+
+        let bx1 = b.x;
+        let bx2 = b.x + 1;
+        let by1 = b.y;
+        let by2 = b.y + 1;
+
+        ax1 <= bx2 && ax2 >= bx1 && ay1 <= by2 && ay2 >= by1
+    }
+
+    fn has_blocking_above(
+        pos: &tile::Position,
+        occupied: &HashSet<tile::Position>,
+    ) -> bool {
+        occupied
+            .iter()
+            .any(|op| op.z > pos.z && overlaps_xy(op, pos))
+    }
+
     // Place tiles
     for variant_pair in available_tile_variants {
         let (v0, v1) = variant_pair;
@@ -1057,6 +1083,7 @@ pub fn generate_solvable_board(
         });
         let free_positions: Vec<&tile::Position> = free_positions
             .values()
+            .filter(|p| !has_blocking_above(p, &occupied))
             .filter(|p| {
                 let mut left_blocked = p.x > 1
                     && occupied.contains(&tile::Position(UVec3 {
@@ -1070,12 +1097,13 @@ pub fn generate_solvable_board(
                         z: p.z,
                     }));
 
-                let mut right_blocked = p.x < u32::MAX - 2 &&
-                    occupied.contains(&tile::Position(UVec3 {
+                let mut right_blocked = p.x < u32::MAX - 2
+                    && occupied.contains(&tile::Position(UVec3 {
                         x: p.x + 2,
                         y: p.y,
                         z: p.z,
-                    })) || occupied.contains(&tile::Position(UVec3 {
+                    }))
+                    || occupied.contains(&tile::Position(UVec3 {
                         x: p.x + 2,
                         y: p.y + 1,
                         z: p.z,
