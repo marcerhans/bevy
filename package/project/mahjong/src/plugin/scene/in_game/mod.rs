@@ -1078,6 +1078,7 @@ pub fn generate_solvable_board(
     //      2.1 Row empty? Place tile! NEXT
     //      2.2 Decide if tile should go on this layer or one above
     //              2.2.1 Above? Repeat 2 but one layer above.
+    //              2.2.2 Place to either the left or right of existing tiles on row and layer.
     //
     // NOTE: After placing the one of the two tiles in the variant pair,
     // the first position has to restrict some positions of its (soon to be placed) matching pair variant.
@@ -1100,12 +1101,12 @@ pub fn generate_solvable_board(
                 *row_pos_capacity -= 1;
             }
 
-            let start_layer = available_layer_pos_capacity.keys().min().unwrap();
-            let top_layer = available_layer_pos_capacity.keys().max().unwrap();
+            let start_layer_index = available_layer_pos_capacity.keys().min().unwrap();
+            let top_layer_index = available_layer_pos_capacity.keys().max().unwrap();
             let mut position_to_add = None;
             let mut final_layer = None;
 
-            for layer in *start_layer..*top_layer {
+            for layer in *start_layer_index..=*top_layer_index {
                 final_layer = Some(layer);
 
                 let mut columns_in_row_and_layer: Vec<&tile::Position> = available_positions
@@ -1124,13 +1125,20 @@ pub fn generate_solvable_board(
                     .collect();
 
                 if columns_in_row_and_layer.is_empty() {
+                    // A position can be added without any restrictions.
                     position_to_add = Some(columns_in_row_and_layer
                         .swap_remove(rng.random_range(0..columns_in_row_and_layer.len())).to_owned());
                     break;
                 }
 
-                // let on_last_layer
-                // let go_for_next_layer
+                let on_last_layer = layer == *top_layer_index;
+                let go_for_next_layer = rng.random_bool(0.5);
+
+                if !on_last_layer && go_for_next_layer {
+                    continue;
+                }
+
+                // Try to pick a position on current 
             }
 
             let layer_pos_capacity = available_layer_pos_capacity.get_mut(&(final_layer.unwrap())).unwrap();
