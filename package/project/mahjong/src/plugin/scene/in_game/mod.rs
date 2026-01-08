@@ -1168,11 +1168,11 @@ pub fn generate_solvable_board(
 
                 if go_to_the_left && position_to_the_left.is_some() {
                     position_to_add = Some((*position_to_the_left.unwrap()).to_owned());
-                    break;
                 } else {
                     position_to_add = Some((*position_to_the_right.unwrap()).to_owned());
-                    break;
                 }
+
+                break;
             }
 
             let layer_pos_capacity = available_layer_pos_capacity
