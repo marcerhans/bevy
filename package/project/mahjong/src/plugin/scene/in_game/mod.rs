@@ -1083,7 +1083,7 @@ pub fn generate_solvable_board(
     // the first position has to restrict some positions of its (soon to be placed) matching pair variant.
     // Specifically, it has to deny positions that would place the second variant directly above/on top of the first.
     //
-    // NOTE:2: Since a tile is 2 spaces in (grid) size, a "Row check" needs to include tiles +-1 in the y axis .
+    // NOTE:2: Since a tile is 2 spaces in (grid) size, a "Row check" needs to also include tiles +1 in the y axis.
 
     let banned_position: Option<tile::Position> = None;
     while available_positions.len() > 0 {
@@ -1105,7 +1105,20 @@ pub fn generate_solvable_board(
         }
 
         for layer in *start_layer..max_layers {
-
+            let columns_in_row_and_layer: Vec<&tile::Position> = available_positions
+                .iter()
+                .filter(|pos| {
+                    let odd_row = *random_row % 2 != 0;
+                    if odd_row {
+                        (pos.y == *random_row || pos.y == *random_row + 1) && pos.z == layer
+                    } else {
+                        (pos.y == *random_row
+                            || pos.y == *random_row + 1
+                            || pos.y == *random_row - 1)
+                            && pos.z == layer
+                    }
+                })
+                .collect();
         }
         // let available_layers
 
