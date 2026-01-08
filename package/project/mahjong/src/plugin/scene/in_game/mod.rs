@@ -1090,49 +1090,50 @@ pub fn generate_solvable_board(
         let tile_variant_pair = available_tile_variants.pop().unwrap();
         let tile_variant_pair = [tile_variant_pair.0, tile_variant_pair.1];
 
-        for i in tile_variant_pair {}
-
-        let available_rows: Vec<&u32> = available_row_pos_capacity.keys().collect();
-        let random_row = available_rows[rng.random_range(0..available_rows.len())];
-        let row_pos_capacity = available_row_pos_capacity.get_mut(random_row).unwrap();
-        if *row_pos_capacity == 1 {
-            available_row_pos_capacity.remove(random_row);
-        } else {
-            *row_pos_capacity -= 1;
-        }
-
-        let start_layer = available_layer_pos_capacity.keys().min().unwrap();
-        let layer_pos_capacity = available_layer_pos_capacity.get_mut(start_layer).unwrap();
-        if *layer_pos_capacity == 1 {
-            available_layer_pos_capacity.remove(start_layer);
-        } else {
-            *layer_pos_capacity -= 1;
-        }
-
-        let tile_to_place;
-        for layer in *start_layer..max_layers {
-            let mut columns_in_row_and_layer: Vec<&tile::Position> = available_positions
-                .iter()
-                .filter(|pos| {
-                    let at_zero = *random_row == 0;
-                    if at_zero {
-                        (pos.y == *random_row || pos.y == *random_row + 1) && pos.z == layer
-                    } else {
-                        (pos.y == *random_row
-                            || pos.y == *random_row + 1
-                            || pos.y == *random_row - 1)
-                            && pos.z == layer
-                    }
-                })
-                .collect();
-
-            if columns_in_row_and_layer.is_empty() {
-                tile_to_place = columns_in_row_and_layer.swap_remove(rng.random_range(0..columns_in_row_and_layer.len()));
-                break;
+        for variant in tile_variant_pair {
+            let available_rows: Vec<&u32> = available_row_pos_capacity.keys().collect();
+            let random_row = available_rows[rng.random_range(0..available_rows.len())];
+            let row_pos_capacity = available_row_pos_capacity.get_mut(random_row).unwrap();
+            if *row_pos_capacity == 1 {
+                available_row_pos_capacity.remove(random_row);
+            } else {
+                *row_pos_capacity -= 1;
             }
-        }
 
-        result.push();
+            let start_layer = available_layer_pos_capacity.keys().min().unwrap();
+            let layer_pos_capacity = available_layer_pos_capacity.get_mut(start_layer).unwrap();
+            if *layer_pos_capacity == 1 {
+                available_layer_pos_capacity.remove(start_layer);
+            } else {
+                *layer_pos_capacity -= 1;
+            }
+
+            let position;
+            for layer in *start_layer..max_layers {
+                let mut columns_in_row_and_layer: Vec<&tile::Position> = available_positions
+                    .iter()
+                    .filter(|pos| {
+                        let at_zero = *random_row == 0;
+                        if at_zero {
+                            (pos.y == *random_row || pos.y == *random_row + 1) && pos.z == layer
+                        } else {
+                            (pos.y == *random_row
+                                || pos.y == *random_row + 1
+                                || pos.y == *random_row - 1)
+                                && pos.z == layer
+                        }
+                    })
+                    .collect();
+
+                if columns_in_row_and_layer.is_empty() {
+                    position = columns_in_row_and_layer
+                        .swap_remove(rng.random_range(0..columns_in_row_and_layer.len()));
+                    break;
+                }
+            }
+
+            result.push((*position, variant));
+        }
     }
 
     return result;
