@@ -161,7 +161,7 @@ mod tile {
     pub struct Marker<const DEPTH: u32>;
 
     #[derive(Component, Deref, DerefMut, Clone, Copy, Debug, PartialEq)]
-    pub struct Position(UVec3);
+    pub struct Position(pub UVec3);
 
     pub struct Turtle;
 
@@ -1021,19 +1021,38 @@ pub fn generate_solvable_board(
         panic!();
     }
 
-    const TILE_CATEGORY_SIZE: u32 = 4;
-    const TILE_LAYERS: u32 = 5;
-    let tile_categories = available_positions.len() as u32 / TILE_CATEGORY_SIZE;
-    let tile_pairs = tile_categories / 2;
+    let seed = seed.unwrap_or(0);
+    let mut rng = StdRng::seed_from_u64(seed);
+    let mut result: Vec<(tile::Position, tile::Variant)> = vec![];
+
+    // Determine board dimensions
+    let mut layers = 0;
+    available_positions
+        .iter()
+        .for_each(|pos| layers = u32::max(pos.z, layers));
+
+    let mut rows = 0;
+    available_positions
+        .iter()
+        .for_each(|pos| rows = u32::max(pos.y, rows));
+
+    let mut columns = 0;
+    available_positions
+        .iter()
+        .for_each(|pos| layers = u32::max(pos.x, columns));
+
+    //
+    let tile_pairs = available_positions.len() as u32 / 2;
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
         .map(|variant| (tile::Variant(variant), tile::Variant(variant)))
         .collect();
-    if seed.is_none() {
-        seed = Some(0);
+
+    for variant_pair in available_tile_variants {
+        result.push((available_positions.pop().unwrap(), variant_pair.0));
+        result.push((available_positions.pop().unwrap(), variant_pair.1));
     }
-    let seed = seed.unwrap();
-    let mut rng = StdRng::seed_from_u64(seed);
-    let mut result: Vec<(tile::Position, tile::Variant)> = vec![];
+
+    return result;
 
     // // Categorize positions.
     // let mut positions_by_layer: [Vec<&tile::Position>; TILE_LAYERS as usize] =
