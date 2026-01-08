@@ -1104,8 +1104,9 @@ pub fn generate_solvable_board(
             *layer_pos_capacity -= 1;
         }
 
+        let tile_to_place;
         for layer in *start_layer..max_layers {
-            let columns_in_row_and_layer: Vec<&tile::Position> = available_positions
+            let mut columns_in_row_and_layer: Vec<&tile::Position> = available_positions
                 .iter()
                 .filter(|pos| {
                     let at_zero = *random_row == 0;
@@ -1119,12 +1120,14 @@ pub fn generate_solvable_board(
                     }
                 })
                 .collect();
+
+            if columns_in_row_and_layer.is_empty() {
+                tile_to_place = columns_in_row_and_layer.swap_remove(rng.random_range(0..columns_in_row_and_layer.len()));
+                break;
+            }
         }
-        // let available_layers
 
-        // for layer
-
-        result.push(todo!());
+        result.push();
     }
 
     return result;
