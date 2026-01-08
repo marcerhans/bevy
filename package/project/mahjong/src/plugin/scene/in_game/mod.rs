@@ -1021,9 +1021,11 @@ pub fn generate_solvable_board(
         panic!();
     }
 
+    let mut result: Vec<(tile::Position, tile::Variant)> = vec![];
+
+    // Set rng seed
     let seed = seed.unwrap_or(0);
     let mut rng = StdRng::seed_from_u64(seed);
-    let mut result: Vec<(tile::Position, tile::Variant)> = vec![];
 
     // Determine board dimensions
     let mut layers = 0;
@@ -1041,15 +1043,27 @@ pub fn generate_solvable_board(
         .iter()
         .for_each(|pos| layers = u32::max(pos.x, columns));
 
-    //
+    // Generate [tile::Variant] pairs
     let tile_pairs = available_positions.len() as u32 / 2;
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
         .map(|variant| (tile::Variant(variant), tile::Variant(variant)))
         .collect();
 
-    for variant_pair in available_tile_variants {
-        result.push((available_positions.pop().unwrap(), variant_pair.0));
-        result.push((available_positions.pop().unwrap(), variant_pair.1));
+    // Of still available positions, pop a variant pair. For each variant in the pair, determine two valid positions following the steps:
+    //  1 Pick random row
+    //  2 For each layer, starting at the the smallest still available layer:
+    //      2.1 Row empty? Place tile! NEXT
+    //      2.2 Decide if tile should go on this row or one above
+    //              2.2.1 Above? Repeat 2 but one layer above.
+    //
+    // NOTE: After placing the one of the two tiles in the variant pair, 
+    // the first position has to restrict some positions for it's matching pair variant.
+    // Specificall, it has to deny positions that would place the second variant directly above/on top of the first.
+    //
+    // NOTE:2: Since a tile is 2 spaces in (grid) size, a "Row check" needs to include tiles +-1 in the y axis .
+    
+    while available_positions.len() > 0 {
+        result.push(todo!());
     }
 
     return result;
