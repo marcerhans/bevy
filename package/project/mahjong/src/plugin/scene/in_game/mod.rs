@@ -1063,6 +1063,15 @@ pub fn generate_solvable_board(
         }
     });
 
+    let mut available_layer_pos_capacity: HashMap<u32, u32> = HashMap::new();
+    available_positions.iter().for_each(|pos| {
+        if let Some(capacity) = available_row_pos_capacity.get_mut(&pos.z) {
+            *capacity += 1;
+        } else {
+            available_row_pos_capacity.insert(pos.z, 1);
+        }
+    });
+
     // Of still available positions, pop a variant pair. For each variant in the pair, determine two valid positions following the steps:
     //  1 Pick random row
     //  2 For each layer, starting at the the smallest still available layer:
@@ -1082,10 +1091,10 @@ pub fn generate_solvable_board(
         let random_row = available_rows[rng.random_range(0..available_rows.len())];
         *available_row_pos_capacity.get_mut(random_row).unwrap() -= 1;
 
-        let mut available_layers_by_row = vec![Vec::<tile::Position>::new(); rows as usize];
+        let mut available_layers_by_row = vec![Vec::<tile::Position>::new(); max_rows as usize];
         available_positions.iter().for_each(|pos| {
-            if pos.y == random_row {
-                available_columns_by_layer[pos.z as usize].push(*pos);
+            if pos.y == *random_row {
+                available_layers_by_row[pos. as usize].push(*pos);
             }
         });
 
