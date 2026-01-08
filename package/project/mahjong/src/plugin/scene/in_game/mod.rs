@@ -1016,7 +1016,7 @@ pub fn spawn_tiles(
 
 pub fn generate_solvable_board(
     mut available_positions: Vec<tile::Position>,
-    mut seed: Option<u64>,
+    seed: Option<u64>,
 ) -> Vec<(tile::Position, tile::Variant)> {
     if available_positions.len() % 2 != 0 {
         panic!();
