@@ -1108,7 +1108,7 @@ pub fn generate_solvable_board(
                 *layer_pos_capacity -= 1;
             }
 
-            let position;
+            let position_to_add;
             for layer in *start_layer..max_layers {
                 let mut columns_in_row_and_layer: Vec<&tile::Position> = available_positions
                     .iter()
@@ -1126,13 +1126,19 @@ pub fn generate_solvable_board(
                     .collect();
 
                 if columns_in_row_and_layer.is_empty() {
-                    position = columns_in_row_and_layer
+                    position_to_add = columns_in_row_and_layer
                         .swap_remove(rng.random_range(0..columns_in_row_and_layer.len()));
                     break;
                 }
             }
 
-            result.push((*position, variant));
+            available_positions.swap_remove(
+                available_positions
+                    .iter()
+                    .position(|pos| *pos == *position_to_add)
+                    .unwrap(),
+            );
+            result.push((*position_to_add, variant));
         }
     }
 
