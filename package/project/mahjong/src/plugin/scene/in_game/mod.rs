@@ -1087,6 +1087,11 @@ pub fn generate_solvable_board(
 
     let banned_position: Option<tile::Position> = None;
     while available_positions.len() > 0 {
+        let tile_variant_pair = available_tile_variants.pop().unwrap();
+        let tile_variant_pair = [tile_variant_pair.0, tile_variant_pair.1];
+
+        for i in tile_variant_pair {}
+
         let available_rows: Vec<&u32> = available_row_pos_capacity.keys().collect();
         let random_row = available_rows[rng.random_range(0..available_rows.len())];
         let row_pos_capacity = available_row_pos_capacity.get_mut(random_row).unwrap();
