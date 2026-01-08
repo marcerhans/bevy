@@ -1086,8 +1086,8 @@ pub fn generate_solvable_board(
     //
     // NOTE:2: Since a tile is 2 spaces in (grid) size, a "Row check" needs to also include tiles +1 in the y axis.
 
-    let banned_position: Option<tile::Position> = None;
     while available_positions.len() > 0 {
+        let banned_position: Option<tile::Position> = None;
         let tile_variant_pair = available_tile_variants.pop().unwrap();
         let tile_variant_pair = [tile_variant_pair.0, tile_variant_pair.1];
 
