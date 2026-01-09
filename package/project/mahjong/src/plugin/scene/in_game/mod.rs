@@ -1036,8 +1036,14 @@ pub fn generate_solvable_board(
         .collect();
     available_tile_variants.shuffle(&mut rng);
 
-
+    let mut occupied: HashSet<&tile::Position> = HashSet::new();
     let mut result: Vec<(tile::Position, tile::Variant)> = vec![];
+
+    for (v0, v1) in available_tile_variants {
+        result.push((available_positions.swap_remove(0), v0));
+        result.push((available_positions.swap_remove(0), v1));
+    }
+
     return result;
 }
 
