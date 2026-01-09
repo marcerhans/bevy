@@ -925,7 +925,7 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    let positions: Vec<tile::Position> = position_generator.take(80).collect();
+    let positions: Vec<tile::Position> = position_generator.collect();
     let positions = generate_solvable_board(positions, None);
 
     for (pos, variant) in positions {
@@ -1070,59 +1070,46 @@ pub fn generate_solvable_board(
         let (v0, v1) = variant_pair;
 
         let occupied: HashSet<tile::Position> = result.iter().map(|(pos, _variant)| *pos).collect();
-        let mut free_positions: HashMap<UVec2, tile::Position> = HashMap::new();
-        available_positions.iter().for_each(|pos| {
-            let key = pos.truncate();
-            if let Some(hashed_pos) = free_positions.get_mut(&key) {
-                if hashed_pos.z > pos.z {
-                    *hashed_pos = *pos;
-                }
-            } else {
-                free_positions.insert(key, pos.to_owned());
-            }
-        });
-        let free_positions: Vec<&tile::Position> = free_positions
-            .values()
+        let free_positions: Vec<&tile::Position> = available_positions
+            .iter()
             .filter(|p| !has_blocking_above(p, &occupied))
             .filter(|p| {
                 let mut left_blocked = p.x > 1
-                    && occupied.contains(&tile::Position(UVec3 {
+                    && (occupied.contains(&tile::Position(UVec3 {
                         x: p.x - 2,
                         y: p.y,
                         z: p.z,
-                    }))
-                    || occupied.contains(&tile::Position(UVec3 {
+                    })) || occupied.contains(&tile::Position(UVec3 {
                         x: p.x - 2,
                         y: p.y + 1,
                         z: p.z,
-                    }));
+                    })));
 
-                let mut right_blocked = p.x < u32::MAX - 2
-                    && occupied.contains(&tile::Position(UVec3 {
+                let mut right_blocked = p.x < u32::MAX - 1
+                    && (occupied.contains(&tile::Position(UVec3 {
                         x: p.x + 2,
                         y: p.y,
                         z: p.z,
-                    }))
-                    || occupied.contains(&tile::Position(UVec3 {
+                    })) || occupied.contains(&tile::Position(UVec3 {
                         x: p.x + 2,
                         y: p.y + 1,
                         z: p.z,
-                    }));
+                    })));
 
                 if p.y > 0 {
-                    left_blocked = left_blocked
+                    left_blocked = p.x > 1 && (left_blocked
                         || occupied.contains(&tile::Position(UVec3 {
                             x: p.x - 2,
                             y: p.y - 1,
                             z: p.z,
-                        }));
+                        })));
 
-                    right_blocked = right_blocked
+                    right_blocked = p.x < u32::MAX - 1 && (right_blocked
                         || occupied.contains(&tile::Position(UVec3 {
                             x: p.x + 2,
                             y: p.y - 1,
                             z: p.z,
-                        }));
+                        })));
                 }
 
                 !left_blocked || !right_blocked
@@ -1131,11 +1118,12 @@ pub fn generate_solvable_board(
         let selected_positions: Vec<&&tile::Position> =
             free_positions.choose_multiple(&mut rng, 2).collect();
 
-        result.push((**selected_positions[0], v0));
-        result.push((**selected_positions[1], v1));
+        let p0 = **selected_positions[0];
+        let p1 = **selected_positions[1];
+        result.push((p0, v0));
+        result.push((p1, v1));
 
-        available_positions
-            .retain(|pos| !(*pos == **selected_positions[0] || *pos == **selected_positions[1]));
+        available_positions.retain(|pos| !(*pos == p0 || *pos == p1));
     }
 
     return result;
