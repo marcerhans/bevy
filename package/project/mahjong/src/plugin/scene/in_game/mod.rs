@@ -926,7 +926,7 @@ pub fn spawn_tiles(
     );
 
     let positions: Vec<tile::Position> = position_generator.collect();
-    let positions = generate_solvable_board(positions, None);
+    let positions = generate_solvable_board(positions, Some(64));
 
     for (pos, variant) in positions {
         let default_depth = Vec3::default().with_z(100.0);
@@ -1025,9 +1025,6 @@ pub fn generate_solvable_board(
     if available_positions.len() % 2 != 0 {
         panic!();
     }
-
-    let mut result: Vec<(tile::Position, tile::Variant)> = vec![];
-
     // Set rng seed
     let seed = seed.unwrap_or(0);
     let mut rng = StdRng::seed_from_u64(seed);
@@ -1039,11 +1036,8 @@ pub fn generate_solvable_board(
         .collect();
     available_tile_variants.shuffle(&mut rng);
 
-    result.push((
-        *available_positions.first().unwrap(),
-        available_tile_variants.first().unwrap().0,
-    ));
 
+    let mut result: Vec<(tile::Position, tile::Variant)> = vec![];
     return result;
 }
 
