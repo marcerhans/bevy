@@ -1032,16 +1032,42 @@ pub fn generate_solvable_board(
     // Generate [tile::Variant] pairs
     let tile_pairs = available_positions.len() as u32 / 2;
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
-        .map(|variant| (tile::Variant(variant), tile::Variant(variant)))
+        .map(|variant| {
+            (
+                tile::Variant(variant),
+                tile::Variant(
+                    variant
+                        + tile::PositionGenerator::<tile::Turtle>::TILES as u32
+                            / tile::PositionGenerator::<tile::Turtle>::TILE_VARIANT_GROUP_SIZE
+                                as u32,
+                ),
+            )
+        })
         .collect();
     available_tile_variants.shuffle(&mut rng);
 
+    let mut result: Vec<(tile::Position, tile::Variant)> = Vec::new();
     let mut occupied: HashSet<&tile::Position> = HashSet::new();
-    let mut result: Vec<(tile::Position, tile::Variant)> = vec![];
+    let mut lowest_available_positions: HashMap<UVec2, (usize, &tile::Position)> = HashMap::new();
 
     for (v0, v1) in available_tile_variants {
-        result.push((available_positions.swap_remove(0), v0));
-        result.push((available_positions.swap_remove(0), v1));
+        lowest_available_positions.clear();
+        available_positions
+            .iter()
+            .enumerate()
+            .for_each(|(index, pos)| {
+                let pos_u2 = pos.truncate();
+                if let Some((index_, pos_)) = lowest_available_positions.get_mut(&pos_u2) {
+                    if pos_.z > pos.z {
+                        *index_ = index;
+                        *pos_ = pos;
+                    }
+                } else {
+                    lowest_available_positions.insert(pos_u2, (index, pos));
+                }
+            });
+        // result.push((available_positions.swap_remove(0), v0));
+        // result.push((available_positions.swap_remove(0), v1));
     }
 
     return result;
