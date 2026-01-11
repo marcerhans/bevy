@@ -1075,10 +1075,14 @@ pub fn generate_solvable_board(
         let positions = lowest_available_positions
             .values()
             .choose_multiple(&mut rng, 2);
+        let mut positions: [usize; 2] = [positions[0].0, positions[1].0];
 
-        dbg!(available_positions.len());
-        result.push((available_positions.swap_remove(positions[0].0), v0));
-        result.push((available_positions.swap_remove(positions[1].0), v1));
+        if positions[0] < positions[1] {
+            positions[1] -= 1;
+        }
+
+        result.push((available_positions.swap_remove(positions[0]), v0));
+        result.push((available_positions.swap_remove(positions[1]), v1));
     }
 
     return result;
