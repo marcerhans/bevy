@@ -8,7 +8,7 @@ use bevy::{
 use rand::{
     Rng, SeedableRng,
     rngs::StdRng,
-    seq::{IndexedRandom, SliceRandom},
+    seq::{IndexedRandom, IteratorRandom, SliceRandom},
 };
 use std::collections::{HashSet, VecDeque};
 
@@ -1047,8 +1047,7 @@ pub fn generate_solvable_board(
     available_tile_variants.shuffle(&mut rng);
 
     let mut result: Vec<(tile::Position, tile::Variant)> = Vec::new();
-    let mut occupied: HashSet<&tile::Position> = HashSet::new();
-    let mut lowest_available_positions: HashMap<UVec2, (usize, &tile::Position)> = HashMap::new();
+    let mut lowest_available_positions: HashMap<UVec2, (usize, tile::Position)> = HashMap::new();
 
     for (v0, v1) in available_tile_variants {
         lowest_available_positions.clear();
@@ -1060,14 +1059,19 @@ pub fn generate_solvable_board(
                 if let Some((index_, pos_)) = lowest_available_positions.get_mut(&pos_u2) {
                     if pos_.z > pos.z {
                         *index_ = index;
-                        *pos_ = pos;
+                        *pos_ = *pos;
                     }
                 } else {
                     lowest_available_positions.insert(pos_u2, (index, pos));
                 }
             });
-        // result.push((available_positions.swap_remove(0), v0));
-        // result.push((available_positions.swap_remove(0), v1));
+
+        let positions = lowest_available_positions
+            .values()
+            .choose_multiple(&mut rng, 2);
+
+        result.push((available_positions.swap_remove(positions[0].0), v0));
+        result.push((available_positions.swap_remove(positions[1].0), v1));
     }
 
     return result;
