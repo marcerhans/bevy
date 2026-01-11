@@ -926,7 +926,7 @@ pub fn spawn_tiles(
     );
 
     let positions: Vec<tile::Position> = position_generator.collect();
-    let positions = generate_solvable_board(positions, Some(64));
+    let positions = generate_solvable_board(positions, Some(0));
 
     for (pos, variant) in positions {
         let default_depth = Vec3::default().with_z(100.0);
@@ -1049,7 +1049,13 @@ pub fn generate_solvable_board(
     let mut result: Vec<(tile::Position, tile::Variant)> = Vec::new();
     let mut lowest_available_positions: HashMap<UVec2, (usize, tile::Position)> = HashMap::new();
 
+    dbg!(available_positions.len());
+    dbg!(available_tile_variants.len());
+    let mut w = 0;
+
     for (v0, v1) in available_tile_variants {
+        w += 1;
+        dbg!(w);
         lowest_available_positions.clear();
         available_positions
             .iter()
@@ -1062,7 +1068,7 @@ pub fn generate_solvable_board(
                         *pos_ = *pos;
                     }
                 } else {
-                    lowest_available_positions.insert(pos_u2, (index, pos));
+                    lowest_available_positions.insert(pos_u2, (index, *pos));
                 }
             });
 
@@ -1070,6 +1076,7 @@ pub fn generate_solvable_board(
             .values()
             .choose_multiple(&mut rng, 2);
 
+        dbg!(available_positions.len());
         result.push((available_positions.swap_remove(positions[0].0), v0));
         result.push((available_positions.swap_remove(positions[1].0), v1));
     }
