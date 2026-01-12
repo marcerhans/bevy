@@ -1078,14 +1078,14 @@ pub fn generate_solvable_board(
 
     for (v0, v1) in available_tile_variants {
         let random_row = rng.random_range(0..lookup.len());
-        let row_is_empty = lookup[random_row].is_empty()
-            && (if random_row + 1 < lookup.len() {
-                lookup[random_row + 1].is_empty()
+        let row_is_empty = occupied[random_row].is_empty()
+            && (if random_row + 1 < occupied.len() {
+                occupied[random_row + 1].is_empty()
             } else {
                 true
             })
             && (if random_row > 0 {
-                lookup[random_row - 1].is_empty()
+                occupied[random_row - 1].is_empty()
             } else {
                 true
             });
