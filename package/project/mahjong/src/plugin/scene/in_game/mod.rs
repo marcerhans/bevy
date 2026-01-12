@@ -1047,43 +1047,32 @@ pub fn generate_solvable_board(
     available_tile_variants.shuffle(&mut rng);
 
     let mut result: Vec<(tile::Position, tile::Variant)> = Vec::new();
-    let mut lowest_available_positions: HashMap<UVec2, (usize, tile::Position)> = HashMap::new();
 
-    dbg!(available_positions.len());
-    dbg!(available_tile_variants.len());
-    let mut w = 0;
+    // Generate lookup tensors
+    let mut layers = 0;
+    let mut rows = 0;
+    let mut columns = 0;
 
-    for (v0, v1) in available_tile_variants {
-        w += 1;
-        dbg!(w);
-        lowest_available_positions.clear();
-        available_positions
-            .iter()
-            .enumerate()
-            .for_each(|(index, pos)| {
-                let pos_u2 = pos.truncate();
-                if let Some((index_, pos_)) = lowest_available_positions.get_mut(&pos_u2) {
-                    if pos_.z > pos.z {
-                        *index_ = index;
-                        *pos_ = *pos;
-                    }
-                } else {
-                    lowest_available_positions.insert(pos_u2, (index, *pos));
-                }
-            });
-
-        let positions = lowest_available_positions
-            .values()
-            .choose_multiple(&mut rng, 2);
-        let mut positions: [usize; 2] = [positions[0].0, positions[1].0];
-
-        if positions[0] < positions[1] {
-            positions[1] -= 1;
+    for tile::Position(UVec3 { x, y, z }) in &available_positions {
+        if *z > layers {
+            layers = *z;
         }
-
-        result.push((available_positions.swap_remove(positions[0]), v0));
-        result.push((available_positions.swap_remove(positions[1]), v1));
+        if *y > rows {
+            rows = *y;
+        }
+        if *x > columns {
+            columns = *x;
+        }
     }
+
+    let mut lookup: Vec<Vec<Vec<(tile::Position, usize)>>> =
+        vec![vec![vec![]; layers as usize]; rows as usize];
+
+    for (index, tile::Position(UVec3 { x, y, z })) in available_positions.iter().enumerate() {
+        lookup[*z as usize][*y as usize].push((tile::Position(UVec3::new(*x, *y, *z)), index));
+    }
+
+    for (v0, v1) in available_tile_variants {}
 
     return result;
 }
