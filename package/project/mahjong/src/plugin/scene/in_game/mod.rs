@@ -1092,6 +1092,8 @@ pub fn generate_solvable_board(
 
         if row_is_empty {
             // We must place a tile here! "Seed tile" for the layer.
+            tile::Position(UVec3 {x,y,z}) = lookup[random_row][]
+            occupied[]
             lookup
         }
 
