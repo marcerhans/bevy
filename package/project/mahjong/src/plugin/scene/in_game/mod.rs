@@ -1074,7 +1074,7 @@ pub fn generate_solvable_board(
 
     // ...and move into the occupied table (and add to the result vector when doing so)
     let mut occupied: Vec<Vec<Vec<(tile::Position, usize)>>> =
-        vec![vec![vec![]; layers as usize]; rows as usize];
+        vec![vec![vec![]; columns as usize]; rows as usize];
 
     for (v0, v1) in available_tile_variants {
         let random_row = rng.random_range(0..lookup.len());
@@ -1091,7 +1091,8 @@ pub fn generate_solvable_board(
             });
 
         if row_is_empty {
-
+            // We must place a tile here! "Seed tile" for the layer.
+            lookup
         }
 
         // REMOVE ANY EMPTY LOOKUP TABLES!!!
