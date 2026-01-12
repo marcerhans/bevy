@@ -1051,7 +1051,7 @@ pub fn generate_solvable_board(
     // Generate lookup tensors
     let mut layers = 0;
     let mut rows = 0;
-    let mut columns = 0;
+    // let mut columns = 0;
 
     for tile::Position(UVec3 { x, y, z }) in &available_positions {
         if *z > layers {
@@ -1060,9 +1060,9 @@ pub fn generate_solvable_board(
         if *y > rows {
             rows = *y;
         }
-        if *x > columns {
-            columns = *x;
-        }
+        // if *x > columns {
+        //     columns = *x;
+        // }
     }
 
     let mut lookup: Vec<Vec<Vec<(tile::Position, usize)>>> =
@@ -1072,7 +1072,12 @@ pub fn generate_solvable_board(
         lookup[*z as usize][*y as usize].push((tile::Position(UVec3::new(*x, *y, *z)), index));
     }
 
-    for (v0, v1) in available_tile_variants {}
+    for (v0, v1) in available_tile_variants {
+        let random_row = rng.random_range(0..)
+
+        // REMOVE ANY EMPTY LOOKUP TABLES!!!
+        // (Performance) ONLY REMOVE THOSE THAT WE HAVE REMOVED FROM!
+    }
 
     return result;
 }
