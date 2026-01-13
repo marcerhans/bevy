@@ -1065,20 +1065,31 @@ pub fn generate_solvable_board(
         }
     }
 
-    dbg!(rows, layers, columns);
-
     let mut lookup: Vec<Vec<Vec<(&tile::Position, usize)>>> =
         vec![vec![vec![]; layers as usize]; rows as usize];
     for (index, pos) in available_positions.iter().enumerate() {
-        dbg!(pos.y);
-        dbg!(pos.z);
         lookup[pos.y as usize][pos.z as usize].push((pos, index));
     }
     let mut occupied: Vec<Vec<Vec<(&tile::Position, usize)>>> =
         vec![vec![vec![]; layers as usize]; rows as usize];
 
+    fn place_tile<'a>(
+        lookup: &mut Vec<Vec<Vec<(&'a tile::Position, usize)>>>,
+        occupied: &mut Vec<Vec<Vec<(&'a tile::Position, usize)>>>,
+        result: &mut Vec<(tile::Position, tile::Variant)>,
+        rng: &mut StdRng,
+        row: usize,
+        layer: usize,
+        variant: tile::Variant,
+    ) {
+        let random_column = rng.random_range(0..lookup[row][layer].len());
+        let (pos, index) = lookup[row][layer].swap_remove(random_column);
+        occupied[row][layer].push((pos, index));
+        result.push((*pos, variant));
+    }
+
     // Pick positions from the lookup table...
-    // ...and move into the occupied table (and add to the result vector when doing so)
+    // ...and move them into the occupied table (and add to the result vector when doing so)
     for (v0, v1) in available_tile_variants {
         let v = [v0, v1];
         let random_row = rng.random_range(0..lookup.len());
@@ -1102,11 +1113,15 @@ pub fn generate_solvable_board(
                     true
                 });
             if occupied_row_is_empty {
-                // We must place a tile here! "Seed tile" for the layer.
-                let random_column = rng.random_range(0..lookup[random_row][layer].len());
-                let (pos, index) = lookup[random_row][layer].swap_remove(random_column);
-                occupied[random_row][layer].push((pos, index));
-                result.push((*pos, v[0]));
+                place_tile(
+                    &mut lookup,
+                    &mut occupied,
+                    &mut result,
+                    &mut rng,
+                    random_row,
+                    layer,
+                    v[0],
+                );
             }
         }
 
