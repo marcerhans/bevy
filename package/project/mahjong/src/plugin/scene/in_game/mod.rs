@@ -926,16 +926,15 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    let positions: Vec<tile::Position> = position_generator.collect();
-    // let positions = vec![
-    //     tile::Position(UVec3::new(0, 0, 0)),
-    //     tile::Position(UVec3::new(2, 0, 0)),
-    //     tile::Position(UVec3::new(0, 2, 0)),
-    //     tile::Position(UVec3::new(2, 2, 0)),
-    // ];
+    // let positions: Vec<tile::Position> = position_generator.collect();
+    let positions = vec![
+        tile::Position(UVec3::new(0, 0, 0)),
+        tile::Position(UVec3::new(0, 0, 1)),
+        tile::Position(UVec3::new(0, 0, 2)),
+        tile::Position(UVec3::new(0, 0, 3)),
+    ];
     let positions = generate_solvable_board(
         &positions,
-        tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32,
         Some(2),
     );
 
@@ -1031,11 +1030,8 @@ pub fn spawn_tiles(
 
 pub fn generate_solvable_board(
     available_positions: &Vec<tile::Position>,
-    grid_resolution: u32,
     seed: Option<u64>,
 ) -> Vec<(tile::Position, tile::Variant)> {
-    let grid_resolution = grid_resolution as usize;
-
     if available_positions.len() % 2 != 0 {
         panic!();
     }
