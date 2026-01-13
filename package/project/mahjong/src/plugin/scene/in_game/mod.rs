@@ -1114,7 +1114,7 @@ pub fn generate_solvable_board(
             if let Some(pos) = banned_position {
                 // Replace lookup table with filtered version.
                 // This is done to ensure that the SECOND tile place in a pair is every placed on top of the FIRST.
-                let lookup_original = Some(lookup.clone());
+                lookup_original = Some(lookup.clone());
 
                 let row = pos.y;
                 if let Some(row_vec) = lookup.get_mut(row as usize) {
