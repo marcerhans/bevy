@@ -1065,13 +1065,13 @@ pub fn generate_solvable_board(
         }
     }
 
-    // 
+    //
     let mut lookup: Vec<Vec<Vec<(&tile::Position, usize)>>> =
         vec![vec![vec![]; layers as usize]; rows as usize];
     for (index, pos) in available_positions.iter().enumerate() {
         lookup[pos.y as usize][pos.z as usize].push((pos, index));
     }
-    let mut occupied: Vec<Vec<Vec<(tile::Position, usize)>>> =
+    let mut occupied: Vec<Vec<Vec<(&tile::Position, usize)>>> =
         vec![vec![vec![]; layers as usize]; rows as usize];
 
     // Pick positions from the lookup table...
@@ -1099,9 +1099,10 @@ pub fn generate_solvable_board(
                 });
             if occupied_row_is_empty {
                 // We must place a tile here! "Seed tile" for the layer.
-                tile::Position(UVec3 {x,y,z}) = lookup[random_row][]
-                occupied[]
-                lookup
+                occupied[random_row][layer].push(
+                    lookup[random_row][layer]
+                        .swap_remove(rng.random_range(0..lookup[random_row][layer].len())),
+                );
             }
         }
 
