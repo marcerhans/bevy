@@ -928,10 +928,32 @@ pub fn spawn_tiles(
 
     // let positions: Vec<tile::Position> = position_generator.collect();
     let positions = vec![
-        tile::Position(UVec3::new(0, 0, 0)),
-        tile::Position(UVec3::new(0, 0, 1)),
-        tile::Position(UVec3::new(0, 0, 2)),
-        tile::Position(UVec3::new(0, 0, 3)),
+        tile::Position(UVec3::new(2, 2, 0)),
+        tile::Position(UVec3::new(1, 1, 1)),
+        tile::Position(UVec3::new(1, 2, 2)),
+        tile::Position(UVec3::new(1, 3, 3)),
+        tile::Position(UVec3::new(2, 3, 4)),
+        tile::Position(UVec3::new(3, 3, 5)),
+        tile::Position(UVec3::new(3, 2, 6)),
+        tile::Position(UVec3::new(3, 1, 7)),
+        // tile::Position(UVec3::new(2, 1, 8)),
+
+        tile::Position(UVec3::new(0, 0, 9)),
+        tile::Position(UVec3::new(0, 1, 10)),
+        tile::Position(UVec3::new(0, 2, 11)),
+        tile::Position(UVec3::new(0, 3, 12)),
+        tile::Position(UVec3::new(0, 4, 13)),
+        tile::Position(UVec3::new(1, 4, 14)),
+        tile::Position(UVec3::new(2, 4, 15)),
+        tile::Position(UVec3::new(3, 4, 16)),
+        tile::Position(UVec3::new(4, 4, 17)),
+        tile::Position(UVec3::new(4, 3, 18)),
+        tile::Position(UVec3::new(4, 2, 19)),
+        tile::Position(UVec3::new(4, 1, 20)),
+        tile::Position(UVec3::new(4, 0, 21)),
+        tile::Position(UVec3::new(3, 0, 22)),
+        tile::Position(UVec3::new(2, 0, 23)),
+        tile::Position(UVec3::new(1, 0, 24)),
     ];
     let positions = generate_solvable_board(&positions, Some(2));
 
@@ -1087,7 +1109,7 @@ pub fn generate_solvable_board(
         variant: tile::Variant,
     ) -> tile::Position {
         assert!(lookup[row][layer].len() != 0);
-        let random_column = rng.random_range(0..lookup[row][layer].len());
+        let random_column = 0; //rng.random_range(0..lookup[row][layer].len());
         let (pos, index) = lookup[row][layer].swap_remove(random_column);
         occupied[row][layer].push((pos, index));
         result.push((*pos, variant));
@@ -1096,7 +1118,8 @@ pub fn generate_solvable_board(
 
     // Pick positions from the lookup table...
     // ...and move them into the occupied table (and add to the result vector when doing so)
-    for (variant0, variant1) in available_tile_variants {
+    // for (variant0, variant1) in available_tile_variants {
+        let (variant0, variant1) = available_tile_variants.first().unwrap();
         let variants = [variant0, variant1];
         let mut banned_position: Option<UVec3> = None; // Decided by first tile placement.
 
@@ -1116,14 +1139,14 @@ pub fn generate_solvable_board(
                             let pos = pos.truncate();
                             let pos_ = pos_.truncate();
                             let overlaps_banned_position = (pos == pos_)
-                                || (pos.x - 1 == pos_.x && pos.y - 1 == pos_.y)
-                                || (pos.x - 1 == pos_.x && pos.y == pos_.y)
-                                || (pos.x - 1 == pos_.x && pos.y + 1 == pos_.y)
+                                || (pos.x == pos_.x + 1 && pos.y == pos_.y + 1)
+                                || (pos.x == pos_.x + 1 && pos.y == pos_.y)
+                                || (pos.x == pos_.x + 1 && pos.y + 1 == pos_.y)
                                 || (pos.x == pos_.x && pos.y + 1 == pos_.y)
                                 || (pos.x + 1 == pos_.x && pos.y + 1 == pos_.y)
                                 || (pos.x + 1 == pos_.x && pos.y == pos_.y)
-                                || (pos.x + 1 == pos_.x && pos.y - 1 == pos_.y)
-                                || (pos.x == pos_.x && pos.y - 1 == pos_.y);
+                                || (pos.x + 1 == pos_.x && pos.y == pos_.y + 1)
+                                || (pos.x == pos_.x && pos.y == pos_.y + 1);
                             !overlaps_banned_position
                         });
                     }
@@ -1133,7 +1156,7 @@ pub fn generate_solvable_board(
                 debug!("Lookup Table: {:?}", lookup);
             }
 
-            let random_row = rng.random_range(0..lookup.len());
+            let random_row = 2; //rng.random_range(0..lookup.len());
             debug!(random_row);
 
             for layer in 0..layers as usize {
@@ -1168,7 +1191,7 @@ pub fn generate_solvable_board(
                         &mut rng,
                         random_row,
                         layer,
-                        variant,
+                        *variant,
                     );
                     debug!(
                         "Placed tile on empty row! Row: {:?} | Layer {:?} | Column {:?}",
@@ -1189,7 +1212,7 @@ pub fn generate_solvable_board(
 
         // REMOVE ANY EMPTY LOOKUP TABLES!!!
         // (Performance) ONLY REMOVE THOSE THAT WE HAVE REMOVED FROM!
-    }
+    // }
 
     return result;
 }
