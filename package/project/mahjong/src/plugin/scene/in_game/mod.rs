@@ -1054,21 +1054,24 @@ pub fn generate_solvable_board(
     let mut columns = 0;
 
     for tile::Position(UVec3 { x, y, z }) in &available_positions {
-        if *y > rows {
-            rows = *y;
+        if *y > rows + 1 {
+            rows = *y + 1;
         }
-        if *z > layers {
-            layers = *z;
+        if *z > layers + 1 {
+            layers = *z + 1;
         }
-        if *x > columns {
-            columns = *x;
+        if *x > columns + 1 {
+            columns = *x + 1;
         }
     }
 
-    //
+    dbg!(rows, layers, columns);
+
     let mut lookup: Vec<Vec<Vec<(&tile::Position, usize)>>> =
         vec![vec![vec![]; layers as usize]; rows as usize];
     for (index, pos) in available_positions.iter().enumerate() {
+        dbg!(pos.y);
+        dbg!(pos.z);
         lookup[pos.y as usize][pos.z as usize].push((pos, index));
     }
     let mut occupied: Vec<Vec<Vec<(&tile::Position, usize)>>> =
