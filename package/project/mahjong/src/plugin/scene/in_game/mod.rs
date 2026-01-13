@@ -1,6 +1,10 @@
 use crate::plugin::scene::main_menu::MainMenu;
 use bevy::{
-    gizmos::grid, input::keyboard::KeyCode, platform::collections::HashMap, prelude::*, sprite::{Anchor, Text2dShadow}
+    gizmos::grid,
+    input::keyboard::KeyCode,
+    platform::collections::HashMap,
+    prelude::*,
+    sprite::{Anchor, Text2dShadow},
 };
 use rand::{
     Rng, SeedableRng,
@@ -922,13 +926,13 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    // let positions: Vec<tile::Position> = position_generator.collect();
-    let positions = vec![
-        tile::Position(UVec3::new(0, 0, 0)),
-        tile::Position(UVec3::new(2, 0, 0)),
-        tile::Position(UVec3::new(0, 2, 0)),
-        tile::Position(UVec3::new(2, 2, 0)),
-    ];
+    let positions: Vec<tile::Position> = position_generator.collect();
+    // let positions = vec![
+    //     tile::Position(UVec3::new(0, 0, 0)),
+    //     tile::Position(UVec3::new(2, 0, 0)),
+    //     tile::Position(UVec3::new(0, 2, 0)),
+    //     tile::Position(UVec3::new(2, 2, 0)),
+    // ];
     let positions = generate_solvable_board(
         &positions,
         tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32,
@@ -1080,7 +1084,7 @@ pub fn generate_solvable_board(
     let mut occupied: Vec<Vec<Vec<(&tile::Position, usize)>>> =
         vec![vec![vec![]; layers as usize]; rows as usize];
 
-    fn place_tile<'a>(
+    fn place_seed_tile<'a>(
         lookup: &mut Vec<Vec<Vec<(&'a tile::Position, usize)>>>,
         occupied: &mut Vec<Vec<Vec<(&'a tile::Position, usize)>>>,
         result: &mut Vec<(tile::Position, tile::Variant)>,
@@ -1098,46 +1102,50 @@ pub fn generate_solvable_board(
 
     // Pick positions from the lookup table...
     // ...and move them into the occupied table (and add to the result vector when doing so)
-    for (v0, v1) in available_tile_variants {
-        let v = [v0, v1];
+    for (variant0, variant1) in available_tile_variants {
+        let variants = [variant0, variant1];
         let random_row = rng.random_range(0..lookup.len());
+        let mut banned_position = None; // Decided by first tile placement.
         debug!(random_row);
 
-        for layer in 0..layers as usize {
-            debug!(layer);
-            let lookup_layer_is_empty = lookup[random_row][layer].is_empty();
-            debug!(lookup_layer_is_empty);
-            if lookup_layer_is_empty {
-                // Nothing to pick - Go next.
-                continue;
-            }
+        for variant in variants {
+            for layer in 0..layers as usize {
+                debug!(layer);
+                let lookup_layer_is_empty = lookup[random_row][layer].is_empty();
+                debug!(lookup_layer_is_empty);
+                if lookup_layer_is_empty {
+                    // Nothing to pick - Go next.
+                    // continue;
+                    break;
+                }
 
-            let occupied_row_is_empty = occupied[random_row][layer].is_empty()
-                && (if random_row + 1 < occupied.len() {
-                    debug!("One above");
-                    occupied[random_row + 1][layer].is_empty()
-                } else {
-                    true
-                })
-                && (if random_row > 0 {
-                    debug!("One below");
-                    occupied[random_row - 1][layer].is_empty()
-                } else {
-                    true
-                });
-            debug!(occupied_row_is_empty);
-            if occupied_row_is_empty {
-                debug!("Place tile! Row: {:?} | Layer {:?}", random_row, layer);
-                place_tile(
-                    &mut lookup,
-                    &mut occupied,
-                    &mut result,
-                    &mut rng,
-                    random_row,
-                    layer,
-                    v[0],
-                );
-                break;
+                let occupied_row_is_empty = occupied[random_row][layer].is_empty()
+                    && (if random_row + 1 < occupied.len() {
+                        debug!("One above");
+                        occupied[random_row + 1][layer].is_empty()
+                    } else {
+                        true
+                    })
+                    && (if random_row > 0 {
+                        debug!("One below");
+                        occupied[random_row - 1][layer].is_empty()
+                    } else {
+                        true
+                    });
+                debug!(occupied_row_is_empty);
+                if occupied_row_is_empty {
+                    debug!("Place tile! Row: {:?} | Layer {:?}", random_row, layer);
+                    place_seed_tile(
+                        &mut lookup,
+                        &mut occupied,
+                        &mut result,
+                        &mut rng,
+                        random_row,
+                        layer,
+                        variant,
+                    );
+                    break;
+                }
             }
         }
 
