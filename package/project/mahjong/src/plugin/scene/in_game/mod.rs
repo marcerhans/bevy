@@ -1101,7 +1101,7 @@ pub fn generate_solvable_board(
     for (v0, v1) in available_tile_variants {
         let v = [v0, v1];
         let random_row = rng.random_range(0..lookup.len());
-        debug!(§random_row);
+        debug!(random_row);
 
         for layer in 0..layers as usize {
             debug!(layer);
