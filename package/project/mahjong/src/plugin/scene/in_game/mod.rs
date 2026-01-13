@@ -933,10 +933,7 @@ pub fn spawn_tiles(
         tile::Position(UVec3::new(0, 0, 2)),
         tile::Position(UVec3::new(0, 0, 3)),
     ];
-    let positions = generate_solvable_board(
-        &positions,
-        Some(2),
-    );
+    let positions = generate_solvable_board(&positions, Some(2));
 
     for (pos, variant) in positions {
         let default_depth = Vec3::default().with_z(100.0);
@@ -1101,9 +1098,7 @@ pub fn generate_solvable_board(
     // ...and move them into the occupied table (and add to the result vector when doing so)
     for (variant0, variant1) in available_tile_variants {
         let variants = [variant0, variant1];
-        let random_row = rng.random_range(0..lookup.len());
         let mut banned_position: Option<UVec3> = None; // Decided by first tile placement.
-        debug!(random_row);
 
         for variant in variants {
             let mut lookup_original: Option<Vec<Vec<Vec<(&tile::Position, usize)>>>> = None;
@@ -1133,6 +1128,9 @@ pub fn generate_solvable_board(
                     }
                 }
             }
+
+            let random_row = rng.random_range(0..lookup.len());
+            debug!(random_row);
 
             for layer in 0..layers as usize {
                 debug!(layer);
