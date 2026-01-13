@@ -1106,7 +1106,7 @@ pub fn generate_solvable_board(
     for (variant0, variant1) in available_tile_variants {
         let variants = [variant0, variant1];
         let random_row = rng.random_range(0..lookup.len());
-        let mut banned_position: Option<UVec2> = None; // Decided by first tile placement.
+        let mut banned_position: Option<UVec3> = None; // Decided by first tile placement.
         debug!(random_row);
 
         for variant in variants {
@@ -1119,8 +1119,21 @@ pub fn generate_solvable_board(
 
                 let row = pos.y;
                 if let Some(row_vec) = lookup.get_mut(row as usize) {
-                    for layer in 0..layers as usize {
-                        row_vec[layer].retain(|pos_| pos_.0.truncate() != pos);
+                    for layer in (pos.z as usize + 1)..(layers as usize) {
+                        row_vec[layer].retain(|(pos_, _index)| {
+                            let pos = pos.truncate();
+                            let pos_ = pos_.truncate();
+                            let overlaps_banned_position = (pos == pos_)
+                                || (pos.x - 1 == pos_.x && pos.y - 1 == pos_.y)
+                                || (pos.x - 1 == pos_.x && pos.y == pos_.y)
+                                || (pos.x - 1 == pos_.x && pos.y + 1 == pos_.y)
+                                || (pos.x == pos_.x && pos.y + 1 == pos_.y)
+                                || (pos.x + 1 == pos_.x && pos.y + 1 == pos_.y)
+                                || (pos.x + 1 == pos_.x && pos.y == pos_.y)
+                                || (pos.x + 1 == pos_.x && pos.y - 1 == pos_.y)
+                                || (pos.x == pos_.x && pos.y - 1 == pos_.y);
+                            !overlaps_banned_position
+                        });
                     }
                 }
             }
@@ -1161,7 +1174,7 @@ pub fn generate_solvable_board(
                         variant,
                     );
                     if banned_position.is_none() {
-                        banned_position = Some(pos.truncate());
+                        banned_position = Some(*pos);
                     }
                     break;
                 }
