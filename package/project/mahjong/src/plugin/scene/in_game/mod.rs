@@ -1109,6 +1109,21 @@ pub fn generate_solvable_board(
         debug!(random_row);
 
         for variant in variants {
+            let mut lookup_original: Option<Vec<Vec<Vec<(&tile::Position, usize)>>>> = None;
+
+            if let Some(pos) = banned_position {
+                // Replace lookup table with filtered version.
+                // This is done to ensure that the SECOND tile place in a pair is every placed on top of the FIRST.
+                let lookup_original = Some(lookup.clone());
+
+                let row = pos.y;
+                if let Some(row_vec) = lookup.get_mut(row as usize) {
+                    for layer in 0..layers as usize {
+                        row_vec[layer].retain(|pos_| pos_.0.truncate() != pos);
+                    }
+                }
+            }
+
             for layer in 0..layers as usize {
                 debug!(layer);
                 let lookup_layer_is_empty = lookup[random_row][layer].is_empty();
@@ -1146,6 +1161,11 @@ pub fn generate_solvable_board(
                     );
                     break;
                 }
+            }
+
+            if let Some(lookup_original) = lookup_original {
+                // Restore lookup table
+                lookup = lookup_original;
             }
         }
 
