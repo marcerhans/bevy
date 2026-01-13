@@ -1092,12 +1092,13 @@ pub fn generate_solvable_board(
         row: usize,
         layer: usize,
         variant: tile::Variant,
-    ) {
+    ) -> tile::Position {
         assert!(lookup[row][layer].len() != 0);
         let random_column = rng.random_range(0..lookup[row][layer].len());
         let (pos, index) = lookup[row][layer].swap_remove(random_column);
         occupied[row][layer].push((pos, index));
         result.push((*pos, variant));
+        *pos
     }
 
     // Pick positions from the lookup table...
@@ -1150,7 +1151,7 @@ pub fn generate_solvable_board(
                 debug!(occupied_row_is_empty);
                 if occupied_row_is_empty {
                     debug!("Place tile! Row: {:?} | Layer {:?}", random_row, layer);
-                    place_seed_tile(
+                    let pos = place_seed_tile(
                         &mut lookup,
                         &mut occupied,
                         &mut result,
@@ -1159,6 +1160,9 @@ pub fn generate_solvable_board(
                         layer,
                         variant,
                     );
+                    if banned_position.is_none() {
+                        banned_position = Some(pos.truncate());
+                    }
                     break;
                 }
             }
