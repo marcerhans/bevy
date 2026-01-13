@@ -1105,7 +1105,7 @@ pub fn generate_solvable_board(
     for (variant0, variant1) in available_tile_variants {
         let variants = [variant0, variant1];
         let random_row = rng.random_range(0..lookup.len());
-        let mut banned_position = None; // Decided by first tile placement.
+        let mut banned_position: Option<UVec2> = None; // Decided by first tile placement.
         debug!(random_row);
 
         for variant in variants {
