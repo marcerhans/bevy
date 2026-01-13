@@ -1106,6 +1106,7 @@ pub fn generate_solvable_board(
             if let Some(pos) = banned_position {
                 // Replace lookup table with filtered version.
                 // This is done to ensure that the SECOND tile place in a pair is every placed on top of the FIRST.
+                debug!("Banned Position {:?}", banned_position);
                 lookup_original = Some(lookup.clone());
 
                 let row = pos.y;
@@ -1127,6 +1128,9 @@ pub fn generate_solvable_board(
                         });
                     }
                 }
+
+                debug!("Lookup Table (Original): {:?}", lookup_original);
+                debug!("Lookup Table: {:?}", lookup);
             }
 
             let random_row = rng.random_range(0..lookup.len());
@@ -1157,7 +1161,6 @@ pub fn generate_solvable_board(
                     });
                 debug!(occupied_row_is_empty);
                 if occupied_row_is_empty {
-                    debug!("Place tile! Row: {:?} | Layer {:?}", random_row, layer);
                     let pos = place_seed_tile(
                         &mut lookup,
                         &mut occupied,
@@ -1166,6 +1169,10 @@ pub fn generate_solvable_board(
                         random_row,
                         layer,
                         variant,
+                    );
+                    debug!(
+                        "Placed tile on empty row! Row: {:?} | Layer {:?} | Column {:?}",
+                        pos.y, pos.z, pos.x
                     );
                     if banned_position.is_none() {
                         banned_position = Some(*pos);
