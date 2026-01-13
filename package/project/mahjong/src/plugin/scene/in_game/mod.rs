@@ -925,8 +925,22 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    let positions: Vec<tile::Position> = position_generator.collect();
-    let positions = generate_solvable_board(positions, Some(0));
+    // let positions: Vec<tile::Position> = position_generator.collect();
+    let positions = vec![
+        tile::Position(UVec3::new(0, 0, 0)),
+        tile::Position(UVec3::new(1, 0, 0)),
+        tile::Position(UVec3::new(0, 1, 0)),
+        tile::Position(UVec3::new(1, 1, 0)),
+        tile::Position(UVec3::new(0, 0, 1)),
+        tile::Position(UVec3::new(1, 0, 1)),
+        tile::Position(UVec3::new(0, 1, 1)),
+        tile::Position(UVec3::new(1, 1, 1)),
+    ];
+    let positions = generate_solvable_board(
+        &positions,
+        tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32,
+        Some(0),
+    );
 
     for (pos, variant) in positions {
         let default_depth = Vec3::default().with_z(100.0);
@@ -1019,41 +1033,39 @@ pub fn spawn_tiles(
 }
 
 pub fn generate_solvable_board(
-    mut available_positions: Vec<tile::Position>,
+    available_positions: &Vec<tile::Position>,
+    grid_resolution: u32,
     seed: Option<u64>,
 ) -> Vec<(tile::Position, tile::Variant)> {
     if available_positions.len() % 2 != 0 {
         panic!();
     }
+
+    let mut result: Vec<(tile::Position, tile::Variant)> = Vec::new();
+
     // Set rng seed
     let seed = seed.unwrap_or(0);
     let mut rng = StdRng::seed_from_u64(seed);
 
     // Generate [tile::Variant] pairs
-    let tile_pairs = available_positions.len() as u32 / 2;
+    let tile_pairs: u32 = available_positions.len() as u32 / 2;
+    let tile_pair_group_size = 4; // I.e., there are two pairs for each variant => 4
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
         .map(|variant| {
             (
                 tile::Variant(variant),
-                tile::Variant(
-                    variant
-                        + tile::PositionGenerator::<tile::Turtle>::TILES as u32
-                            / tile::PositionGenerator::<tile::Turtle>::TILE_VARIANT_GROUP_SIZE
-                                as u32,
-                ),
+                tile::Variant(variant + available_positions.len() as u32 / tile_pair_group_size),
             )
         })
         .collect();
     available_tile_variants.shuffle(&mut rng);
-
-    let mut result: Vec<(tile::Position, tile::Variant)> = Vec::new();
 
     // Generate lookup tensors (Row x Layer x Column)
     let mut rows = 0;
     let mut layers = 0;
     let mut columns = 0;
 
-    for tile::Position(UVec3 { x, y, z }) in &available_positions {
+    for tile::Position(UVec3 { x, y, z }) in available_positions {
         if *y + 1 > rows {
             rows = *y + 1;
         }
