@@ -1101,12 +1101,12 @@ pub fn generate_solvable_board(
     for (v0, v1) in available_tile_variants {
         let v = [v0, v1];
         let random_row = rng.random_range(0..lookup.len());
-        dbg!(random_row);
+        debug!(§random_row);
 
         for layer in 0..layers as usize {
-            dbg!(layer);
+            debug!(layer);
             let lookup_layer_is_empty = lookup[random_row][layer].is_empty();
-            dbg!(lookup_layer_is_empty);
+            debug!(lookup_layer_is_empty);
             if lookup_layer_is_empty {
                 // Nothing to pick - Go next.
                 continue;
@@ -1114,17 +1114,20 @@ pub fn generate_solvable_board(
 
             let occupied_row_is_empty = occupied[random_row][layer].is_empty()
                 && (if random_row + grid_resolution < occupied.len() {
+                    debug!("One above");
                     occupied[random_row + grid_resolution][layer].is_empty()
                 } else {
                     true
                 })
                 && (if random_row >= grid_resolution {
+                    debug!("One below");
                     occupied[random_row - grid_resolution][layer].is_empty()
                 } else {
                     true
                 });
-            dbg!(occupied_row_is_empty);
+            debug!(occupied_row_is_empty);
             if occupied_row_is_empty {
+                debug!("Place tile! Row: {:?} | Layer {:?}", random_row, layer);
                 place_tile(
                     &mut lookup,
                     &mut occupied,
