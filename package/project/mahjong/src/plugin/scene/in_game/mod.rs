@@ -922,21 +922,17 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    let positions: Vec<tile::Position> = position_generator.collect();
-    // let positions = vec![
-    //     tile::Position(UVec3::new(0, 0, 0)),
-    //     tile::Position(UVec3::new(1, 0, 0)),
-    //     tile::Position(UVec3::new(0, 1, 0)),
-    //     tile::Position(UVec3::new(1, 1, 0)),
-    //     tile::Position(UVec3::new(0, 0, 1)),
-    //     tile::Position(UVec3::new(1, 0, 1)),
-    //     tile::Position(UVec3::new(0, 1, 1)),
-    //     tile::Position(UVec3::new(1, 1, 1)),
-    // ];
+    // let positions: Vec<tile::Position> = position_generator.collect();
+    let positions = vec![
+        tile::Position(UVec3::new(0, 0, 0)),
+        tile::Position(UVec3::new(2, 0, 0)),
+        tile::Position(UVec3::new(0, 2, 0)),
+        tile::Position(UVec3::new(2, 2, 0)),
+    ];
     let positions = generate_solvable_board(
         &positions,
         tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32,
-        Some(0),
+        Some(2),
     );
 
     for (pos, variant) in positions {
@@ -1093,6 +1089,7 @@ pub fn generate_solvable_board(
         layer: usize,
         variant: tile::Variant,
     ) {
+        assert!(lookup[row][layer].len() != 0);
         let random_column = rng.random_range(0..lookup[row][layer].len());
         let (pos, index) = lookup[row][layer].swap_remove(random_column);
         occupied[row][layer].push((pos, index));
@@ -1104,9 +1101,12 @@ pub fn generate_solvable_board(
     for (v0, v1) in available_tile_variants {
         let v = [v0, v1];
         let random_row = rng.random_range(0..lookup.len());
+        dbg!(random_row);
 
         for layer in 0..layers as usize {
+            dbg!(layer);
             let lookup_layer_is_empty = lookup[random_row][layer].is_empty();
+            dbg!(lookup_layer_is_empty);
             if lookup_layer_is_empty {
                 // Nothing to pick - Go next.
                 continue;
@@ -1123,6 +1123,7 @@ pub fn generate_solvable_board(
                 } else {
                     true
                 });
+            dbg!(occupied_row_is_empty);
             if occupied_row_is_empty {
                 place_tile(
                     &mut lookup,
