@@ -1113,15 +1113,15 @@ pub fn generate_solvable_board(
             }
 
             let occupied_row_is_empty = occupied[random_row][layer].is_empty()
-                && (if random_row + grid_resolution < occupied.len() {
+                && (if random_row + 1 < occupied.len() {
                     debug!("One above");
-                    occupied[random_row + grid_resolution][layer].is_empty()
+                    occupied[random_row + 1][layer].is_empty()
                 } else {
                     true
                 })
-                && (if random_row >= grid_resolution {
+                && (if random_row > 0 {
                     debug!("One below");
-                    occupied[random_row - grid_resolution][layer].is_empty()
+                    occupied[random_row - 1][layer].is_empty()
                 } else {
                     true
                 });
