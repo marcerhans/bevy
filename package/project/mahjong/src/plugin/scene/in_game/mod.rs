@@ -1048,53 +1048,61 @@ pub fn generate_solvable_board(
 
     let mut result: Vec<(tile::Position, tile::Variant)> = Vec::new();
 
-    // Generate lookup tensors
-    let mut layers = 0;
+    // Generate lookup tensors (Row x Layer x Column)
     let mut rows = 0;
+    let mut layers = 0;
     let mut columns = 0;
 
     for tile::Position(UVec3 { x, y, z }) in &available_positions {
-        if *z > layers {
-            layers = *z;
-        }
         if *y > rows {
             rows = *y;
+        }
+        if *z > layers {
+            layers = *z;
         }
         if *x > columns {
             columns = *x;
         }
     }
 
-    // Pick positions from the lookup table...
-    let mut lookup: Vec<Vec<Vec<(tile::Position, usize)>>> =
-        vec![vec![vec![]; columns as usize]; rows as usize];
-    for (index, tile::Position(UVec3 { x, y, z })) in available_positions.iter().enumerate() {
-        lookup[*y as usize][*x as usize].push((tile::Position(UVec3::new(*x, *y, *z)), index));
+    // 
+    let mut lookup: Vec<Vec<Vec<(&tile::Position, usize)>>> =
+        vec![vec![vec![]; layers as usize]; rows as usize];
+    for (index, pos) in available_positions.iter().enumerate() {
+        lookup[pos.y as usize][pos.z as usize].push((pos, index));
     }
-
-    // ...and move into the occupied table (and add to the result vector when doing so)
     let mut occupied: Vec<Vec<Vec<(tile::Position, usize)>>> =
-        vec![vec![vec![]; columns as usize]; rows as usize];
+        vec![vec![vec![]; layers as usize]; rows as usize];
 
+    // Pick positions from the lookup table...
+    // ...and move into the occupied table (and add to the result vector when doing so)
     for (v0, v1) in available_tile_variants {
         let random_row = rng.random_range(0..lookup.len());
-        let row_is_empty = occupied[random_row].is_empty()
-            && (if random_row + 1 < occupied.len() {
-                occupied[random_row + 1].is_empty()
-            } else {
-                true
-            })
-            && (if random_row > 0 {
-                occupied[random_row - 1].is_empty()
-            } else {
-                true
-            });
 
-        if row_is_empty {
-            // We must place a tile here! "Seed tile" for the layer.
-            tile::Position(UVec3 {x,y,z}) = lookup[random_row][]
-            occupied[]
-            lookup
+        for layer in 0..layers as usize {
+            let lookup_layer_is_empty = lookup[random_row][layer].is_empty();
+            if lookup_layer_is_empty {
+                // Nothing to pick - Go next.
+                continue;
+            }
+
+            let occupied_row_is_empty = occupied[random_row][layer].is_empty()
+                && (if random_row + 1 < occupied.len() {
+                    occupied[random_row + 1][layer].is_empty()
+                } else {
+                    true
+                })
+                && (if random_row > 0 {
+                    occupied[random_row - 1][layer].is_empty()
+                } else {
+                    true
+                });
+            if occupied_row_is_empty {
+                // We must place a tile here! "Seed tile" for the layer.
+                tile::Position(UVec3 {x,y,z}) = lookup[random_row][]
+                occupied[]
+                lookup
+            }
         }
 
         // REMOVE ANY EMPTY LOOKUP TABLES!!!
