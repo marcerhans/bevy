@@ -1077,6 +1077,7 @@ pub fn generate_solvable_board(
     // Pick positions from the lookup table...
     // ...and move into the occupied table (and add to the result vector when doing so)
     for (v0, v1) in available_tile_variants {
+        let v = [v0, v1];
         let random_row = rng.random_range(0..lookup.len());
 
         for layer in 0..layers as usize {
@@ -1099,10 +1100,10 @@ pub fn generate_solvable_board(
                 });
             if occupied_row_is_empty {
                 // We must place a tile here! "Seed tile" for the layer.
-                occupied[random_row][layer].push(
-                    lookup[random_row][layer]
-                        .swap_remove(rng.random_range(0..lookup[random_row][layer].len())),
-                );
+                let random_column = rng.random_range(0..lookup[random_row][layer].len());
+                let (pos, index) = lookup[random_row][layer].swap_remove(random_column);
+                occupied[random_row][layer].push((pos, index));
+                result.push((*pos, v[0]));
             }
         }
 
