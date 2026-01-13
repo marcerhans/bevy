@@ -1054,13 +1054,13 @@ pub fn generate_solvable_board(
     let mut columns = 0;
 
     for tile::Position(UVec3 { x, y, z }) in &available_positions {
-        if *y > rows + 1 {
+        if *y + 1 > rows {
             rows = *y + 1;
         }
-        if *z > layers + 1 {
+        if *z + 1 > layers {
             layers = *z + 1;
         }
-        if *x > columns + 1 {
+        if *x + 1 > columns {
             columns = *x + 1;
         }
     }
