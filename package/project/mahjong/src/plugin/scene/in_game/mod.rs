@@ -1,9 +1,6 @@
 use crate::plugin::scene::main_menu::MainMenu;
 use bevy::{
-    input::keyboard::KeyCode,
-    platform::collections::HashMap,
-    prelude::*,
-    sprite::{Anchor, Text2dShadow},
+    gizmos::grid, input::keyboard::KeyCode, platform::collections::HashMap, prelude::*, sprite::{Anchor, Text2dShadow}
 };
 use rand::{
     Rng, SeedableRng,
@@ -925,17 +922,17 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    // let positions: Vec<tile::Position> = position_generator.collect();
-    let positions = vec![
-        tile::Position(UVec3::new(0, 0, 0)),
-        tile::Position(UVec3::new(1, 0, 0)),
-        tile::Position(UVec3::new(0, 1, 0)),
-        tile::Position(UVec3::new(1, 1, 0)),
-        tile::Position(UVec3::new(0, 0, 1)),
-        tile::Position(UVec3::new(1, 0, 1)),
-        tile::Position(UVec3::new(0, 1, 1)),
-        tile::Position(UVec3::new(1, 1, 1)),
-    ];
+    let positions: Vec<tile::Position> = position_generator.collect();
+    // let positions = vec![
+    //     tile::Position(UVec3::new(0, 0, 0)),
+    //     tile::Position(UVec3::new(1, 0, 0)),
+    //     tile::Position(UVec3::new(0, 1, 0)),
+    //     tile::Position(UVec3::new(1, 1, 0)),
+    //     tile::Position(UVec3::new(0, 0, 1)),
+    //     tile::Position(UVec3::new(1, 0, 1)),
+    //     tile::Position(UVec3::new(0, 1, 1)),
+    //     tile::Position(UVec3::new(1, 1, 1)),
+    // ];
     let positions = generate_solvable_board(
         &positions,
         tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32,
@@ -1037,6 +1034,8 @@ pub fn generate_solvable_board(
     grid_resolution: u32,
     seed: Option<u64>,
 ) -> Vec<(tile::Position, tile::Variant)> {
+    let grid_resolution = grid_resolution as usize;
+
     if available_positions.len() % 2 != 0 {
         panic!();
     }
@@ -1114,13 +1113,13 @@ pub fn generate_solvable_board(
             }
 
             let occupied_row_is_empty = occupied[random_row][layer].is_empty()
-                && (if random_row + 1 < occupied.len() {
-                    occupied[random_row + 1][layer].is_empty()
+                && (if random_row + grid_resolution < occupied.len() {
+                    occupied[random_row + grid_resolution][layer].is_empty()
                 } else {
                     true
                 })
-                && (if random_row > 0 {
-                    occupied[random_row - 1][layer].is_empty()
+                && (if random_row >= grid_resolution {
+                    occupied[random_row - grid_resolution][layer].is_empty()
                 } else {
                     true
                 });
@@ -1134,6 +1133,7 @@ pub fn generate_solvable_board(
                     layer,
                     v[0],
                 );
+                break;
             }
         }
 
