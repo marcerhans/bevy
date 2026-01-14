@@ -1123,6 +1123,8 @@ pub fn generate_solvable_board(
     let variants = [variant0, variant1];
     let mut banned_position: Option<UVec3> = None; // Decided by first tile placement.
 
+    debug!("Lookup table: {:?}", lookup);
+
     for variant in variants {
         let mut lookup_original: Option<Vec<Vec<Vec<(&tile::Position, usize)>>>> = None;
 
@@ -1133,27 +1135,21 @@ pub fn generate_solvable_board(
             lookup_original = Some(lookup.clone());
 
             let row = pos.y;
-            // TODO:BUG: row is not enouogh - Add row - 1, row, row + 1
-            if let Some(row_vec) = lookup.get_mut(row as usize) {
-                for layer in (pos.z as usize + 1)..(layers as usize) {
-                    row_vec[layer].retain(|(pos_, _index)| {
-                        let pos = pos.truncate();
-                        let pos_ = pos_.truncate();
+            let row_start = if row > 0 { row - 1 } else { 0 };
+            let row_end = if row < rows - 1 { row + 1 } else { rows - 1 };
 
-                        debug!("{:?}", pos_);
-                        debug!("{:?}", (pos.x == pos_.x + 1 && pos.y + 1 == pos_.y));
-
-                        let overlaps_banned_position = (pos == pos_)
-                            || (pos.x == pos_.x + 1 && pos.y == pos_.y + 1)
-                            || (pos.x == pos_.x + 1 && pos.y == pos_.y)
-                            || (pos.x == pos_.x + 1 && pos.y + 1 == pos_.y)
-                            || (pos.x == pos_.x && pos.y + 1 == pos_.y)
-                            || (pos.x + 1 == pos_.x && pos.y + 1 == pos_.y)
-                            || (pos.x + 1 == pos_.x && pos.y == pos_.y)
-                            || (pos.x + 1 == pos_.x && pos.y == pos_.y + 1)
-                            || (pos.x == pos_.x && pos.y == pos_.y + 1);
-                        !overlaps_banned_position
-                    });
+            for row in row_start..=row_end {
+                if let Some(row_vec) = lookup.get_mut(row as usize) {
+                    for layer in (pos.z as usize + 1)..(layers as usize) {
+                        row_vec[layer].retain(|(pos_, _index)| {
+                            let pos = pos.truncate();
+                            let pos_ = pos_.truncate();
+                            debug!("{:?}", pos_);
+                            let overlaps_banned_position = pos.x == pos_.x - 1 || pos.x == pos_.x || pos.x == pos_.x + 1;
+                            debug!("{:?}", overlaps_banned_position);
+                            !overlaps_banned_position
+                        });
+                    }
                 }
             }
 
