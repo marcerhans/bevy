@@ -930,12 +930,12 @@ pub fn spawn_tiles(
     let positions = vec![
         tile::Position(UVec3::new(2, 2, 0)),
         tile::Position(UVec3::new(1, 1, 1)),
-        tile::Position(UVec3::new(1, 2, 1)),
+        tile::Position(UVec3::new(0, 2, 0)),
         tile::Position(UVec3::new(1, 3, 1)),
-        tile::Position(UVec3::new(2, 3, 1)),
-        tile::Position(UVec3::new(3, 3, 1)),
-        tile::Position(UVec3::new(3, 2, 1)),
-        tile::Position(UVec3::new(3, 1, 1)),
+        // tile::Position(UVec3::new(2, 3, 1)),
+        // tile::Position(UVec3::new(3, 3, 1)),
+        // tile::Position(UVec3::new(3, 2, 1)),
+        // tile::Position(UVec3::new(3, 1, 1)),
         // tile::Position(UVec3::new(2, 1, 8)),
 
         // tile::Position(UVec3::new(0, 0, 2)),
@@ -1099,8 +1099,29 @@ pub fn generate_solvable_board(
     let mut occupied: Vec<Vec<Vec<(&tile::Position, usize)>>> =
         vec![vec![vec![]; layers as usize]; rows as usize];
 
+    fn remove_from_lookup_original(
+        pos: &tile::Position,
+        row: usize,
+        layer: usize,
+        lookup_original: &mut Option<Vec<Vec<Vec<(&tile::Position, usize)>>>>,
+    ) {
+        if let Some(lookup_original) = lookup_original {
+            debug!(
+                "Removing {:?} (Row: {:?} | Layer: {:?}) from non-filtered lookup table",
+                *pos, row, layer
+            );
+
+            let index = lookup_original[row][layer]
+                .iter()
+                .position(|(p, _)| **p == *pos)
+                .unwrap();
+            lookup_original[row][layer].swap_remove(index);
+        }
+    }
+
     fn place_seed_tile<'a>(
         lookup: &mut Vec<Vec<Vec<(&'a tile::Position, usize)>>>,
+        lookup_original: &mut Option<Vec<Vec<Vec<(&'a tile::Position, usize)>>>>,
         occupied: &mut Vec<Vec<Vec<(&'a tile::Position, usize)>>>,
         result: &mut Vec<(tile::Position, tile::Variant)>,
         rng: &mut StdRng,
@@ -1109,10 +1130,11 @@ pub fn generate_solvable_board(
         variant: tile::Variant,
     ) -> tile::Position {
         assert!(lookup[row][layer].len() != 0);
-        let random_column = 0; //rng.random_range(0..lookup[row][layer].len());
+        let random_column = rng.random_range(0..lookup[row][layer].len());
         let (pos, index) = lookup[row][layer].swap_remove(random_column);
         occupied[row][layer].push((pos, index));
         result.push((*pos, variant));
+        remove_from_lookup_original(pos, row, layer, lookup_original);
         *pos
     }
 
@@ -1121,7 +1143,6 @@ pub fn generate_solvable_board(
     for (variant0, variant1) in available_tile_variants {
         let variants = [variant0, variant1];
         let mut banned_position: Option<UVec3> = None; // Decided by first tile placement.
-
         debug!("Lookup table: {:?}", lookup);
 
         for variant in variants {
@@ -1154,11 +1175,11 @@ pub fn generate_solvable_board(
                     }
                 }
 
-                debug!("Lookup Table (Original): {:?}", lookup_original);
-                debug!("Lookup Table: {:?}", lookup);
+                debug!("Lookup Table (Original): {:?}", lookup_original.as_ref().unwrap());
+                debug!("Lookup Table (Filtered): {:?}", lookup);
             }
 
-            let random_row = 2; //rng.random_range(0..lookup.len());
+            let random_row = rng.random_range(0..lookup.len());
             debug!(random_row);
 
             for layer in 0..layers as usize {
@@ -1167,8 +1188,7 @@ pub fn generate_solvable_board(
                 debug!(lookup_layer_is_empty);
                 if lookup_layer_is_empty {
                     // Nothing to pick - Go next.
-                    // continue;
-                    break;
+                    continue;
                 }
 
                 let occupied_row_is_empty = occupied[random_row][layer].is_empty()
@@ -1188,6 +1208,7 @@ pub fn generate_solvable_board(
                 if occupied_row_is_empty {
                     let pos = place_seed_tile(
                         &mut lookup,
+                        &mut lookup_original,
                         &mut occupied,
                         &mut result,
                         &mut rng,
@@ -1196,7 +1217,7 @@ pub fn generate_solvable_board(
                         variant,
                     );
                     debug!(
-                        "Placed tile on empty row! Row: {:?} | Layer {:?} | Column {:?}",
+                        "Placed tile on empty row! (Row: {:?} | Layer {:?} | Column {:?})",
                         pos.y, pos.z, pos.x
                     );
                     if banned_position.is_none() {
