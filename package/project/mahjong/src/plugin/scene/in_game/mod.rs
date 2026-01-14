@@ -938,22 +938,22 @@ pub fn spawn_tiles(
         tile::Position(UVec3::new(3, 1, 1)),
         // tile::Position(UVec3::new(2, 1, 8)),
 
-        // tile::Position(UVec3::new(0, 0, 2)),
-        // tile::Position(UVec3::new(0, 1, 2)),
-        // tile::Position(UVec3::new(0, 2, 2)),
-        // tile::Position(UVec3::new(0, 3, 2)),
-        // tile::Position(UVec3::new(0, 4, 2)),
-        // tile::Position(UVec3::new(1, 4, 2)),
-        // tile::Position(UVec3::new(2, 4, 2)),
-        // tile::Position(UVec3::new(3, 4, 2)),
-        // tile::Position(UVec3::new(4, 4, 2)),
-        // tile::Position(UVec3::new(4, 3, 2)),
-        // tile::Position(UVec3::new(4, 2, 2)),
-        // tile::Position(UVec3::new(4, 1, 2)),
-        // tile::Position(UVec3::new(4, 0, 2)),
-        // tile::Position(UVec3::new(3, 0, 2)),
-        // tile::Position(UVec3::new(2, 0, 2)),
-        // tile::Position(UVec3::new(1, 0, 2)),
+        tile::Position(UVec3::new(0, 0, 2)),
+        tile::Position(UVec3::new(0, 1, 2)),
+        tile::Position(UVec3::new(0, 2, 2)),
+        tile::Position(UVec3::new(0, 3, 2)),
+        tile::Position(UVec3::new(0, 4, 2)),
+        tile::Position(UVec3::new(1, 4, 2)),
+        tile::Position(UVec3::new(2, 4, 2)),
+        tile::Position(UVec3::new(3, 4, 2)),
+        tile::Position(UVec3::new(4, 4, 2)),
+        tile::Position(UVec3::new(4, 3, 2)),
+        tile::Position(UVec3::new(4, 2, 2)),
+        tile::Position(UVec3::new(4, 1, 2)),
+        tile::Position(UVec3::new(4, 0, 2)),
+        tile::Position(UVec3::new(3, 0, 2)),
+        tile::Position(UVec3::new(2, 0, 2)),
+        tile::Position(UVec3::new(1, 0, 2)),
     ];
     let positions = generate_solvable_board(&positions, Some(2));
 
@@ -1145,7 +1145,7 @@ pub fn generate_solvable_board(
                             let pos = pos.truncate();
                             let pos_ = pos_.truncate();
                             debug!("{:?}", pos_);
-                            let overlaps_banned_position = pos.x == pos_.x - 1 || pos.x == pos_.x || pos.x == pos_.x + 1;
+                            let overlaps_banned_position = pos.x + 1 == pos_.x || pos.x == pos_.x || pos.x == pos_.x + 1;
                             debug!("{:?}", overlaps_banned_position);
                             !overlaps_banned_position
                         });
