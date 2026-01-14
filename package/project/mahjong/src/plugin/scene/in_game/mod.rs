@@ -926,12 +926,12 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    // let positions: Vec<tile::Position> = position_generator.collect();
-    let positions = vec![
-        tile::Position(UVec3::new(2, 2, 0)),
-        tile::Position(UVec3::new(1, 1, 1)),
-        tile::Position(UVec3::new(0, 2, 0)),
-        tile::Position(UVec3::new(1, 3, 1)),
+    let positions: Vec<tile::Position> = position_generator.collect();
+    // let positions = vec![
+    //     tile::Position(UVec3::new(2, 2, 0)),
+    //     tile::Position(UVec3::new(1, 1, 1)),
+    //     tile::Position(UVec3::new(0, 2, 0)),
+    //     tile::Position(UVec3::new(1, 3, 1)),
         // tile::Position(UVec3::new(2, 3, 1)),
         // tile::Position(UVec3::new(3, 3, 1)),
         // tile::Position(UVec3::new(3, 2, 1)),
@@ -954,7 +954,7 @@ pub fn spawn_tiles(
         // tile::Position(UVec3::new(3, 0, 2)),
         // tile::Position(UVec3::new(2, 0, 2)),
         // tile::Position(UVec3::new(1, 0, 2)),
-    ];
+    // ];
     let positions = generate_solvable_board(&positions, Some(2));
 
     for (pos, variant) in positions {
@@ -1140,7 +1140,14 @@ pub fn generate_solvable_board(
 
     // Pick positions from the lookup table...
     // ...and move them into the occupied table (and add to the result vector when doing so)
+    let mut counter = 0;
     for (variant0, variant1) in available_tile_variants {
+        counter += 1;
+
+        if counter >= 2 {
+            return result;
+        }
+
         let variants = [variant0, variant1];
         let mut banned_position: Option<UVec3> = None; // Decided by first tile placement.
         debug!("Lookup table: {:?}", lookup);
