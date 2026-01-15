@@ -1076,14 +1076,33 @@ pub fn generate_solvable_board(
         pos: &tile::Position,
         available_positions: &Vec<tile::Position>,
     ) -> Option<usize> {
+        let mut overlapped_tiles: Vec<usize> = Vec::new();
+
         for other in available_positions.iter().enumerate() {
             if other.0 == index {
                 continue;
             }
 
+            let is_on_same_layer = pos.z == other.1.z;
+            let is_above_other_tile = pos.z > other.1.z;
+            let is_overlapping_other_tile =
+                pos.x.abs_diff(other.1.x) < 2 && pos.y.abs_diff(other.1.y) < 2;
+
+            if is_on_same_layer && is_overlapping_other_tile {
+                panic!("Invalid/bad tile positioning!")
+            }
+
+            if is_above_other_tile && is_overlapping_other_tile {
+                overlapped_tiles.push(other.0);
+                break;
+            }
         }
 
-        Some(index)
+        if overlapped_tiles.is_empty() {
+            Some(index)
+        } else {
+            None
+        }
     }
 
     for (v0, v1) in available_tile_variants {
