@@ -1071,10 +1071,11 @@ pub fn generate_solvable_board(
         .collect();
     available_tile_variants.shuffle(&mut rng);
 
-    fn filter_fn(
+    fn filter_fn<'a>(
         index: usize,
-        pos: &tile::Position,
-    ) -> Option<(usize, &tile::Position)> {
+        pos: &'a tile::Position,
+        available_positions: &Vec<tile::Position>,
+    ) -> Option<(usize, &'a tile::Position)> {
         Some((index, pos))
     }
 
@@ -1083,7 +1084,7 @@ pub fn generate_solvable_board(
         let valid_positions = available_positions
             .iter()
             .enumerate()
-            .filter_map(|(index, pos)| Some((index, pos)));
+            .filter_map(|(index, pos)| filter_fn(index, pos, &available_positions));
 
         let mut valid_position_pair = valid_positions
             .choose_multiple(&mut rng, 2)
