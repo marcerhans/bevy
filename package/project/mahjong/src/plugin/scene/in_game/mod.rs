@@ -1079,7 +1079,7 @@ pub fn generate_solvable_board(
     ) -> Option<usize> {
         let pos = &available_positions[index];
 
-        let mut overlapped_tiles = false;
+        let mut overlapped_tiles_available = false;
         for other in available_positions.iter().enumerate() {
             if other.0 == index {
                 continue;
@@ -1095,9 +1095,15 @@ pub fn generate_solvable_board(
             }
 
             if is_above_other_tile && is_overlapping_other_tile {
-                overlapped_tiles = true;
+                overlapped_tiles_available = true;
                 break;
             }
+        }
+
+        if overlapped_tiles_available {
+            debug!("invalid");
+            debug!("{pos:?}");
+            return None;
         }
 
         let mut row_already_occupied = false;
@@ -1114,6 +1120,31 @@ pub fn generate_solvable_board(
                 break;
             }
         }
+
+        if !row_already_occupied {
+            debug!("Row is not occupied by any other tile! Any position (column) is valid!");
+            debug!("{pos:?}");
+            return Some(index);
+        }
+
+        todo!("Have to find the left- and right-most tiles on the row. BUT! Keep in mind that we have to check +-1 row!");
+        // let left_most_position_in_row = None;
+        // let right_most_position_in_row = None;
+        // for other in occupied_positions.iter().enumerate() {
+        //     if other.0 == index {
+        //         continue;
+        //     }
+
+        //     let is_on_same_layer = pos.z == other.1.z;
+        //     let is_on_same_row = pos.y.abs_diff(other.1.y) < 2;
+
+        //     if is_on_same_layer && is_on_same_row {
+        //         row_already_occupied = true;
+        //         break;
+        //     }
+        // }
+
+
 
         // let mut overlapped_tiles = false;
         // for other in available_positions.iter().enumerate() {
@@ -1136,15 +1167,7 @@ pub fn generate_solvable_board(
         //     }
         // }
 
-        if overlapped_tiles {
-            debug!("invalid");
-            debug!("{pos:?}");
-            None
-        } else {
-            debug!("valid");
-            debug!("{pos:?}");
-            Some(index)
-        }
+        todo!()
     }
 
     for (v0, v1) in available_tile_variants {
