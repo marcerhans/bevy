@@ -1056,6 +1056,7 @@ pub fn generate_solvable_board(
     }
 
     let mut result: Vec<(tile::Position, tile::Variant)> = Vec::new();
+    let mut occupied_positions: Vec<tile::Position> = Vec::with_capacity(available_positions.len());
 
     // Set rng seed
     let seed = seed.unwrap_or(0);
@@ -1073,9 +1074,10 @@ pub fn generate_solvable_board(
 
     fn filter_fn<'a>(
         index: usize,
-        pos: &tile::Position,
         available_positions: &Vec<tile::Position>,
+        occupied_positions: &Vec<tile::Position>,
     ) -> Option<usize> {
+        let pos = &available_positions[index];
         let mut overlapped_tiles = false;
 
         for other in available_positions.iter().enumerate() {
@@ -1115,7 +1117,9 @@ pub fn generate_solvable_board(
         let valid_positions = available_positions
             .iter()
             .enumerate()
-            .filter_map(|(index, pos)| filter_fn(index, pos, &available_positions));
+            .filter_map(|(index, _pos)| {
+                filter_fn(index, &available_positions, &occupied_positions)
+            });
 
         let mut valid_position_pair = valid_positions
             .choose_multiple(&mut rng, 2)
