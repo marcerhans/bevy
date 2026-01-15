@@ -932,28 +932,28 @@ pub fn spawn_tiles(
     //     tile::Position(UVec3::new(1, 1, 1)),
     //     tile::Position(UVec3::new(0, 2, 0)),
     //     tile::Position(UVec3::new(1, 3, 1)),
-        // tile::Position(UVec3::new(2, 3, 1)),
-        // tile::Position(UVec3::new(3, 3, 1)),
-        // tile::Position(UVec3::new(3, 2, 1)),
-        // tile::Position(UVec3::new(3, 1, 1)),
-        // tile::Position(UVec3::new(2, 1, 8)),
+    // tile::Position(UVec3::new(2, 3, 1)),
+    // tile::Position(UVec3::new(3, 3, 1)),
+    // tile::Position(UVec3::new(3, 2, 1)),
+    // tile::Position(UVec3::new(3, 1, 1)),
+    // tile::Position(UVec3::new(2, 1, 8)),
 
-        // tile::Position(UVec3::new(0, 0, 2)),
-        // tile::Position(UVec3::new(0, 1, 2)),
-        // tile::Position(UVec3::new(0, 2, 2)),
-        // tile::Position(UVec3::new(0, 3, 2)),
-        // tile::Position(UVec3::new(0, 4, 2)),
-        // tile::Position(UVec3::new(1, 4, 2)),
-        // tile::Position(UVec3::new(2, 4, 2)),
-        // tile::Position(UVec3::new(3, 4, 2)),
-        // tile::Position(UVec3::new(4, 4, 2)),
-        // tile::Position(UVec3::new(4, 3, 2)),
-        // tile::Position(UVec3::new(4, 2, 2)),
-        // tile::Position(UVec3::new(4, 1, 2)),
-        // tile::Position(UVec3::new(4, 0, 2)),
-        // tile::Position(UVec3::new(3, 0, 2)),
-        // tile::Position(UVec3::new(2, 0, 2)),
-        // tile::Position(UVec3::new(1, 0, 2)),
+    // tile::Position(UVec3::new(0, 0, 2)),
+    // tile::Position(UVec3::new(0, 1, 2)),
+    // tile::Position(UVec3::new(0, 2, 2)),
+    // tile::Position(UVec3::new(0, 3, 2)),
+    // tile::Position(UVec3::new(0, 4, 2)),
+    // tile::Position(UVec3::new(1, 4, 2)),
+    // tile::Position(UVec3::new(2, 4, 2)),
+    // tile::Position(UVec3::new(3, 4, 2)),
+    // tile::Position(UVec3::new(4, 4, 2)),
+    // tile::Position(UVec3::new(4, 3, 2)),
+    // tile::Position(UVec3::new(4, 2, 2)),
+    // tile::Position(UVec3::new(4, 1, 2)),
+    // tile::Position(UVec3::new(4, 0, 2)),
+    // tile::Position(UVec3::new(3, 0, 2)),
+    // tile::Position(UVec3::new(2, 0, 2)),
+    // tile::Position(UVec3::new(1, 0, 2)),
     // ];
     let positions = generate_solvable_board(&positions, Some(2));
 
@@ -1048,7 +1048,7 @@ pub fn spawn_tiles(
 }
 
 pub fn generate_solvable_board(
-    available_positions: &Vec<tile::Position>,
+    mut available_positions: Vec<tile::Position>,
     seed: Option<u64>,
 ) -> Vec<(tile::Position, tile::Variant)> {
     if available_positions.len() % 2 != 0 {
@@ -1066,195 +1066,28 @@ pub fn generate_solvable_board(
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
         .map(|variant| {
             let variant = variant * 2;
-            (
-                tile::Variant(variant),
-                tile::Variant(variant + 1),
-            )
+            (tile::Variant(variant), tile::Variant(variant + 1))
         })
         .collect();
     // available_tile_variants.shuffle(&mut rng);
 
     for (v0, v1) in available_tile_variants {
-        let valid_positions = available_positions.iter().filter(|pos| {
-            true
-        });
+        let v = [v0, v1];
+        let valid_positions = available_positions
+            .iter()
+            .enumerate()
+            .filter_map(|(index, pos)| Some((index, pos)));
 
-        let mut valid_position_pair = available_positions.choose_multiple(&mut rng, 2);
-        result.push((*valid_position_pair.next().unwrap(), v0));
-        result.push((*valid_position_pair.next().unwrap(), v1));
-    }
+        let valid_position_pair = valid_positions
+            .choose_multiple(&mut rng, 2)
+            .iter()
+            .map(|(index, pos)| (*index, **pos))
+            .collect::<Vec<(usize, tile::Position)>>();
 
-    return result;
-
-    // Generate lookup tensors (Row x Layer x Column)
-    let mut rows = 0;
-    let mut layers = 0;
-    let mut columns = 0;
-
-    for tile::Position(UVec3 { x, y, z }) in available_positions {
-        if *y + 1 > rows {
-            rows = *y + 1;
+        for i in 0..2 {
+            result.push((valid_position_pair[i].1, v[i]));
+            available_positions.swap_remove(valid_position_pair[i].0);
         }
-        if *z + 1 > layers {
-            layers = *z + 1;
-        }
-        if *x + 1 > columns {
-            columns = *x + 1;
-        }
-    }
-
-    let mut lookup: Vec<Vec<Vec<(&tile::Position, usize)>>> =
-        vec![vec![vec![]; layers as usize]; rows as usize];
-    for (index, pos) in available_positions.iter().enumerate() {
-        lookup[pos.y as usize][pos.z as usize].push((pos, index));
-    }
-    let mut occupied: Vec<Vec<Vec<(&tile::Position, usize)>>> =
-        vec![vec![vec![]; layers as usize]; rows as usize];
-
-    fn remove_from_lookup_original(
-        pos: &tile::Position,
-        row: usize,
-        layer: usize,
-        lookup_original: &mut Option<Vec<Vec<Vec<(&tile::Position, usize)>>>>,
-    ) {
-        if let Some(lookup_original) = lookup_original {
-            debug!(
-                "Removing {:?} (Row: {:?} | Layer: {:?}) from non-filtered lookup table",
-                *pos, row, layer
-            );
-
-            let index = lookup_original[row][layer]
-                .iter()
-                .position(|(p, _)| **p == *pos)
-                .unwrap();
-            lookup_original[row][layer].swap_remove(index);
-        }
-    }
-
-    fn place_seed_tile<'a>(
-        lookup: &mut Vec<Vec<Vec<(&'a tile::Position, usize)>>>,
-        lookup_original: &mut Option<Vec<Vec<Vec<(&'a tile::Position, usize)>>>>,
-        occupied: &mut Vec<Vec<Vec<(&'a tile::Position, usize)>>>,
-        result: &mut Vec<(tile::Position, tile::Variant)>,
-        rng: &mut StdRng,
-        row: usize,
-        layer: usize,
-        variant: tile::Variant,
-    ) -> tile::Position {
-        assert!(lookup[row][layer].len() != 0);
-        let random_column = rng.random_range(0..lookup[row][layer].len());
-        let (pos, index) = lookup[row][layer].swap_remove(random_column);
-        occupied[row][layer].push((pos, index));
-        result.push((*pos, variant));
-        remove_from_lookup_original(pos, row, layer, lookup_original);
-        *pos
-    }
-
-    // Pick positions from the lookup table...
-    // ...and move them into the occupied table (and add to the result vector when doing so)
-    let mut counter = 0;
-    for (variant0, variant1) in available_tile_variants {
-        counter += 1;
-
-        if counter >= 2 {
-            return result;
-        }
-
-        let variants = [variant0, variant1];
-        let mut banned_position: Option<UVec3> = None; // Decided by first tile placement.
-        debug!("Lookup table: {:?}", lookup);
-
-        for variant in variants {
-            debug!("Find a tile position!");
-            let mut lookup_original: Option<Vec<Vec<Vec<(&tile::Position, usize)>>>> = None;
-
-            if let Some(pos) = banned_position {
-                // Replace lookup table with filtered version.
-                // This is done to ensure that the SECOND tile place in a pair is every placed on top of the FIRST.
-                debug!("Banned Position {:?}", banned_position);
-                lookup_original = Some(lookup.clone());
-
-                let row = pos.y;
-                let row_start = if row > 0 { row - 1 } else { 0 };
-                let row_end = if row < rows - 1 { row + 1 } else { rows - 1 };
-
-                for row in row_start..=row_end {
-                    if let Some(row_vec) = lookup.get_mut(row as usize) {
-                        for layer in (pos.z as usize + 1)..(layers as usize) {
-                            row_vec[layer].retain(|(pos_, _index)| {
-                                let pos = pos.truncate();
-                                let pos_ = pos_.truncate();
-                                debug!("Comparing banned pos with: {:?}", pos_);
-                                let overlaps_banned_position =
-                                    pos.x + 1 == pos_.x || pos.x == pos_.x || pos.x == pos_.x + 1;
-                                debug!(overlaps_banned_position);
-                                !overlaps_banned_position
-                            });
-                        }
-                    }
-                }
-
-                debug!("Lookup Table (Original): {:?}", lookup_original.as_ref().unwrap());
-                debug!("Lookup Table (Filtered): {:?}", lookup);
-            }
-
-            let random_row = rng.random_range(0..lookup.len());
-            debug!(random_row);
-            debug!("{:?}", lookup[random_row]);
-
-            for layer in 0..layers as usize {
-                debug!(layer);
-                let lookup_layer_is_empty = lookup[random_row][layer].is_empty();
-                debug!(lookup_layer_is_empty);
-                if lookup_layer_is_empty {
-                    // Nothing to pick - Go next.
-                    continue;
-                }
-
-                let occupied_row_is_empty = occupied[random_row][layer].is_empty()
-                    && (if random_row + 1 < occupied.len() {
-                        debug!("Checking one row above...");
-                        occupied[random_row + 1][layer].is_empty()
-                    } else {
-                        true
-                    })
-                    && (if random_row > 0 {
-                        debug!("Checking one row below...");
-                        occupied[random_row - 1][layer].is_empty()
-                    } else {
-                        true
-                    });
-                debug!(occupied_row_is_empty);
-                if occupied_row_is_empty {
-                    let pos = place_seed_tile(
-                        &mut lookup,
-                        &mut lookup_original,
-                        &mut occupied,
-                        &mut result,
-                        &mut rng,
-                        random_row,
-                        layer,
-                        variant,
-                    );
-                    debug!(
-                        "Placed tile on empty row! (Row: {:?} | Layer {:?} | Column {:?})",
-                        pos.y, pos.z, pos.x
-                    );
-                    if banned_position.is_none() {
-                        banned_position = Some(*pos);
-                    }
-                    break;
-                }
-            }
-
-            if let Some(lookup_original) = lookup_original {
-                // Restore lookup table
-                lookup = lookup_original;
-            }
-        }
-
-        // REMOVE ANY EMPTY LOOKUP TABLES!!!
-        // (Performance) ONLY REMOVE THOSE THAT WE HAVE REMOVED FROM!
     }
 
     return result;
