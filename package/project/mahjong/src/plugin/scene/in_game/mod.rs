@@ -1076,7 +1076,7 @@ pub fn generate_solvable_board(
         pos: &tile::Position,
         available_positions: &Vec<tile::Position>,
     ) -> Option<usize> {
-        let mut overlapped_tiles: Vec<usize> = Vec::new();
+        let mut overlapped_tiles = false;
 
         for other in available_positions.iter().enumerate() {
             if other.0 == index {
@@ -1093,19 +1093,24 @@ pub fn generate_solvable_board(
             }
 
             if is_above_other_tile && is_overlapping_other_tile {
-                overlapped_tiles.push(other.0);
+                overlapped_tiles = true;
                 break;
             }
         }
 
-        if overlapped_tiles.is_empty() {
-            Some(index)
-        } else {
+        if overlapped_tiles {
+            debug!("invalid");
+            debug!("{pos:?}");
             None
+        } else {
+            debug!("valid");
+            debug!("{pos:?}");
+            Some(index)
         }
     }
 
     for (v0, v1) in available_tile_variants {
+        debug!("New pair placement!");
         let v = [v0, v1];
         let valid_positions = available_positions
             .iter()
