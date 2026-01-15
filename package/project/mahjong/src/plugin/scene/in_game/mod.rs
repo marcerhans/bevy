@@ -1102,6 +1102,10 @@ pub fn generate_solvable_board(
         }
     }
 
+    if available_positions.len() > 0 {
+        panic!()
+    }
+
     return result;
 }
 
