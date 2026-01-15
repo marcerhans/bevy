@@ -1063,16 +1063,28 @@ pub fn generate_solvable_board(
 
     // Generate [tile::Variant] pairs
     let tile_pairs: u32 = available_positions.len() as u32 / 2;
-    let tile_pair_group_size = 4; // I.e., there are two pairs for each variant => 4
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
         .map(|variant| {
+            let variant = variant * 2;
             (
                 tile::Variant(variant),
-                tile::Variant(variant + available_positions.len() as u32 / tile_pair_group_size),
+                tile::Variant(variant + 1),
             )
         })
         .collect();
-    available_tile_variants.shuffle(&mut rng);
+    // available_tile_variants.shuffle(&mut rng);
+
+    // available_tile_variants.iter().for_each(|variant| {
+    //     result.push((available_positions.swap_remove(0), variant.0));
+    // });
+
+    for (index, (v0, v1)) in available_tile_variants.iter().enumerate() {
+        let index = index * 2;
+        result.push((available_positions[index], *v0));
+        result.push((available_positions[index + 1], *v1));
+    }
+
+    return result;
 
     // Generate lookup tensors (Row x Layer x Column)
     let mut rows = 0;
@@ -1188,6 +1200,7 @@ pub fn generate_solvable_board(
 
             let random_row = rng.random_range(0..lookup.len());
             debug!(random_row);
+            debug!("{:?}", lookup[random_row]);
 
             for layer in 0..layers as usize {
                 debug!(layer);
