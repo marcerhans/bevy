@@ -1076,6 +1076,14 @@ pub fn generate_solvable_board(
         pos: &tile::Position,
         available_positions: &Vec<tile::Position>,
     ) -> Option<usize> {
+        for other in available_positions.iter().enumerate() {
+            if other.0 == index {
+                continue;
+            }
+
+            
+        }
+
         Some(index)
     }
 
