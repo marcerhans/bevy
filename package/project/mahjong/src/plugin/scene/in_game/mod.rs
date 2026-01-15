@@ -1081,7 +1081,6 @@ pub fn generate_solvable_board(
                 continue;
             }
 
-            
         }
 
         Some(index)
