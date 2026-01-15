@@ -1073,10 +1073,10 @@ pub fn generate_solvable_board(
 
     fn filter_fn<'a>(
         index: usize,
-        pos: &'a tile::Position,
+        pos: &tile::Position,
         available_positions: &Vec<tile::Position>,
-    ) -> Option<(usize, &'a tile::Position)> {
-        Some((index, pos))
+    ) -> Option<usize> {
+        Some(index)
     }
 
     for (v0, v1) in available_tile_variants {
@@ -1089,17 +1089,17 @@ pub fn generate_solvable_board(
         let mut valid_position_pair = valid_positions
             .choose_multiple(&mut rng, 2)
             .iter()
-            .map(|(index, pos)| (*index, **pos))
-            .collect::<Vec<(usize, tile::Position)>>();
+            .copied()
+            .collect::<Vec<usize>>();
 
-        if valid_position_pair[1].0 > valid_position_pair[0].0 {
+        if valid_position_pair[1] > valid_position_pair[0] {
             // The second index decreases by one after the first removal.
-            valid_position_pair[1].0 -= 1;
+            valid_position_pair[1] -= 1;
         }
 
         for i in 0..2 {
-            result.push((valid_position_pair[i].1, v[i]));
-            available_positions.swap_remove(valid_position_pair[i].0);
+            result.push((available_positions[valid_position_pair[i]], v[i]));
+            available_positions.swap_remove(valid_position_pair[i]);
         }
     }
 
