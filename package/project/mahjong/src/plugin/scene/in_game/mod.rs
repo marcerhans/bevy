@@ -1175,7 +1175,7 @@ pub fn generate_solvable_board(
 
         for i in 0..2 {
             result.push((available_positions[valid_position_pair[i]], v[i]));
-            available_positions.swap_remove(valid_position_pair[i]);
+            occupied_positions.push(available_positions.swap_remove(valid_position_pair[i]));
         }
     }
 
