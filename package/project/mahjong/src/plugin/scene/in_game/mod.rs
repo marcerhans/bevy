@@ -1074,14 +1074,14 @@ pub fn generate_solvable_board(
         .collect();
     // available_tile_variants.shuffle(&mut rng);
 
-    // available_tile_variants.iter().for_each(|variant| {
-    //     result.push((available_positions.swap_remove(0), variant.0));
-    // });
+    for (v0, v1) in available_tile_variants {
+        let valid_positions = available_positions.iter().filter(|pos| {
+            true
+        });
 
-    for (index, (v0, v1)) in available_tile_variants.iter().enumerate() {
-        let index = index * 2;
-        result.push((available_positions[index], *v0));
-        result.push((available_positions[index + 1], *v1));
+        let mut valid_position_pair = available_positions.choose_multiple(&mut rng, 2);
+        result.push((*valid_position_pair.next().unwrap(), v0));
+        result.push((*valid_position_pair.next().unwrap(), v1));
     }
 
     return result;
