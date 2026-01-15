@@ -1078,8 +1078,8 @@ pub fn generate_solvable_board(
         occupied_positions: &Vec<tile::Position>,
     ) -> Option<usize> {
         let pos = &available_positions[index];
-        let mut overlapped_tiles = false;
 
+        let mut overlapped_tiles = false;
         for other in available_positions.iter().enumerate() {
             if other.0 == index {
                 continue;
@@ -1099,6 +1099,42 @@ pub fn generate_solvable_board(
                 break;
             }
         }
+
+        let mut row_already_occupied = false;
+        for other in occupied_positions.iter().enumerate() {
+            if other.0 == index {
+                continue;
+            }
+
+            let is_on_same_layer = pos.z == other.1.z;
+            let is_on_same_row = pos.y.abs_diff(other.1.y) < 2;
+
+            if is_on_same_layer && is_on_same_row {
+                row_already_occupied = true;
+                break;
+            }
+        }
+
+        // let mut overlapped_tiles = false;
+        // for other in available_positions.iter().enumerate() {
+        //     if other.0 == index {
+        //         continue;
+        //     }
+
+        //     let is_on_same_layer = pos.z == other.1.z;
+        //     let is_above_other_tile = pos.z > other.1.z;
+        //     let is_overlapping_other_tile =
+        //         pos.x.abs_diff(other.1.x) < 2 && pos.y.abs_diff(other.1.y) < 2;
+
+        //     if is_on_same_layer && is_overlapping_other_tile {
+        //         panic!("Invalid/bad tile positioning!")
+        //     }
+
+        //     if is_above_other_tile && is_overlapping_other_tile {
+        //         overlapped_tiles = true;
+        //         break;
+        //     }
+        // }
 
         if overlapped_tiles {
             debug!("invalid");
