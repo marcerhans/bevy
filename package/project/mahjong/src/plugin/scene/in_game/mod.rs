@@ -1076,7 +1076,7 @@ pub fn generate_solvable_board(
         pos: &tile::Position,
     ) -> Option<(usize, &tile::Position)> {
         Some((index, pos))
-    };
+    }
 
     for (v0, v1) in available_tile_variants {
         let v = [v0, v1];
