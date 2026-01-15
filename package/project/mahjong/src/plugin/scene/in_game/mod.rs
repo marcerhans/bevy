@@ -1101,7 +1101,7 @@ pub fn generate_solvable_board(
         }
 
         if overlapped_tiles_available {
-            debug!("invalid");
+            debug!("INVALID: Obstructs other available tile position(s).");
             debug!("{pos:?}");
             return None;
         }
@@ -1122,52 +1122,34 @@ pub fn generate_solvable_board(
         }
 
         if !row_already_occupied {
-            debug!("Row is not occupied by any other tile! Any position (column) is valid!");
+            debug!("VALID: Row is not occupied by any other tile! Any position (column) is valid!");
             debug!("{pos:?}");
             return Some(index);
         }
 
-        todo!("Have to find the left- and right-most tiles on the row. BUT! Keep in mind that we have to check +-1 row!");
-        // let left_most_position_in_row = None;
-        // let right_most_position_in_row = None;
-        // for other in occupied_positions.iter().enumerate() {
-        //     if other.0 == index {
-        //         continue;
-        //     }
+        let mut is_next_to_occupied_tile = false;
+        for other in occupied_positions.iter().enumerate() {
+            if other.0 == index {
+                continue;
+            }
 
-        //     let is_on_same_layer = pos.z == other.1.z;
-        //     let is_on_same_row = pos.y.abs_diff(other.1.y) < 2;
+            let is_on_same_layer = pos.z == other.1.z;
+            let is_on_same_row = pos.y.abs_diff(other.1.y) < 2;
+            let is_next_to_other_tile = pos.x.abs_diff(other.1.x) == 2;
 
-        //     if is_on_same_layer && is_on_same_row {
-        //         row_already_occupied = true;
-        //         break;
-        //     }
-        // }
+            if is_on_same_layer && is_on_same_row && is_next_to_other_tile {
+                is_next_to_occupied_tile = true;
+                break;
+            }
+        }
 
+        if is_next_to_occupied_tile {
+            debug!("VALID: Tile (position) is next to an already occupied position");
+            debug!("{pos:?}");
+            return Some(index);
+        }
 
-
-        // let mut overlapped_tiles = false;
-        // for other in available_positions.iter().enumerate() {
-        //     if other.0 == index {
-        //         continue;
-        //     }
-
-        //     let is_on_same_layer = pos.z == other.1.z;
-        //     let is_above_other_tile = pos.z > other.1.z;
-        //     let is_overlapping_other_tile =
-        //         pos.x.abs_diff(other.1.x) < 2 && pos.y.abs_diff(other.1.y) < 2;
-
-        //     if is_on_same_layer && is_overlapping_other_tile {
-        //         panic!("Invalid/bad tile positioning!")
-        //     }
-
-        //     if is_above_other_tile && is_overlapping_other_tile {
-        //         overlapped_tiles = true;
-        //         break;
-        //     }
-        // }
-
-        todo!()
+        None
     }
 
     for (v0, v1) in available_tile_variants {
