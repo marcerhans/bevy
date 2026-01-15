@@ -955,7 +955,7 @@ pub fn spawn_tiles(
     // tile::Position(UVec3::new(2, 0, 2)),
     // tile::Position(UVec3::new(1, 0, 2)),
     // ];
-    let positions = generate_solvable_board(&positions, Some(2));
+    let positions = generate_solvable_board(positions, Some(2));
 
     for (pos, variant) in positions {
         let default_depth = Vec3::default().with_z(100.0);
@@ -1071,8 +1071,11 @@ pub fn generate_solvable_board(
         .collect();
     available_tile_variants.shuffle(&mut rng);
 
-    let filter_fn = |index, pos| -> Option<(usize, &tile::Position)> {
-        todo!()
+    fn filter_fn(
+        index: usize,
+        pos: &tile::Position,
+    ) -> Option<(usize, &tile::Position)> {
+        Some((index, pos))
     };
 
     for (v0, v1) in available_tile_variants {
@@ -1080,9 +1083,7 @@ pub fn generate_solvable_board(
         let valid_positions = available_positions
             .iter()
             .enumerate()
-            .filter_map(|(index, pos)| {
-                filter_fn(index, pos)
-        });
+            .filter_map(|(index, pos)| filter_fn(index, pos));
 
         let valid_position_pair = valid_positions
             .choose_multiple(&mut rng, 2)
