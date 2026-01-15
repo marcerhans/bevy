@@ -1083,13 +1083,18 @@ pub fn generate_solvable_board(
         let valid_positions = available_positions
             .iter()
             .enumerate()
-            .filter_map(|(index, pos)| filter_fn(index, pos));
+            .filter_map(|(index, pos)| Some((index, pos)));
 
-        let valid_position_pair = valid_positions
+        let mut valid_position_pair = valid_positions
             .choose_multiple(&mut rng, 2)
             .iter()
             .map(|(index, pos)| (*index, **pos))
             .collect::<Vec<(usize, tile::Position)>>();
+
+        if valid_position_pair[1].0 > valid_position_pair[0].0 {
+            // The second index decreases by one after the first removal.
+            valid_position_pair[1].0 -= 1;
+        }
 
         for i in 0..2 {
             result.push((valid_position_pair[i].1, v[i]));
