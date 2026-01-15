@@ -1089,17 +1089,17 @@ pub fn generate_solvable_board(
         let mut valid_position_pair = valid_positions
             .choose_multiple(&mut rng, 2)
             .iter()
-            .map(|index| (*index, available_positions[*index]))
-            .collect::<Vec<(usize, tile::Position)>>();
+            .copied()
+            .collect::<Vec<usize>>();
 
-        if valid_position_pair[1].0 == available_positions.len() - 1 {
+        if valid_position_pair[1] == available_positions.len() - 1 {
             // Since we are using swap remove, we have to adjust the second of the two indexes in this particular case.
-            valid_position_pair[1].0 = valid_position_pair[0].0;
+            valid_position_pair[1] = valid_position_pair[0];
         }
 
         for i in 0..2 {
-            result.push((valid_position_pair[i].1, v[i]));
-            available_positions.swap_remove(valid_position_pair[i].0);
+            result.push((available_positions[valid_position_pair[i]], v[i]));
+            available_positions.swap_remove(valid_position_pair[i]);
         }
     }
 
