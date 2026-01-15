@@ -1069,14 +1069,20 @@ pub fn generate_solvable_board(
             (tile::Variant(variant), tile::Variant(variant + 1))
         })
         .collect();
-    // available_tile_variants.shuffle(&mut rng);
+    available_tile_variants.shuffle(&mut rng);
+
+    let filter_fn = |index, pos| -> Option<(usize, &tile::Position)> {
+        todo!()
+    };
 
     for (v0, v1) in available_tile_variants {
         let v = [v0, v1];
         let valid_positions = available_positions
             .iter()
             .enumerate()
-            .filter_map(|(index, pos)| Some((index, pos)));
+            .filter_map(|(index, pos)| {
+                filter_fn(index, pos)
+        });
 
         let valid_position_pair = valid_positions
             .choose_multiple(&mut rng, 2)
