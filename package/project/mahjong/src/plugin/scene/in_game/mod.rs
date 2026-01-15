@@ -1106,6 +1106,7 @@ pub fn generate_solvable_board(
             return None;
         }
 
+        let mut who = None;
         let mut row_already_occupied = false;
         for other in occupied_positions.iter().enumerate() {
             if other.0 == index {
@@ -1117,6 +1118,7 @@ pub fn generate_solvable_board(
 
             if is_on_same_layer && is_on_same_row {
                 row_already_occupied = true;
+                who = Some(other.1);
                 break;
             }
         }
@@ -1149,6 +1151,8 @@ pub fn generate_solvable_board(
             return Some(index);
         }
 
+        debug!("INVALID: Row is occupied, but tile is not next to it ({:?}).", who.unwrap());
+        debug!("{pos:?}");
         None
     }
 
