@@ -927,35 +927,7 @@ pub fn spawn_tiles(
     );
 
     let positions: Vec<tile::Position> = position_generator.collect();
-    // let positions = vec![
-    //     tile::Position(UVec3::new(2, 2, 0)),
-    //     tile::Position(UVec3::new(1, 1, 1)),
-    //     tile::Position(UVec3::new(0, 2, 0)),
-    //     tile::Position(UVec3::new(1, 3, 1)),
-    // tile::Position(UVec3::new(2, 3, 1)),
-    // tile::Position(UVec3::new(3, 3, 1)),
-    // tile::Position(UVec3::new(3, 2, 1)),
-    // tile::Position(UVec3::new(3, 1, 1)),
-    // tile::Position(UVec3::new(2, 1, 8)),
-
-    // tile::Position(UVec3::new(0, 0, 2)),
-    // tile::Position(UVec3::new(0, 1, 2)),
-    // tile::Position(UVec3::new(0, 2, 2)),
-    // tile::Position(UVec3::new(0, 3, 2)),
-    // tile::Position(UVec3::new(0, 4, 2)),
-    // tile::Position(UVec3::new(1, 4, 2)),
-    // tile::Position(UVec3::new(2, 4, 2)),
-    // tile::Position(UVec3::new(3, 4, 2)),
-    // tile::Position(UVec3::new(4, 4, 2)),
-    // tile::Position(UVec3::new(4, 3, 2)),
-    // tile::Position(UVec3::new(4, 2, 2)),
-    // tile::Position(UVec3::new(4, 1, 2)),
-    // tile::Position(UVec3::new(4, 0, 2)),
-    // tile::Position(UVec3::new(3, 0, 2)),
-    // tile::Position(UVec3::new(2, 0, 2)),
-    // tile::Position(UVec3::new(1, 0, 2)),
-    // ];
-    let positions = generate_solvable_board(positions, Some(2));
+    let positions = generate_solvable_board(positions, None);
 
     for (pos, variant) in positions {
         let default_depth = Vec3::default().with_z(100.0);
