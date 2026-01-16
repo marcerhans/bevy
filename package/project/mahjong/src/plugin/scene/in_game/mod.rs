@@ -1068,15 +1068,17 @@ pub fn generate_solvable_board(
         // IF the row is currently empty AND we try to place TWO tiles on the SAME ROW there may be dragons.
         // If these to be placed tiles are NOT next to each other, then iiiiit will break the rules :) So DON'T! :D
         // In this case, solve it by finding a position that IS next to the other.
-        let pos_a = available_positions[valid_position_pair[0]];
-        let pos_b = available_positions[valid_position_pair[1]];
+        let pos_a = &available_positions[valid_position_pair[0]];
+        let pos_b = &available_positions[valid_position_pair[1]];
+        let on_same_layer = pos_a.z == pos_b.z;
         let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
         let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
-        if on_same_row && !next_to_each_other {
+        if on_same_layer && on_same_row && !next_to_each_other {
             for (pos_b_index, pos_b) in available_positions.iter().enumerate() {
+                let on_same_layer = pos_a.z == pos_b.z;
                 let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
                 let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
-                if on_same_row && next_to_each_other {
+                if on_same_layer && on_same_row && next_to_each_other {
                     valid_position_pair[1] = pos_b_index;
                     break;
                 }
