@@ -11,7 +11,10 @@ use rand::{
     rngs::StdRng,
     seq::{IndexedRandom, IteratorRandom, SliceRandom},
 };
-use std::collections::{HashSet, VecDeque};
+use std::{
+    collections::{HashSet, VecDeque},
+    time::Duration,
+};
 
 pub struct Plugin;
 
@@ -22,6 +25,11 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_sub_state::<InGame>()
             .add_message::<HelpMsg>()
+            .insert_resource(Timer(bevy::time::Timer::new(
+                Duration::from_secs(1),
+                TimerMode::Repeating,
+            )))
+            .insert_resource(TilePositionVariantPairs::default())
             .insert_resource(SelectedTile::default())
             .insert_resource(History::default())
             .insert_resource(HelpEnabled::default())
@@ -30,6 +38,7 @@ impl bevy::prelude::Plugin for Plugin {
                 (spawn_background, spawn_tiles, spawn_buttons),
             )
             .add_systems(Update, resize_background.run_if(in_state(InGame::Root)))
+            .add_systems(Update, place_tiles.run_if(in_state(InGame::Root)))
             .add_systems(
                 Update,
                 (
@@ -60,6 +69,12 @@ pub enum InGame {
     #[default]
     Root,
 }
+
+#[derive(Resource, Deref, DerefMut, Default)]
+pub struct Timer(bevy::time::Timer);
+
+#[derive(Resource, Deref, DerefMut, Default)]
+pub struct TilePositionVariantPairs(Vec<(tile::Position, tile::Variant)>);
 
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct SelectedTile(Option<Entity>);
@@ -893,9 +908,9 @@ pub fn spawn_background(
 }
 
 pub fn spawn_tiles(
-    mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
+    mut tile_position_variant_pairs: ResMut<TilePositionVariantPairs>,
 ) {
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
@@ -927,96 +942,10 @@ pub fn spawn_tiles(
     );
 
     let positions: Vec<tile::Position> = position_generator.collect();
-    let positions = generate_solvable_board(positions, None);
+    let mut positions = generate_solvable_board(positions, None);
+    positions.reverse();
 
-    for (pos, variant) in positions {
-        let default_depth = Vec3::default().with_z(100.0);
-        let column_depth_offset_factor = Vec3::default().with_z(-0.1);
-        let row_depth_offset_factor =
-            column_depth_offset_factor * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32;
-        let layer_depth_offset_factor = Vec3::default().with_z(10.0);
-        let layer_offset_factor = Vec3 {
-            x: tile_border_length_scaled,
-            y: tile_border_length_scaled,
-            ..default()
-        };
-
-        let special = match pos.x / tile_grid_size {
-            0 => Vec3::default().with_z(
-                -column_depth_offset_factor.z
-                    * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32,
-            ),
-            13 | 14 => Vec3::default().with_z(
-                column_depth_offset_factor.z
-                    * (tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32),
-            ),
-            _ => Vec3::default(),
-        };
-
-        let mut entity_commands = spawn(
-            &mut commands,
-            (
-                tile::Tile {
-                    marker: tile::Marker::<0>,
-                    position: pos,
-                    variant: variant,
-                },
-                Sprite {
-                    custom_size: Some(tile_size_full),
-                    color: tile::DEFAULT_COLOR,
-                    ..Sprite::from_image(tile_texture.clone())
-                },
-                Transform {
-                    translation: (((pos.as_vec3() / tile_grid_size as f32)
-                        * tile_size.extend(1.0))
-                        + tile_pos_offset)
-                        + default_depth
-                        + (layer_offset_factor * pos.z as f32)
-                        + (column_depth_offset_factor * pos.x as f32)
-                        + (row_depth_offset_factor * pos.y as f32)
-                        + (layer_depth_offset_factor * pos.z as f32)
-                        + special,
-                    ..default()
-                },
-            ),
-        );
-
-        entity_commands.observe(tile_pressed);
-
-        if pos.z != 0 {
-            entity_commands.with_child((
-                Sprite {
-                    custom_size: Some(tile_size_full),
-                    color: Color::hsla(0.0, 0.0, 0.0, 0.75),
-                    ..Sprite::from_image(tile_texture.clone())
-                },
-                Transform {
-                    scale: Vec3 {
-                        x: 1.2,
-                        y: 1.03,
-                        ..Vec3::splat(1.0)
-                    },
-                    translation: Vec3 {
-                        x: -tile_size_full.x / 2.0,
-                        y: -tile_size_full.y / 2.0,
-                        z: column_depth_offset_factor.z * pos.x as f32,
-                        ..default()
-                    },
-                    ..default()
-                },
-                Anchor::BOTTOM_LEFT,
-            ));
-        }
-
-        let offset = layer_offset_factor / 2.0;
-        tile::Variant::insert_sprite_as_child(
-            &asset_server,
-            &mut entity_commands,
-            variant.0,
-            &tile_size,
-            &offset,
-        );
-    }
+    tile_position_variant_pairs.0 = positions;
 }
 
 pub fn generate_solvable_board(
@@ -1514,6 +1443,141 @@ fn resize_background(
             y: projection.area.height(),
         });
     }
+}
+
+pub fn place_tiles(
+    mut commands: Commands,
+    projection: Query<&Projection, With<Camera>>,
+    asset_server: Res<AssetServer>,
+    time: Res<Time>,
+    mut timer: ResMut<Timer>,
+    mut tile_position_variant_pairs: ResMut<TilePositionVariantPairs>,
+) {
+    timer.tick(time.delta());
+
+    if !timer.is_finished() {
+        return;
+    }
+
+    let next = tile_position_variant_pairs.pop();
+
+    let Some((pos, variant)) = next else {
+        return;
+    };
+
+    let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
+        panic!();
+    };
+
+    let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::TILE);
+    let tile_size = Vec2::new(
+        (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.8,
+        projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
+    );
+    let tile_grid_size = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
+    let position_generator =
+        tile::PositionGenerator::<tile::Turtle>::new(UVec2::splat(tile_grid_size));
+    let tile_size_full = Vec2::new(
+        (tile_size.x / tile::asset::texture::TILE_NO_BORDER_WIDTH as f32)
+            * tile::asset::texture::TILE_WIDTH as f32,
+        (tile_size.y / tile::asset::texture::TILE_NO_BORDER_HEIGHT as f32)
+            * tile::asset::texture::TILE_HEIGHT as f32,
+    );
+    let tile_size_ratio = tile_size.y / tile::asset::texture::TILE_NO_BORDER_HEIGHT as f32;
+    let tile_border_length_scaled =
+        tile::asset::texture::TILE_BORDER_LENGTH as f32 * tile_size_ratio;
+    let tile_pos_offset = Vec3::new(
+        -(tile_size.x * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32 / 2.0)
+            + tile_size.x * 1.0
+            - tile_border_length_scaled / 2.0,
+        -projection.area.height() / 2.0 + tile_size_full.y * 0.5 - tile_border_length_scaled,
+        0.0,
+    );
+
+    let default_depth = Vec3::default().with_z(100.0);
+    let column_depth_offset_factor = Vec3::default().with_z(-0.1);
+    let row_depth_offset_factor =
+        column_depth_offset_factor * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32;
+    let layer_depth_offset_factor = Vec3::default().with_z(10.0);
+    let layer_offset_factor = Vec3 {
+        x: tile_border_length_scaled,
+        y: tile_border_length_scaled,
+        ..default()
+    };
+
+    let special = match pos.x / tile_grid_size {
+        0 => Vec3::default().with_z(
+            -column_depth_offset_factor.z * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32,
+        ),
+        13 | 14 => Vec3::default().with_z(
+            column_depth_offset_factor.z
+                * (tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32),
+        ),
+        _ => Vec3::default(),
+    };
+
+    let mut entity_commands = spawn(
+        &mut commands,
+        (
+            tile::Tile {
+                marker: tile::Marker::<0>,
+                position: pos,
+                variant: variant,
+            },
+            Sprite {
+                custom_size: Some(tile_size_full),
+                color: tile::DEFAULT_COLOR,
+                ..Sprite::from_image(tile_texture.clone())
+            },
+            Transform {
+                translation: (((pos.as_vec3() / tile_grid_size as f32) * tile_size.extend(1.0))
+                    + tile_pos_offset)
+                    + default_depth
+                    + (layer_offset_factor * pos.z as f32)
+                    + (column_depth_offset_factor * pos.x as f32)
+                    + (row_depth_offset_factor * pos.y as f32)
+                    + (layer_depth_offset_factor * pos.z as f32)
+                    + special,
+                ..default()
+            },
+        ),
+    );
+
+    entity_commands.observe(tile_pressed);
+
+    if pos.z != 0 {
+        entity_commands.with_child((
+            Sprite {
+                custom_size: Some(tile_size_full),
+                color: Color::hsla(0.0, 0.0, 0.0, 0.75),
+                ..Sprite::from_image(tile_texture.clone())
+            },
+            Transform {
+                scale: Vec3 {
+                    x: 1.2,
+                    y: 1.03,
+                    ..Vec3::splat(1.0)
+                },
+                translation: Vec3 {
+                    x: -tile_size_full.x / 2.0,
+                    y: -tile_size_full.y / 2.0,
+                    z: column_depth_offset_factor.z * pos.x as f32,
+                    ..default()
+                },
+                ..default()
+            },
+            Anchor::BOTTOM_LEFT,
+        ));
+    }
+
+    let offset = layer_offset_factor / 2.0;
+    tile::Variant::insert_sprite_as_child(
+        &asset_server,
+        &mut entity_commands,
+        variant.0,
+        &tile_size,
+        &offset,
+    );
 }
 
 fn mouse_activity(
