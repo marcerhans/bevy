@@ -942,6 +942,11 @@ pub fn spawn_tiles(
     );
 
     let positions: Vec<tile::Position> = position_generator.collect();
+
+    for _ in 0..10000 {
+        generate_solvable_board(positions.clone(), None);
+    }
+
     let mut positions = generate_solvable_board(positions, None);
     positions.reverse();
 
@@ -960,7 +965,7 @@ pub fn generate_solvable_board(
     let mut occupied_positions: Vec<tile::Position> = Vec::with_capacity(available_positions.len());
 
     // Set rng seed
-    let seed = seed.unwrap_or(0);
+    let seed = seed.unwrap_or(rand::random());
     let mut rng = StdRng::seed_from_u64(seed);
 
     // Generate [tile::Variant] pairs
@@ -1058,6 +1063,7 @@ pub fn generate_solvable_board(
             });
 
         let mut valid_position_pair = valid_positions
+            .clone()
             .choose_multiple(&mut rng, 2)
             .iter()
             .copied()
@@ -1074,7 +1080,8 @@ pub fn generate_solvable_board(
         let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
         let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
         if on_same_layer && on_same_row && !next_to_each_other {
-            for (pos_b_index, pos_b) in available_positions.iter().enumerate() {
+            for pos_b_index in valid_positions {
+                let pos_b = available_positions[pos_b_index];
                 let on_same_layer = pos_a.z == pos_b.z;
                 let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
                 let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;

@@ -35,7 +35,7 @@ impl bevy::prelude::Plugin for Plugin {
         app.add_plugins((
             bevy::DefaultPlugins
                 .set(LogPlugin {
-                    filter: "error,bevy=info,mahjong=info".into(),
+                    filter: "error,bevy=info,mahjong=debug".into(),
                     level: bevy::log::Level::DEBUG,
                     ..default()
                 })
