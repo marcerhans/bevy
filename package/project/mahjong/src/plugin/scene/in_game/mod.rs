@@ -1106,19 +1106,13 @@ pub fn generate_solvable_board(
             return None;
         }
 
-        let mut who = None;
         let mut row_already_occupied = false;
         for other in occupied_positions.iter().enumerate() {
-            if other.0 == index {
-                continue;
-            }
-
             let is_on_same_layer = pos.z == other.1.z;
             let is_on_same_row = pos.y.abs_diff(other.1.y) < 2;
 
             if is_on_same_layer && is_on_same_row {
                 row_already_occupied = true;
-                who = Some(other.1);
                 break;
             }
         }
@@ -1131,10 +1125,6 @@ pub fn generate_solvable_board(
 
         let mut is_next_to_occupied_tile = false;
         for other in occupied_positions.iter().enumerate() {
-            if other.0 == index {
-                continue;
-            }
-
             let is_on_same_layer = pos.z == other.1.z;
             let is_on_same_row = pos.y.abs_diff(other.1.y) < 2;
             let is_next_to_other_tile = pos.x.abs_diff(other.1.x) == 2;
@@ -1151,13 +1141,13 @@ pub fn generate_solvable_board(
             return Some(index);
         }
 
-        debug!("INVALID: Row is occupied, but tile is not next to it ({:?}).", who.unwrap());
+        debug!("INVALID: Row is occupied, but tile is not next to it.");
         debug!("{pos:?}");
         None
     }
 
     for (v0, v1) in available_tile_variants {
-        debug!("New pair placement!");
+        debug!("\n\nNew pair placement!");
         let v = [v0, v1];
         let valid_positions = available_positions
             .iter()
@@ -1171,6 +1161,8 @@ pub fn generate_solvable_board(
             .iter()
             .copied()
             .collect::<Vec<usize>>();
+
+        debug!("{occupied_positions:?}");
 
         if valid_position_pair[1] == available_positions.len() - 1 {
             // Since we are using swap remove, we have to adjust the second of the two indexes in this particular case.
