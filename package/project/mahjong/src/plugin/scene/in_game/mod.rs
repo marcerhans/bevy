@@ -124,16 +124,24 @@ mod platform {
     mod implementation {
         use super::*;
 
-        pub struct Platform;
+        pub struct PlatformPlugin;
 
-        impl bevy::prelude::Plugin for Platform {
-            type ObserverItem = ();
+        impl bevy::prelude::Plugin for PlatformPlugin {
+            fn build(
+                &self,
+                app: &mut App,
+            ) {
+                let mut platform = Platform::default();
+                app.insert_resource(platform);
+            }
         }
 
         #[derive(Resource, Default)]
         pub struct Platform;
 
-        impl PlatformTrait for Platform {}
+        impl PlatformTrait for Platform {
+            type ObserverItem = ();
+        }
 
         impl Platform {}
     }
