@@ -2136,7 +2136,7 @@ fn new_game_mouse(
     _on_press: On<Pointer<Press>>,
     mut next_state: ResMut<NextState<InGame>>,
 ) {
-    info!("new game");
+    info!("New Game!");
     next_state.set(InGame::Root);
 }
 
@@ -2145,6 +2145,7 @@ fn poll_new_seed(
     mut next_state: ResMut<NextState<InGame>>,
 ) {
     if let Some(_msg) = msg.read().last() {
+        info!("New Game!");
         next_state.set(InGame::Root);
     }
 }
