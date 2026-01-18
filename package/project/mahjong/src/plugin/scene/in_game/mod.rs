@@ -34,11 +34,14 @@ impl bevy::prelude::Plugin for Plugin {
             .add_systems(OnEnter(InGame::Root), startup)
             .add_systems(
                 OnEnter(InGame::Running),
-                (spawn_background, spawn_tiles, spawn_buttons),
+                (spawn_background, spawn_tiles, spawn_buttons_and_info),
             )
             .add_systems(
                 Update,
-                resize_background.run_if(in_state(InGame::Running).or(in_state(InGame::Victory))),
+                resize_background.run_if(
+                    in_state(InGame::Running)
+                        .or(in_state(InGame::Victory).or(in_state(InGame::Defeat))),
+                ),
             )
             .add_systems(Update, place_tiles.run_if(in_state(InGame::Running)))
             .add_systems(
@@ -53,7 +56,8 @@ impl bevy::prelude::Plugin for Plugin {
                     .run_if(in_state(InGame::Running)),
             )
             .add_systems(Update, poll_new_seed.run_if(in_state(InGame::Running)))
-            .add_systems(Update, spawn_finished.run_if(in_state(InGame::Victory)));
+            .add_systems(Update, spawn_finished.run_if(in_state(InGame::Victory)))
+            .add_systems(Update, spawn_defeat.run_if(in_state(InGame::Defeat)));
     }
 }
 
@@ -297,6 +301,7 @@ pub enum InGame {
     Root,
     Running,
     Victory,
+    Defeat,
 }
 
 #[derive(Resource, Deref, DerefMut, Default)]
@@ -373,6 +378,9 @@ mod marker {
 
     #[derive(Component)]
     pub struct Hidden;
+
+    #[derive(Component)]
+    pub struct Info;
 }
 
 mod tile {
@@ -1092,6 +1100,7 @@ mod button {
         Redo,
         Help,
         NewGame,
+        Moves,
     }
 
     impl Marker {
@@ -1103,6 +1112,7 @@ mod button {
                 Redo => "[R]edo",
                 Help => "[H]elp",
                 NewGame => "NewGame",
+                Moves => "Moves:\n",
             }
         }
     }
@@ -1573,7 +1583,7 @@ pub fn valid_removal(
         && free_above(selected_entity, selected_position, tiles)
 }
 
-pub fn spawn_buttons(
+pub fn spawn_buttons_and_info(
     mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
@@ -1636,6 +1646,14 @@ pub fn spawn_buttons(
                 ..default()
             },
         },
+        Button {
+            marker: button::Marker::Moves,
+            flip_x: false,
+            offset: Vec3 {
+                y: button_size.y * 2.0,
+                ..default()
+            },
+        },
     ];
 
     for button in buttons {
@@ -1691,16 +1709,27 @@ pub fn spawn_buttons(
             ),
         );
 
-        ec.observe(mouse_over)
-            .observe(mouse_out)
-            .observe(mouse_press)
-            .observe(mouse_release);
+        if !matches!(button.marker, button::Marker::Moves) {
+            ec.observe(mouse_over)
+                .observe(mouse_out)
+                .observe(mouse_press)
+                .observe(mouse_release);
+        }
 
         match button.marker {
-            button::Marker::Undo => ec.observe(undo_mouse),
-            button::Marker::Redo => ec.observe(redo_mouse),
-            button::Marker::Help => ec.observe(help_mouse),
-            button::Marker::NewGame => ec.observe(new_game_mouse),
+            button::Marker::Undo => {
+                ec.observe(undo_mouse);
+            },
+            button::Marker::Redo => {
+                ec.observe(redo_mouse);
+            },
+            button::Marker::Help => {
+                ec.observe(help_mouse);
+            },
+            button::Marker::NewGame => {
+                ec.observe(new_game_mouse);
+            },
+            _ => (),
         };
     }
 }
@@ -2194,13 +2223,31 @@ pub fn spawn_finished(
                 custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
                 ..Sprite::from_image(handle)
             },
-            Transform {
-                translation: Vec3 {
-                    z: -10.0,
-                    ..default()
-                },
-                ..default()
+            Transform { ..default() },
+        ),
+    );
+}
+
+pub fn spawn_defeat(
+    mut commands: Commands,
+    projection: Query<&Projection, With<Camera>>,
+    asset_server: Res<AssetServer>,
+) {
+    let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
+        panic!();
+    };
+
+    let handle: Handle<Image> = asset_server.load("misc/rev2/original/Defeat.png");
+
+    spawn(
+        &mut commands,
+        (
+            marker::Background,
+            Sprite {
+                custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
+                ..Sprite::from_image(handle)
             },
+            Transform { ..default() },
         ),
     );
 }
