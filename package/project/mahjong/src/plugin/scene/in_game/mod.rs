@@ -10,7 +10,10 @@ use rand::{
     rngs::StdRng,
     seq::{IteratorRandom, SliceRandom},
 };
-use std::{collections::VecDeque, time::Duration};
+use std::{
+    collections::{HashMap, VecDeque},
+    time::Duration,
+};
 
 pub struct Plugin;
 
@@ -22,6 +25,7 @@ impl bevy::prelude::Plugin for Plugin {
         app.add_plugins(PlatformPlugin)
             .add_sub_state::<InGame>()
             .add_message::<HelpMsg>()
+            .add_message::<BoardUpdated>()
             .insert_resource(Timer(bevy::time::Timer::new(
                 Duration::from_secs(1),
                 TimerMode::Repeating,
@@ -52,6 +56,7 @@ impl bevy::prelude::Plugin for Plugin {
                     help_keyboard,
                     help_toggle,
                     help,
+                    update_move_count,
                 )
                     .run_if(in_state(InGame::Running)),
             )
@@ -121,7 +126,9 @@ mod platform {
 
         pub struct Platform;
 
-        impl bevy::prelude::Plugin for Platform {}
+        impl bevy::prelude::Plugin for Platform {
+            type ObserverItem = ();
+        }
 
         #[derive(Resource, Default)]
         pub struct Platform;
@@ -321,6 +328,9 @@ pub struct HelpEnabled(bool);
 
 #[derive(Message)]
 pub struct HelpMsg;
+
+#[derive(Message)]
+pub struct BoardUpdated;
 
 #[derive(Clone)]
 pub enum HistoryItem {
@@ -556,7 +566,7 @@ mod tile {
         }
     }
 
-    #[derive(Component, Deref, DerefMut, Clone, Copy, Eq)]
+    #[derive(Component, Deref, DerefMut, Clone, Copy, Eq, Debug)]
     pub struct Variant(pub u32);
 
     /// TODO: This is a bit hacky...
@@ -1385,6 +1395,7 @@ pub fn tile_pressed(
     >,
     mut selected_tile: ResMut<SelectedTile>,
     mut history: ResMut<History>,
+    mut board_updated: MessageWriter<BoardUpdated>,
     mut next_state: ResMut<NextState<InGame>>,
 ) {
     let (pressed_entity, _, _, _, _) = tiles.iter().find(|tile| tile.0 == on_press.entity).unwrap();
@@ -1462,6 +1473,8 @@ pub fn tile_pressed(
     commands.entity(selected_entity).insert(marker::Hidden);
     *pressed_visibility = Visibility::Hidden;
     *selected_visibility = Visibility::Hidden;
+
+    board_updated.write(BoardUpdated);
 
     if tiles.iter().len() == 2 {
         next_state.set(InGame::Victory);
@@ -1663,6 +1676,11 @@ pub fn spawn_buttons_and_info(
                 button.marker.clone(),
                 Sprite {
                     custom_size: Some(button_size),
+                    color: if matches!(button.marker, button::Marker::Moves) {
+                        Color::srgb(0.7, 0.7, 0.7)
+                    } else {
+                        Color::default()
+                    },
                     ..Sprite::from_atlas_image(
                         texture_handle.clone(),
                         TextureAtlas {
@@ -1686,6 +1704,7 @@ pub fn spawn_buttons_and_info(
                     Anchor::BOTTOM_LEFT
                 },
                 children![(
+                    button.marker.clone(),
                     Text2d(button.marker.as_string().to_owned()),
                     font.clone(),
                     Transform {
@@ -1763,6 +1782,7 @@ pub fn place_tiles(
     time: Res<Time>,
     mut timer: ResMut<Timer>,
     mut tile_position_variant_pairs: ResMut<TilePositionVariantPairs>,
+    mut board_updated: MessageWriter<BoardUpdated>,
 ) {
     timer.tick(time.delta());
 
@@ -1889,6 +1909,8 @@ pub fn place_tiles(
         &tile_size,
         &offset,
     );
+
+    board_updated.write(BoardUpdated);
 }
 
 fn mouse_activity(
@@ -1939,6 +1961,7 @@ fn undo_mouse(
         (With<tile::Marker<0>>, With<marker::Hidden>),
     >,
     mut history: ResMut<History>,
+    mut board_updated: MessageWriter<BoardUpdated>,
     mut selected_tile: ResMut<SelectedTile>,
 ) {
     undo(
@@ -1946,7 +1969,8 @@ fn undo_mouse(
         &mut history_valid_pair_tiles,
         &mut history,
         &mut selected_tile,
-    )
+    );
+    board_updated.write(BoardUpdated);
 }
 
 fn undo_keyboard(
@@ -1957,6 +1981,7 @@ fn undo_keyboard(
         (With<tile::Marker<0>>, With<marker::Hidden>),
     >,
     mut history: ResMut<History>,
+    mut board_updated: MessageWriter<BoardUpdated>,
     mut selected_tile: ResMut<SelectedTile>,
 ) {
     if key.just_pressed(KeyCode::KeyU) {
@@ -1965,7 +1990,8 @@ fn undo_keyboard(
             &mut history_valid_pair_tiles,
             &mut history,
             &mut selected_tile,
-        )
+        );
+        board_updated.write(BoardUpdated);
     }
 }
 
@@ -2001,6 +2027,7 @@ fn redo_mouse(
     mut commands: Commands,
     mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
     mut history: ResMut<History>,
+    mut board_updated: MessageWriter<BoardUpdated>,
     mut selected_tile: ResMut<SelectedTile>,
 ) {
     redo(
@@ -2008,7 +2035,8 @@ fn redo_mouse(
         &mut history_valid_pair_tiles,
         &mut history,
         &mut selected_tile,
-    )
+    );
+    board_updated.write(BoardUpdated);
 }
 
 fn redo_keyboard(
@@ -2016,6 +2044,7 @@ fn redo_keyboard(
     mut commands: Commands,
     mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
     mut history: ResMut<History>,
+    mut board_updated: MessageWriter<BoardUpdated>,
     mut selected_tile: ResMut<SelectedTile>,
 ) {
     if key.just_pressed(KeyCode::KeyR) {
@@ -2024,7 +2053,8 @@ fn redo_keyboard(
             &mut history_valid_pair_tiles,
             &mut history,
             &mut selected_tile,
-        )
+        );
+        board_updated.write(BoardUpdated);
     }
 }
 
@@ -2181,6 +2211,81 @@ fn help(
                 sprite.color = tile::DEFAULT_COLOR;
             }
         },
+    }
+}
+
+fn update_move_count(
+    button_texts: Query<(&mut Text2d, &button::Marker)>,
+    positions: Query<
+        (&tile::Position, &tile::Variant),
+        (With<tile::Marker<0>>, Without<marker::Hidden>),
+    >,
+    board_updated: MessageReader<BoardUpdated>,
+    mut next_state: ResMut<NextState<InGame>>,
+) {
+    if board_updated.is_empty() {
+        return;
+    }
+
+    let len = positions.iter().len();
+
+    debug!(len);
+
+    if len == 0 || len % 2 != 0 {
+        return;
+    }
+
+    let mut free_variants: HashMap<u32, u32> = HashMap::new();
+
+    'outer: for (index0, (p0, v0)) in positions.iter().enumerate() {
+        let mut is_free_horizontally_counter: u32 = 0;
+
+        for (index1, (p1, v1)) in positions.iter().enumerate() {
+            debug!("{p0:?} and {p1:?}");
+            if index0 == index1 {
+                continue;
+            }
+
+            let overlap = p0.x.abs_diff(p1.x) < 2 && p0.y.abs_diff(p1.y) < 2;
+
+            if overlap {
+                let is_free_vertically = p0.z > p1.z;
+                if !is_free_vertically {
+                    continue 'outer;
+                }
+            }
+
+            let is_same_row = p0.y.abs_diff(p1.y) < 2;
+            let is_next_to = is_same_row && p0.x.abs_diff(p1.x) == 2;
+
+            if is_next_to {
+                is_free_horizontally_counter += 1;
+
+                if is_free_horizontally_counter >= 2 {
+                    continue 'outer;
+                }
+            }
+        }
+
+        if let Some(count) = free_variants.get_mut(&(v0.0 / 4)) {
+            *count += 1;
+        } else {
+            free_variants.insert(v0.0 / 4, 1);
+        }
+    }
+
+    let moves = free_variants
+        .iter()
+        .fold(0, |acc, (_variant, count)| acc + (*count / 2));
+
+    for (mut button_text, button_marker) in button_texts {
+        if matches!(button_marker, button::Marker::Moves) {
+            button_text.0 = format!("Moves:\n{moves}").to_string();
+        }
+    }
+
+    if moves < 1 {
+        next_state.set(InGame::Defeat);
     }
 }
 
