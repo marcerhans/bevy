@@ -26,6 +26,7 @@ impl bevy::prelude::Plugin for Plugin {
                 Duration::from_secs(1),
                 TimerMode::Repeating,
             )))
+            .insert_resource(Seed::default())
             .insert_resource(TilePositionVariantPairs::default())
             .insert_resource(SelectedTile::default())
             .insert_resource(History::default())
@@ -47,19 +48,37 @@ impl bevy::prelude::Plugin for Plugin {
                     help,
                 )
                     .run_if(in_state(InGame::Running)),
-            );
+            )
+            .add_systems(Update, poll_new_seed.run_if(in_state(InGame::Running)));
     }
 }
 
 mod platform {
     use bevy::prelude::*;
-    pub use implementation::{Platform, PlatformPlugin};
+    pub use implementation::Platform;
+
+    pub struct PlatformPlugin;
+
+    impl bevy::prelude::Plugin for PlatformPlugin {
+        fn build(
+            &self,
+            app: &mut App,
+        ) {
+            app.add_message::<SeedChanged>()
+                .add_plugins(implementation::PlatformPlugin);
+        }
+    }
 
     pub trait Observer<T> {
         fn observe(
             &mut self,
             object: T,
         );
+    }
+
+    #[derive(Message)]
+    pub struct SeedChanged {
+        pub new: u64,
     }
 
     pub trait PlatformTrait: Resource + Default {
@@ -107,10 +126,9 @@ mod platform {
     /// WASM
     #[cfg(target_arch = "wasm32")]
     mod implementation {
+        use super::*;
         use std::cell::RefCell;
         use std::rc::Rc;
-
-        use super::*;
         use wasm_bindgen::JsCast;
         use wasm_bindgen::prelude::*;
         use web_sys::HashChangeEvent;
@@ -122,21 +140,18 @@ mod platform {
                 &self,
                 app: &mut App,
             ) {
-                app.insert_resource(Platform::default())
-                    .insert_non_send_resource(HashObserver::default())
-                    .add_message::<HashChanged>()
+                let mut platform = Platform::default();
+                let mut observer = HashObserver::default();
+                platform.rng_seed_observe(&mut observer);
+
+                app.insert_resource(platform)
+                    .insert_non_send_resource(observer)
                     .add_systems(PreUpdate, poll_hash_changes);
             }
         }
 
         #[derive(Resource, Default)]
         pub struct Platform;
-
-        #[derive(Message)]
-        pub struct HashChanged {
-            pub old: String,
-            pub new: String,
-        }
 
         // Resource: NonSend
         #[derive(Default)]
@@ -242,13 +257,15 @@ mod platform {
 
         fn poll_hash_changes(
             observer: NonSend<HashObserver>,
-            mut writer: MessageWriter<HashChanged>,
+            mut writer: MessageWriter<SeedChanged>,
         ) {
             if let Some(pending) = observer.pending.as_ref() {
                 if let Some((old, new)) = pending.borrow_mut().take() {
                     if old != new {
                         debug!("New hash!");
-                        writer.write(HashChanged { old, new });
+                        debug!("{:?}", new.trim_start_matches('#'));
+                        let new = new.trim_start_matches('#').parse().unwrap();
+                        writer.write(SeedChanged { new });
                     }
                 }
             }
@@ -273,6 +290,9 @@ pub enum InGame {
     Root,
     Running,
 }
+
+#[derive(Resource, Deref, DerefMut, Default)]
+pub struct Seed(Option<u64>);
 
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct Timer(bevy::time::Timer);
@@ -1119,13 +1139,11 @@ pub fn spawn_tiles(
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
     mut tile_position_variant_pairs: ResMut<TilePositionVariantPairs>,
-    mut platform: ResMut<Platform>,
+    platform: ResMut<Platform>,
 ) {
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
     };
-
-    // platform.rng_seed_observe();
 
     let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::TILE);
     let tile_size = Vec2::new(
@@ -1153,7 +1171,6 @@ pub fn spawn_tiles(
     );
 
     let positions: Vec<tile::Position> = position_generator.take(2).collect();
-
     // for _ in 0..10000 {
     //     generate_solvable_board(positions.clone(), None);
     // }
@@ -2118,4 +2135,13 @@ fn new_game_mouse(
 ) {
     info!("new game");
     next_state.set(InGame::Root);
+}
+
+fn poll_new_seed(
+    mut msg: MessageReader<platform::SeedChanged>,
+    mut next_state: ResMut<NextState<InGame>>,
+) {
+    if let Some(_msg) = msg.read().last() {
+        next_state.set(InGame::Root);
+    }
 }
