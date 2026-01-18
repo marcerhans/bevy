@@ -1,5 +1,5 @@
 [alias]
-debug = "run --features debug"
+debug = "run --features debug --target x86_64-unknown-linux-gnu"
 debug-test = "test --features debug"
 debug-build = "build --features debug"
 release = "run --release"
