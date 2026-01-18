@@ -1,3 +1,4 @@
+use crate::plugin::scene::Startup;
 use crate::plugin::scene::main_menu::MainMenu;
 use bevy::{
     gizmos::grid,
@@ -16,6 +17,44 @@ use std::{
     collections::{HashSet, VecDeque},
     time::Duration,
 };
+
+pub struct Plugin;
+
+impl bevy::prelude::Plugin for Plugin {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
+        app.add_sub_state::<InGame>()
+            .add_message::<HelpMsg>()
+            .insert_resource(Platform::default())
+            .insert_resource(Timer(bevy::time::Timer::new(
+                Duration::from_secs(1),
+                TimerMode::Repeating,
+            )))
+            .insert_resource(TilePositionVariantPairs::default())
+            .insert_resource(SelectedTile::default())
+            .insert_resource(History::default())
+            .insert_resource(HelpEnabled::default())
+            .add_systems(
+                OnEnter(InGame::Root),
+                (spawn_background, spawn_tiles, spawn_buttons),
+            )
+            .add_systems(Update, resize_background.run_if(in_state(InGame::Root)))
+            .add_systems(Update, place_tiles.run_if(in_state(InGame::Root)))
+            .add_systems(
+                Update,
+                (
+                    undo_keyboard,
+                    redo_keyboard,
+                    help_keyboard,
+                    help_toggle,
+                    help,
+                )
+                    .run_if(in_state(InGame::Root)),
+            );
+    }
+}
 
 mod platform {
     use bevy::prelude::*;
@@ -123,44 +162,6 @@ mod platform {
                     .expect("failed to set hash");
             }
         }
-    }
-}
-
-pub struct Plugin;
-
-impl bevy::prelude::Plugin for Plugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
-        app.add_sub_state::<InGame>()
-            .add_message::<HelpMsg>()
-            .insert_resource(Platform::default())
-            .insert_resource(Timer(bevy::time::Timer::new(
-                Duration::from_secs(1),
-                TimerMode::Repeating,
-            )))
-            .insert_resource(TilePositionVariantPairs::default())
-            .insert_resource(SelectedTile::default())
-            .insert_resource(History::default())
-            .insert_resource(HelpEnabled::default())
-            .add_systems(
-                OnEnter(InGame::Root),
-                (spawn_background, spawn_tiles, spawn_buttons),
-            )
-            .add_systems(Update, resize_background.run_if(in_state(InGame::Root)))
-            .add_systems(Update, place_tiles.run_if(in_state(InGame::Root)))
-            .add_systems(
-                Update,
-                (
-                    undo_keyboard,
-                    redo_keyboard,
-                    help_keyboard,
-                    help_toggle,
-                    help,
-                )
-                    .run_if(in_state(InGame::Root)),
-            );
     }
 }
 
@@ -2017,9 +2018,8 @@ fn help(
 
 fn new_game_mouse(
     _on_press: On<Pointer<Press>>,
-    mut commands: Commands,
-    mut history_valid_pair_tiles: Query<&mut Visibility, With<tile::Marker<0>>>,
-    mut history: ResMut<History>,
+    mut next_state: ResMut<NextState<Startup>>,
 ) {
     info!("new game");
+    next_state.set(Startup::Greeter);
 }
