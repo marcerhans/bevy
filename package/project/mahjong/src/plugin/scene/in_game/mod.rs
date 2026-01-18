@@ -6,7 +6,7 @@ use bevy::{
 };
 use platform::{Platform, PlatformPlugin, PlatformTrait};
 use rand::{
-    SeedableRng,
+    Rng, SeedableRng,
     rngs::StdRng,
     seq::{IteratorRandom, SliceRandom},
 };
@@ -2135,8 +2135,10 @@ fn help(
 fn new_game_mouse(
     _on_press: On<Pointer<Press>>,
     mut next_state: ResMut<NextState<InGame>>,
+    platform: ResMut<Platform>,
 ) {
     info!("New Game!");
+    platform.rng_seed_set(rand::random::<u64>());
     next_state.set(InGame::Root);
 }
 
