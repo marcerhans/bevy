@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
     sprite::{Anchor, Text2dShadow},
 };
-use platform::{Platform, PlatformTrait};
+use platform::{Platform, PlatformPlugin, PlatformTrait};
 use rand::{
     SeedableRng,
     rngs::StdRng,
@@ -19,9 +19,9 @@ impl bevy::prelude::Plugin for Plugin {
         &self,
         app: &mut App,
     ) {
-        app.add_sub_state::<InGame>()
+        app.add_plugins(PlatformPlugin)
+            .add_sub_state::<InGame>()
             .add_message::<HelpMsg>()
-            .insert_resource(Platform::default())
             .insert_resource(Timer(bevy::time::Timer::new(
                 Duration::from_secs(1),
                 TimerMode::Repeating,
@@ -53,12 +53,24 @@ impl bevy::prelude::Plugin for Plugin {
 
 mod platform {
     use bevy::prelude::*;
-    pub use implementation::Platform;
+    pub use implementation::{Platform, PlatformPlugin};
+
+    pub trait Observer<T> {
+        fn observe(
+            &mut self,
+            object: T,
+        );
+    }
 
     pub trait PlatformTrait: Resource + Default {
         const DEFAULT_MSG: &'static str = "Not implemented for this platform!";
 
-        fn rng_seed_observe(&mut self) {
+        type ObserverItem;
+
+        fn rng_seed_observe(
+            &mut self,
+            _observer: &mut dyn Observer<Self::ObserverItem>,
+        ) {
             debug!("rng_seed_observe {}", Self::DEFAULT_MSG);
         }
 
@@ -80,6 +92,10 @@ mod platform {
     mod implementation {
         use super::*;
 
+        pub struct Platform;
+
+        impl bevy::prelude::Plugin for Platform {}
+
         #[derive(Resource, Default)]
         pub struct Platform;
 
@@ -91,30 +107,98 @@ mod platform {
     /// WASM
     #[cfg(target_arch = "wasm32")]
     mod implementation {
+        use std::cell::RefCell;
+        use std::rc::Rc;
+
         use super::*;
         use wasm_bindgen::JsCast;
         use wasm_bindgen::prelude::*;
         use web_sys::HashChangeEvent;
 
+        pub struct PlatformPlugin;
+
+        impl bevy::prelude::Plugin for PlatformPlugin {
+            fn build(
+                &self,
+                app: &mut App,
+            ) {
+                app.insert_resource(Platform::default())
+                    .insert_non_send_resource(HashObserver::default())
+                    .add_message::<HashChanged>()
+                    .add_systems(PreUpdate, poll_hash_changes);
+            }
+        }
+
         #[derive(Resource, Default)]
-        pub struct Platform {
-            rng_seed_observer_exists: bool,
+        pub struct Platform;
+
+        #[derive(Message)]
+        pub struct HashChanged {
+            pub old: String,
+            pub new: String,
+        }
+
+        // Resource: NonSend
+        #[derive(Default)]
+        pub struct HashObserver {
+            pub closure: Option<Closure<dyn FnMut(HashChangeEvent)>>,
+            pub pending: Option<Rc<RefCell<Option<(String, String)>>>>,
+        }
+
+        impl
+            Observer<(
+                Closure<dyn FnMut(HashChangeEvent)>,
+                Rc<RefCell<Option<(String, String)>>>,
+            )> for HashObserver
+        {
+            fn observe(
+                &mut self,
+                object: (
+                    Closure<dyn FnMut(HashChangeEvent)>,
+                    Rc<RefCell<Option<(String, String)>>>,
+                ),
+            ) {
+                self.closure = Some(object.0);
+                self.pending = Some(object.1);
+            }
+        }
+
+        impl Drop for HashObserver {
+            fn drop(&mut self) {
+                if self.closure.is_some() {
+                    let window = web_sys::window().unwrap();
+                    window
+                        .remove_event_listener_with_callback(
+                            "hashchange",
+                            self.closure.take().unwrap().as_ref().unchecked_ref(),
+                        )
+                        .unwrap();
+                }
+            }
         }
 
         impl PlatformTrait for Platform {
-            fn rng_seed_observe(&mut self) {
-                if self.rng_seed_observer_exists {
-                    return;
-                }
+            type ObserverItem = (
+                Closure<dyn FnMut(HashChangeEvent)>,
+                Rc<RefCell<Option<(String, String)>>>,
+            );
 
+            fn rng_seed_observe(
+                &mut self,
+                observer: &mut dyn Observer<Self::ObserverItem>,
+            ) {
                 let window = web_sys::window().expect("no window found");
+                let pending = Rc::new(RefCell::new(None));
 
-                let closure = Closure::wrap(Box::new(move |event: HashChangeEvent| {
-                    let url_old = event.old_url();
-                    let url_new = event.new_url();
-                    let hash_old = url_old.trim_start_matches('#');
-                    let hash_new = url_new.trim_start_matches('#');
-                    debug!("Old hash: {hash_old} | New hash: {hash_new}");
+                let closure = Closure::wrap(Box::new({
+                    let pending = Rc::clone(&pending);
+                    move |event: HashChangeEvent| {
+                        let url_old = event.old_url();
+                        let url_new = event.new_url();
+                        let hash_old = url_old.trim_start_matches('#');
+                        let hash_new = url_new.trim_start_matches('#');
+                        *pending.borrow_mut() = Some((hash_old.to_owned(), hash_new.to_owned()));
+                    }
                 }) as Box<dyn FnMut(_)>);
 
                 window
@@ -124,9 +208,7 @@ mod platform {
                     )
                     .unwrap();
 
-                // Keep closure alive
-                closure.forget();
-                self.rng_seed_observer_exists = true;
+                observer.observe((closure, pending));
             }
 
             fn rng_seed_get(&self) -> Option<u64> {
@@ -155,6 +237,20 @@ mod platform {
                 location
                     .set_hash(format!("#{fragment_hash}").as_str())
                     .expect("failed to set hash");
+            }
+        }
+
+        fn poll_hash_changes(
+            observer: NonSend<HashObserver>,
+            mut writer: MessageWriter<HashChanged>,
+        ) {
+            if let Some(pending) = observer.pending.as_ref() {
+                if let Some((old, new)) = pending.borrow_mut().take() {
+                    if old != new {
+                        debug!("New hash!");
+                        writer.write(HashChanged { old, new });
+                    }
+                }
             }
         }
     }
@@ -1029,7 +1125,7 @@ pub fn spawn_tiles(
         panic!();
     };
 
-    platform.rng_seed_observe();
+    // platform.rng_seed_observe();
 
     let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::TILE);
     let tile_size = Vec2::new(
@@ -1056,7 +1152,7 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    let positions: Vec<tile::Position> = position_generator.take(4).collect();
+    let positions: Vec<tile::Position> = position_generator.take(2).collect();
 
     // for _ in 0..10000 {
     //     generate_solvable_board(positions.clone(), None);
