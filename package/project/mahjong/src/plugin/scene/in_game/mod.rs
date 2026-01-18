@@ -27,7 +27,7 @@ impl bevy::prelude::Plugin for Plugin {
             .add_message::<HelpMsg>()
             .add_message::<BoardUpdated>()
             .insert_resource(Timer(bevy::time::Timer::new(
-                Duration::from_secs(1),
+                Duration::from_millis(10),
                 TimerMode::Repeating,
             )))
             .insert_resource(Seed::default())
@@ -42,7 +42,7 @@ impl bevy::prelude::Plugin for Plugin {
             )
             .add_systems(
                 Update,
-                resize_background.run_if(
+                resize.run_if(
                     in_state(InGame::Running)
                         .or(in_state(InGame::Victory).or(in_state(InGame::Defeat))),
                 ),
@@ -1113,6 +1113,9 @@ mod button {
         Moves,
     }
 
+    #[derive(Component)]
+    pub struct Whatever(pub Vec2, pub bool);
+
     impl Marker {
         pub fn as_string(&self) -> &'static str {
             use Marker::*;
@@ -1198,7 +1201,7 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    let positions: Vec<tile::Position> = position_generator.take(2).collect();
+    let positions: Vec<tile::Position> = position_generator.collect();
     // for _ in 0..10000 {
     //     generate_solvable_board(positions.clone(), None);
     // }
@@ -1674,10 +1677,11 @@ pub fn spawn_buttons_and_info(
             &mut commands,
             (
                 button.marker.clone(),
+                button::Whatever(button.offset.truncate(), button.flip_x),
                 Sprite {
                     custom_size: Some(button_size),
                     color: if matches!(button.marker, button::Marker::Moves) {
-                        Color::srgb(0.7, 0.7, 0.7)
+                        Color::srgb(0.5, 0.5, 0.5)
                     } else {
                         Color::default()
                     },
@@ -1753,8 +1757,9 @@ pub fn spawn_buttons_and_info(
     }
 }
 
-fn resize_background(
+fn resize(
     mut transform: Query<(&mut Transform, &mut Sprite), With<marker::Background>>,
+    buttons: Query<(&mut Transform, &mut Sprite, &button::Whatever), With<button::Marker>>,
     projection: Query<&Projection, With<Camera>>,
 ) {
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
@@ -1773,6 +1778,14 @@ fn resize_background(
             y: projection.area.height(),
         });
     }
+
+    for (mut button_transform, _, button_whatever) in buttons {
+        button_transform.translation = Vec3 {
+            x: (-projection.area.width() / 2.0) * if button_whatever.1 { -1.0 } else { 1.0 },
+            y: -projection.area.height() / 2.0,
+            ..default()
+        } + button_whatever.0.extend(0.0);
+    }
 }
 
 pub fn place_tiles(
@@ -1784,11 +1797,11 @@ pub fn place_tiles(
     mut tile_position_variant_pairs: ResMut<TilePositionVariantPairs>,
     mut board_updated: MessageWriter<BoardUpdated>,
 ) {
-    timer.tick(time.delta());
+    // timer.tick(time.delta());
 
-    if !timer.is_finished() {
-        return;
-    }
+    // if !timer.is_finished() {
+    //     return;
+    // }
 
     let next = tile_position_variant_pairs.pop();
 
@@ -2229,8 +2242,6 @@ fn update_move_count(
 
     let len = positions.iter().len();
 
-    debug!(len);
-
     if len == 0 || len % 2 != 0 {
         return;
     }
@@ -2241,7 +2252,6 @@ fn update_move_count(
         let mut is_free_horizontally_counter: u32 = 0;
 
         for (index1, (p1, v1)) in positions.iter().enumerate() {
-            debug!("{p0:?} and {p1:?}");
             if index0 == index1 {
                 continue;
             }
