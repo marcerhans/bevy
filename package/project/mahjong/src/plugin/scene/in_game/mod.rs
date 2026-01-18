@@ -55,7 +55,7 @@ mod platform {
     use bevy::prelude::*;
     pub use implementation::Platform;
 
-    pub trait PlatformTrait: Resource {
+    pub trait PlatformTrait: Resource + Default {
         const DEFAULT_MSG: &'static str = "Not implemented for this platform!";
 
         fn rng_seed_observe(&mut self) {
@@ -80,7 +80,7 @@ mod platform {
     mod implementation {
         use super::*;
 
-        #[derive(Resource)]
+        #[derive(Resource, Default)]
         pub struct Platform;
 
         impl PlatformTrait for Platform {}
@@ -2021,5 +2021,5 @@ fn new_game_mouse(
     mut next_state: ResMut<NextState<InGame>>,
 ) {
     info!("new game");
-    next_state.set(InGame::Running);
+    next_state.set(InGame::Root);
 }
