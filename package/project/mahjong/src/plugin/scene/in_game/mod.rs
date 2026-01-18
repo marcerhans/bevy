@@ -24,7 +24,7 @@ mod platform {
     pub trait PlatformTrait: Resource {
         const DEFAULT_MSG: &'static str = "Not implemented for this platform!";
 
-        fn rng_seed_observe(&self) {
+        fn rng_seed_observe(&mut self) {
             debug!("rng_seed_observe {}", Self::DEFAULT_MSG);
         }
 
@@ -62,20 +62,25 @@ mod platform {
         use wasm_bindgen::prelude::*;
         use web_sys::HashChangeEvent;
 
-        #[derive(Resource)]
-        pub struct Platform;
+        #[derive(Resource, Default)]
+        pub struct Platform {
+            rng_seed_observer_exists: bool,
+        }
 
         impl PlatformTrait for Platform {
-            fn rng_seed_observe(&self) {
+            fn rng_seed_observe(&mut self) {
+                if self.rng_seed_observer_exists {
+                    return;
+                }
+
                 let window = web_sys::window().expect("no window found");
 
-                let closure = Closure::wrap(Box::new({
-                    let window = window.clone();
-                    move |_event: HashChangeEvent| {
-                        let location = window.location();
-                        let hash = location.hash().ok().unwrap();
-                        debug!("Hash changed to {hash}");
-                    }
+                let closure = Closure::wrap(Box::new(move |event: HashChangeEvent| {
+                    let url_old = event.old_url();
+                    let url_new = event.new_url();
+                    let hash_old = url_old.trim_start_matches('#');
+                    let hash_new = url_new.trim_start_matches('#');
+                    debug!("Old hash: {hash_old} | New hash: {hash_new}");
                 }) as Box<dyn FnMut(_)>);
 
                 window
@@ -87,6 +92,7 @@ mod platform {
 
                 // Keep closure alive
                 closure.forget();
+                self.rng_seed_observer_exists = true;
             }
 
             fn rng_seed_get(&self) -> Option<u64> {
@@ -129,7 +135,7 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_sub_state::<InGame>()
             .add_message::<HelpMsg>()
-            .insert_resource(Platform)
+            .insert_resource(Platform::default())
             .insert_resource(Timer(bevy::time::Timer::new(
                 Duration::from_secs(1),
                 TimerMode::Repeating,
