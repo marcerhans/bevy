@@ -54,7 +54,9 @@ mod platform {
     #[cfg(target_arch = "wasm32")]
     mod implementation {
         use super::*;
-        use web_sys::Window;
+        use web_sys::{HashChangeEvent, Window};
+        use wasm_bindgen::JsCast;
+        use wasm_bindgen::prelude::*;
 
         #[derive(Resource)]
         pub struct Platform;
@@ -89,32 +91,26 @@ mod platform {
             }
         }
 
-        // TODO!
-        // use wasm_bindgen::JsCast;
-        // use wasm_bindgen::prelude::*;
-        // use web_sys::{HashChangeEvent, window};
+        pub fn start() {
+            let window = web_sys::window().expect("no window found");
 
-        // #[wasm_bindgen(start)]
-        // pub fn start() {
-        //     let window = window().expect("no window found");
+            let closure = Closure::wrap(Box::new(move |event: HashChangeEvent| {
+                // Get the old and new hash
+                let old_hash = event.old_url();
+                let new_hash = event.new_url();
 
-        //     let closure = Closure::wrap(Box::new(move |event: HashChangeEvent| {
-        //         // Get the old and new hash
-        //         let old_hash = event.old_url();
-        //         let new_hash = event.new_url();
+                web_sys::console::log_1(
+                    &format!("Hash changed from {} to {}", old_hash, new_hash).into(),
+                );
+            }) as Box<dyn FnMut(_)>);
 
-        //         web_sys::console::log_1(
-        //             &format!("Hash changed from {} to {}", old_hash, new_hash).into(),
-        //         );
-        //     }) as Box<dyn FnMut(_)>);
+            window
+                .add_event_listener_with_callback("hashchange", closure.as_ref().unchecked_ref())
+                .unwrap();
 
-        //     window
-        //         .add_event_listener_with_callback("hashchange", closure.as_ref().unchecked_ref())
-        //         .unwrap();
-
-        //     // Keep closure alive (important!)
-        //     closure.forget();
-        // }
+            // Keep closure alive (important!)
+            closure.forget();
+        }
     }
 }
 
