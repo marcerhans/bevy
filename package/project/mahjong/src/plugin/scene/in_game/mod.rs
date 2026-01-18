@@ -6,6 +6,7 @@ use bevy::{
     prelude::*,
     sprite::{Anchor, Text2dShadow},
 };
+use platform::{Platform, PlatformTrait};
 use rand::{
     Rng, SeedableRng,
     rngs::StdRng,
@@ -15,15 +16,17 @@ use std::{
     collections::{HashSet, VecDeque},
     time::Duration,
 };
-use platform::{Platform, PlatformTrait};
 
 mod platform {
     use bevy::prelude::*;
     pub use implementation::Platform;
 
     pub trait PlatformTrait: Resource {
-        fn rng_seed_set(&self, seed: u64) {
-                debug!("rng_seed_set not implemented for this platform");
+        fn rng_seed_set(
+            &self,
+            seed: u64,
+        ) {
+            debug!("rng_seed_set not implemented for this platform");
         }
     }
 
@@ -50,18 +53,21 @@ mod platform {
         pub struct Platform;
 
         impl PlatformTrait for Platform {
-            fn rng_seed_set() {
-                set_hash()
+            fn rng_seed_set(
+                &self,
+                seed: u64,
+            ) {
+                Self::set_fragment(&seed.to_string())
             }
         }
 
         impl Platform {
-            fn set_hash() {
-                let window = window().expect("no global `window` exists");
+            fn set_fragment(fragment_hash: &str) {
+                let window = web_sys::window().expect("no global `window` exists");
                 let location = window.location();
 
                 location
-                    .set_hash("#123123451235")
+                    .set_hash(format!("#{fragment_hash}").as_str())
                     .expect("failed to set hash");
             }
         }
