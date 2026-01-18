@@ -1758,8 +1758,14 @@ pub fn spawn_buttons_and_info(
 }
 
 fn resize(
-    mut transform: Query<(&mut Transform, &mut Sprite), With<marker::Background>>,
-    buttons: Query<(&mut Transform, &mut Sprite, &button::Whatever), With<button::Marker>>,
+    mut transform: Query<
+        (&mut Transform, &mut Sprite),
+        (With<marker::Background>, Without<button::Marker>),
+    >,
+    buttons: Query<
+        (&mut Transform, &button::Whatever),
+        (With<button::Marker>, Without<marker::Background>),
+    >,
     projection: Query<&Projection, With<Camera>>,
 ) {
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
@@ -1779,7 +1785,7 @@ fn resize(
         });
     }
 
-    for (mut button_transform, _, button_whatever) in buttons {
+    for (mut button_transform, button_whatever) in buttons {
         button_transform.translation = Vec3 {
             x: (-projection.area.width() / 2.0) * if button_whatever.1 { -1.0 } else { 1.0 },
             y: -projection.area.height() / 2.0,
