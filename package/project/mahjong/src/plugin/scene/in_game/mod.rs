@@ -36,7 +36,10 @@ impl bevy::prelude::Plugin for Plugin {
                 OnEnter(InGame::Running),
                 (spawn_background, spawn_tiles, spawn_buttons),
             )
-            .add_systems(Update, resize_background.run_if(in_state(InGame::Running)))
+            .add_systems(
+                Update,
+                resize_background.run_if(in_state(InGame::Running).or(in_state(InGame::Victory))),
+            )
             .add_systems(Update, place_tiles.run_if(in_state(InGame::Running)))
             .add_systems(
                 Update,
@@ -49,7 +52,8 @@ impl bevy::prelude::Plugin for Plugin {
                 )
                     .run_if(in_state(InGame::Running)),
             )
-            .add_systems(Update, poll_new_seed.run_if(in_state(InGame::Running)));
+            .add_systems(Update, poll_new_seed.run_if(in_state(InGame::Running)))
+            .add_systems(Update, spawn_finished.run_if(in_state(InGame::Victory)));
     }
 }
 
@@ -292,6 +296,7 @@ pub enum InGame {
     #[default]
     Root,
     Running,
+    Victory,
 }
 
 #[derive(Resource, Deref, DerefMut, Default)]
@@ -1210,7 +1215,7 @@ pub fn generate_solvable_board(
         .collect();
     available_tile_variants.shuffle(&mut rng);
 
-    fn filter_fn<'a>(
+    fn valid_position_check<'a>(
         index: usize,
         available_positions: &Vec<tile::Position>,
         occupied_positions: &Vec<tile::Position>,
@@ -1284,6 +1289,16 @@ pub fn generate_solvable_board(
         None
     }
 
+    fn dependency_check<'a>(
+        index: usize,
+        available_positions: &Vec<tile::Position>,
+        occupied_positions: &Vec<tile::Position>,
+    ) -> bool {
+        // Prioritize...
+        // Height
+        todo!()
+    }
+
     for (v0, v1) in available_tile_variants {
         debug!("\n\nNew pair placement!");
         let v = [v0, v1];
@@ -1291,8 +1306,11 @@ pub fn generate_solvable_board(
             .iter()
             .enumerate()
             .filter_map(|(index, _pos)| {
-                filter_fn(index, &available_positions, &occupied_positions)
+                valid_position_check(index, &available_positions, &occupied_positions)
             });
+
+        // let valid_positions = valid_positions
+        //     .filter(|index| dependency_check(*index, &available_positions, &occupied_positions));
 
         let mut valid_position_pair = valid_positions
             .clone()
@@ -1357,6 +1375,7 @@ pub fn tile_pressed(
     >,
     mut selected_tile: ResMut<SelectedTile>,
     mut history: ResMut<History>,
+    mut next_state: ResMut<NextState<InGame>>,
 ) {
     let (pressed_entity, _, _, _, _) = tiles.iter().find(|tile| tile.0 == on_press.entity).unwrap();
 
@@ -1433,6 +1452,10 @@ pub fn tile_pressed(
     commands.entity(selected_entity).insert(marker::Hidden);
     *pressed_visibility = Visibility::Hidden;
     *selected_visibility = Visibility::Hidden;
+
+    if tiles.iter().len() == 2 {
+        next_state.set(InGame::Victory);
+    }
 }
 
 pub fn valid_removal(
@@ -1691,7 +1714,7 @@ fn resize_background(
     };
 
     let Some((_, mut sprite)) = transform.iter_mut().next() else {
-        panic!();
+        return;
     };
 
     if sprite.custom_size.unwrap().x != projection.area.width()
@@ -2150,4 +2173,34 @@ fn poll_new_seed(
         info!("New Game!");
         next_state.set(InGame::Root);
     }
+}
+
+pub fn spawn_finished(
+    mut commands: Commands,
+    projection: Query<&Projection, With<Camera>>,
+    asset_server: Res<AssetServer>,
+) {
+    let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
+        panic!();
+    };
+
+    let handle: Handle<Image> = asset_server.load("misc/rev2/original/Victory.png");
+
+    spawn(
+        &mut commands,
+        (
+            marker::Background,
+            Sprite {
+                custom_size: Some(Vec2::new(projection.area.width(), projection.area.height())),
+                ..Sprite::from_image(handle)
+            },
+            Transform {
+                translation: Vec3 {
+                    z: -10.0,
+                    ..default()
+                },
+                ..default()
+            },
+        ),
+    );
 }
