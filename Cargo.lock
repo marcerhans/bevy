@@ -3490,6 +3490,8 @@ dependencies = [
  "bevy_tweening",
  "getrandom",
  "rand",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

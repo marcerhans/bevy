@@ -15,6 +15,58 @@ use std::{
     collections::{HashSet, VecDeque},
     time::Duration,
 };
+use platform::{Platform, PlatformTrait};
+
+mod platform {
+    use bevy::prelude::*;
+    pub use implementation::Platform;
+
+    pub trait PlatformTrait: Resource {
+        fn rng_seed_set(&self, seed: u64) {
+                debug!("rng_seed_set not implemented for this platform");
+        }
+    }
+
+    /// NATIVE
+    #[cfg(not(target_arch = "wasm32"))]
+    mod implementation {
+        use super::*;
+
+        #[derive(Resource)]
+        pub struct Platform;
+
+        impl PlatformTrait for Platform {}
+
+        impl Platform {}
+    }
+
+    /// WASM
+    #[cfg(target_arch = "wasm32")]
+    mod implementation {
+        use super::*;
+        use web_sys::Window;
+
+        #[derive(Resource)]
+        pub struct Platform;
+
+        impl PlatformTrait for Platform {
+            fn rng_seed_set() {
+                set_hash()
+            }
+        }
+
+        impl Platform {
+            fn set_hash() {
+                let window = window().expect("no global `window` exists");
+                let location = window.location();
+
+                location
+                    .set_hash("#123123451235")
+                    .expect("failed to set hash");
+            }
+        }
+    }
+}
 
 pub struct Plugin;
 
@@ -25,6 +77,7 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         app.add_sub_state::<InGame>()
             .add_message::<HelpMsg>()
+            .insert_resource(Platform)
             .insert_resource(Timer(bevy::time::Timer::new(
                 Duration::from_secs(1),
                 TimerMode::Repeating,
@@ -911,6 +964,7 @@ pub fn spawn_tiles(
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
     mut tile_position_variant_pairs: ResMut<TilePositionVariantPairs>,
+    mut platform: ResMut<Platform>,
 ) {
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
@@ -941,22 +995,23 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    let positions: Vec<tile::Position> = position_generator.collect();
+    let positions: Vec<tile::Position> = position_generator.take(2).collect();
 
     for _ in 0..10000 {
         generate_solvable_board(positions.clone(), None);
     }
 
-    let mut positions = generate_solvable_board(positions, None);
+    let (mut positions, seed) = generate_solvable_board(positions, None);
     positions.reverse();
-
+    platform.rng_seed_set(seed);
     tile_position_variant_pairs.0 = positions;
 }
 
+/// Returns a [Vec] with (position, variant) tuples along with the rng seed ([u64]) to create them.
 pub fn generate_solvable_board(
     mut available_positions: Vec<tile::Position>,
     seed: Option<u64>,
-) -> Vec<(tile::Position, tile::Variant)> {
+) -> (Vec<(tile::Position, tile::Variant)>, u64) {
     if available_positions.len() % 2 != 0 {
         panic!();
     }
@@ -1107,7 +1162,7 @@ pub fn generate_solvable_board(
         panic!()
     }
 
-    return result;
+    return (result, seed);
 }
 
 pub fn tile_pressed(
