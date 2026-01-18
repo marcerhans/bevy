@@ -22,11 +22,18 @@ mod platform {
     pub use implementation::Platform;
 
     pub trait PlatformTrait: Resource {
+        const DEFAULT_MSG: &'static str = "Not implemented for this platform!";
+
+        fn rng_seed_get(&self) -> Option<u64> {
+            debug!("rng_seed_get {}", Self::DEFAULT_MSG);
+            None
+        }
+
         fn rng_seed_set(
             &self,
             seed: u64,
         ) {
-            debug!("rng_seed_set not implemented for this platform");
+            debug!("rng_seed_set {}", Self::DEFAULT_MSG);
         }
     }
 
@@ -53,6 +60,10 @@ mod platform {
         pub struct Platform;
 
         impl PlatformTrait for Platform {
+            fn rng_seed_get(&self) -> Option<u64> {
+                Self::get_fragment()
+            }
+
             fn rng_seed_set(
                 &self,
                 seed: u64,
@@ -62,6 +73,12 @@ mod platform {
         }
 
         impl Platform {
+            fn get_fragment() -> Option<u64> {
+                let window = web_sys::window().expect("no global `window` exists");
+                let location = window.location();
+                location.hash().ok()?.trim_start_matches('#').parse().ok()
+            }
+
             fn set_fragment(fragment_hash: &str) {
                 let window = web_sys::window().expect("no global `window` exists");
                 let location = window.location();
@@ -71,6 +88,33 @@ mod platform {
                     .expect("failed to set hash");
             }
         }
+
+        // TODO!
+        // use wasm_bindgen::JsCast;
+        // use wasm_bindgen::prelude::*;
+        // use web_sys::{HashChangeEvent, window};
+
+        // #[wasm_bindgen(start)]
+        // pub fn start() {
+        //     let window = window().expect("no window found");
+
+        //     let closure = Closure::wrap(Box::new(move |event: HashChangeEvent| {
+        //         // Get the old and new hash
+        //         let old_hash = event.old_url();
+        //         let new_hash = event.new_url();
+
+        //         web_sys::console::log_1(
+        //             &format!("Hash changed from {} to {}", old_hash, new_hash).into(),
+        //         );
+        //     }) as Box<dyn FnMut(_)>);
+
+        //     window
+        //         .add_event_listener_with_callback("hashchange", closure.as_ref().unchecked_ref())
+        //         .unwrap();
+
+        //     // Keep closure alive (important!)
+        //     closure.forget();
+        // }
     }
 }
 
@@ -1001,13 +1045,13 @@ pub fn spawn_tiles(
         0.0,
     );
 
-    let positions: Vec<tile::Position> = position_generator.take(2).collect();
+    let positions: Vec<tile::Position> = position_generator.take(4).collect();
 
-    for _ in 0..10000 {
-        generate_solvable_board(positions.clone(), None);
-    }
-
-    let (mut positions, seed) = generate_solvable_board(positions, None);
+    // for _ in 0..10000 {
+    //     generate_solvable_board(positions.clone(), None);
+    // }
+    let seed = platform.rng_seed_get();
+    let (mut positions, seed) = generate_solvable_board(positions, seed);
     positions.reverse();
     platform.rng_seed_set(seed);
     tile_position_variant_pairs.0 = positions;
