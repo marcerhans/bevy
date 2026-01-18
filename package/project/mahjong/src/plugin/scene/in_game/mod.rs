@@ -210,9 +210,12 @@ mod platform {
                     move |event: HashChangeEvent| {
                         let url_old = event.old_url();
                         let url_new = event.new_url();
-                        let hash_old = url_old.trim_start_matches('#');
-                        let hash_new = url_new.trim_start_matches('#');
-                        *pending.borrow_mut() = Some((hash_old.to_owned(), hash_new.to_owned()));
+                        if let Some(hash_old) = url_old.split_once('#') {
+                            let hash_old = hash_old.1;
+                            let hash_new = url_new.split_once('#').unwrap().1;
+                            *pending.borrow_mut() =
+                                Some((hash_old.to_owned(), hash_new.to_owned()));
+                        }
                     }
                 }) as Box<dyn FnMut(_)>);
 
@@ -260,11 +263,11 @@ mod platform {
             mut writer: MessageWriter<SeedChanged>,
         ) {
             if let Some(pending) = observer.pending.as_ref() {
-                if let Some((old, new)) = pending.borrow_mut().take() {
+                let new = pending.borrow_mut().take();
+                if let Some((old, new)) = new {
                     if old != new {
-                        debug!("New hash!");
-                        debug!("{:?}", new.trim_start_matches('#'));
-                        let new = new.trim_start_matches('#').parse().unwrap();
+                        debug!("New hash! ({new})");
+                        let new = new.parse().unwrap();
                         writer.write(SeedChanged { new });
                     }
                 }
