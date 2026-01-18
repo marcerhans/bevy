@@ -24,6 +24,10 @@ mod platform {
     pub trait PlatformTrait: Resource {
         const DEFAULT_MSG: &'static str = "Not implemented for this platform!";
 
+        fn rng_seed_observe(&self) {
+            debug!("rng_seed_observe {}", Self::DEFAULT_MSG);
+        }
+
         fn rng_seed_get(&self) -> Option<u64> {
             debug!("rng_seed_get {}", Self::DEFAULT_MSG);
             None
@@ -54,14 +58,37 @@ mod platform {
     #[cfg(target_arch = "wasm32")]
     mod implementation {
         use super::*;
-        use web_sys::{HashChangeEvent, Window};
         use wasm_bindgen::JsCast;
         use wasm_bindgen::prelude::*;
+        use web_sys::HashChangeEvent;
 
         #[derive(Resource)]
         pub struct Platform;
 
         impl PlatformTrait for Platform {
+            fn rng_seed_observe(&self) {
+                let window = web_sys::window().expect("no window found");
+
+                let closure = Closure::wrap(Box::new({
+                    let window = window.clone();
+                    move |_event: HashChangeEvent| {
+                        let location = window.location();
+                        let hash = location.hash().ok().unwrap();
+                        debug!("Hash changed to {hash}");
+                    }
+                }) as Box<dyn FnMut(_)>);
+
+                window
+                    .add_event_listener_with_callback(
+                        "hashchange",
+                        closure.as_ref().unchecked_ref(),
+                    )
+                    .unwrap();
+
+                // Keep closure alive
+                closure.forget();
+            }
+
             fn rng_seed_get(&self) -> Option<u64> {
                 Self::get_fragment()
             }
@@ -89,27 +116,6 @@ mod platform {
                     .set_hash(format!("#{fragment_hash}").as_str())
                     .expect("failed to set hash");
             }
-        }
-
-        pub fn start() {
-            let window = web_sys::window().expect("no window found");
-
-            let closure = Closure::wrap(Box::new(move |event: HashChangeEvent| {
-                // Get the old and new hash
-                let old_hash = event.old_url();
-                let new_hash = event.new_url();
-
-                web_sys::console::log_1(
-                    &format!("Hash changed from {} to {}", old_hash, new_hash).into(),
-                );
-            }) as Box<dyn FnMut(_)>);
-
-            window
-                .add_event_listener_with_callback("hashchange", closure.as_ref().unchecked_ref())
-                .unwrap();
-
-            // Keep closure alive (important!)
-            closure.forget();
         }
     }
 }
@@ -1015,6 +1021,8 @@ pub fn spawn_tiles(
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
     };
+
+    platform.rng_seed_observe();
 
     let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::TILE);
     let tile_size = Vec2::new(
