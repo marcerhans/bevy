@@ -1,22 +1,16 @@
-use crate::plugin::scene::Startup;
 use crate::plugin::scene::main_menu::MainMenu;
 use bevy::{
-    gizmos::grid,
     input::keyboard::KeyCode,
-    platform::collections::HashMap,
     prelude::*,
     sprite::{Anchor, Text2dShadow},
 };
 use platform::{Platform, PlatformTrait};
 use rand::{
-    Rng, SeedableRng,
+    SeedableRng,
     rngs::StdRng,
-    seq::{IndexedRandom, IteratorRandom, SliceRandom},
+    seq::{IteratorRandom, SliceRandom},
 };
-use std::{
-    collections::{HashSet, VecDeque},
-    time::Duration,
-};
+use std::{collections::VecDeque, time::Duration};
 
 pub struct Plugin;
 
@@ -36,12 +30,13 @@ impl bevy::prelude::Plugin for Plugin {
             .insert_resource(SelectedTile::default())
             .insert_resource(History::default())
             .insert_resource(HelpEnabled::default())
+            .add_systems(OnEnter(InGame::Root), startup)
             .add_systems(
-                OnEnter(InGame::Root),
+                OnEnter(InGame::Running),
                 (spawn_background, spawn_tiles, spawn_buttons),
             )
-            .add_systems(Update, resize_background.run_if(in_state(InGame::Root)))
-            .add_systems(Update, place_tiles.run_if(in_state(InGame::Root)))
+            .add_systems(Update, resize_background.run_if(in_state(InGame::Running)))
+            .add_systems(Update, place_tiles.run_if(in_state(InGame::Running)))
             .add_systems(
                 Update,
                 (
@@ -51,7 +46,7 @@ impl bevy::prelude::Plugin for Plugin {
                     help_toggle,
                     help,
                 )
-                    .run_if(in_state(InGame::Root)),
+                    .run_if(in_state(InGame::Running)),
             );
     }
 }
@@ -170,7 +165,7 @@ fn spawn<'a>(
     bundle: impl Bundle,
 ) -> EntityCommands<'a> {
     let mut ec = commands.spawn(bundle);
-    ec.insert((DespawnOnExit(InGame::Root), Pickable::default()));
+    ec.insert((DespawnOnExit(InGame::Running), Pickable::default()));
     ec
 }
 
@@ -180,6 +175,7 @@ fn spawn<'a>(
 pub enum InGame {
     #[default]
     Root,
+    Running,
 }
 
 #[derive(Resource, Deref, DerefMut, Default)]
@@ -986,6 +982,10 @@ mod button {
             }
         }
     }
+}
+
+pub fn startup(mut next_state: ResMut<NextState<InGame>>) {
+    next_state.set(InGame::Running);
 }
 
 pub fn spawn_background(
@@ -2018,8 +2018,8 @@ fn help(
 
 fn new_game_mouse(
     _on_press: On<Pointer<Press>>,
-    mut next_state: ResMut<NextState<Startup>>,
+    mut next_state: ResMut<NextState<InGame>>,
 ) {
     info!("new game");
-    next_state.set(Startup::Greeter);
+    next_state.set(InGame::Running);
 }
