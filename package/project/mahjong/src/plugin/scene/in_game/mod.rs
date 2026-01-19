@@ -2,7 +2,8 @@ use crate::plugin::{default::DefaultWinitSettings, scene::main_menu::MainMenu};
 use bevy::{
     input::keyboard::KeyCode,
     prelude::*,
-    sprite::{Anchor, Text2dShadow}, winit::{UpdateMode, WinitSettings},
+    sprite::{Anchor, Text2dShadow},
+    winit::{UpdateMode, WinitSettings},
 };
 use platform::{Platform, PlatformPlugin, PlatformTrait};
 use rand::{
@@ -1142,9 +1143,7 @@ fn startup(mut next_state: ResMut<NextState<InGame>>) {
     next_state.set(InGame::Running);
 }
 
-fn update_winit_settings(
-    mut winit_settings: ResMut<WinitSettings>,
-) {
+fn update_winit_settings(mut winit_settings: ResMut<WinitSettings>) {
     winit_settings.focused_mode = UpdateMode::Continuous;
     winit_settings.unfocused_mode = UpdateMode::Continuous;
 }
@@ -1935,101 +1934,50 @@ fn resize(
     }
 }
 
-// TODO: Bad
-struct PlaceTilesData {
-    tile_texture: Handle<Image>,
-    tile_size: Vec2,
-    tile_grid_size: u32,
-    tile_size_full: Vec2,
-    tile_size_ratio: f32,
-    tile_border_length_scaled: f32,
-    tile_pos_offset: Vec3,
-    default_depth: Vec3,
-    column_depth_offset_factor: Vec3,
-    row_depth_offset_factor: Vec3,
-    layer_depth_offset_factor: Vec3,
-    layer_offset_factor: Vec3,
-}
-
 fn spawn_tiles(
     mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
     tile_position_variant_pairs: ResMut<TilePositionVariantPairs>,
     mut board_updated: MessageWriter<BoardUpdated>,
-    mut local: Local<Option<PlaceTilesData>>,
 ) {
-    debug!("{:?}", tile_position_variant_pairs.iter().len());
-
     let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
         panic!();
     };
 
-    if local.is_none() {
-        let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::TILE);
-        let tile_size = Vec2::new(
-            (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.8,
-            projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
-        );
-        let tile_grid_size = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
-        let tile_size_full = Vec2::new(
-            (tile_size.x / tile::asset::texture::TILE_NO_BORDER_WIDTH as f32)
-                * tile::asset::texture::TILE_WIDTH as f32,
-            (tile_size.y / tile::asset::texture::TILE_NO_BORDER_HEIGHT as f32)
-                * tile::asset::texture::TILE_HEIGHT as f32,
-        );
-        let tile_size_ratio = tile_size.y / tile::asset::texture::TILE_NO_BORDER_HEIGHT as f32;
-        let tile_border_length_scaled =
-            tile::asset::texture::TILE_BORDER_LENGTH as f32 * tile_size_ratio;
-        let tile_pos_offset = Vec3::new(
-            -(tile_size.x * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32 / 2.0)
-                + tile_size.x * 1.0
-                - tile_border_length_scaled / 2.0,
-            -projection.area.height() / 2.0 + tile_size_full.y * 0.5 - tile_border_length_scaled,
-            0.0,
-        );
+    let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::TILE);
+    let tile_size = Vec2::new(
+        (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.8,
+        projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
+    );
+    let tile_grid_size = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
+    let tile_size_full = Vec2::new(
+        (tile_size.x / tile::asset::texture::TILE_NO_BORDER_WIDTH as f32)
+            * tile::asset::texture::TILE_WIDTH as f32,
+        (tile_size.y / tile::asset::texture::TILE_NO_BORDER_HEIGHT as f32)
+            * tile::asset::texture::TILE_HEIGHT as f32,
+    );
+    let tile_size_ratio = tile_size.y / tile::asset::texture::TILE_NO_BORDER_HEIGHT as f32;
+    let tile_border_length_scaled =
+        tile::asset::texture::TILE_BORDER_LENGTH as f32 * tile_size_ratio;
+    let tile_pos_offset = Vec3::new(
+        -(tile_size.x * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32 / 2.0)
+            + tile_size.x * 1.0
+            - tile_border_length_scaled / 2.0,
+        -projection.area.height() / 2.0 + tile_size_full.y * 0.5 - tile_border_length_scaled,
+        0.0,
+    );
 
-        let default_depth = Vec3::default().with_z(100.0);
-        let column_depth_offset_factor = Vec3::default().with_z(-0.1);
-        let row_depth_offset_factor =
-            column_depth_offset_factor * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32;
-        let layer_depth_offset_factor = Vec3::default().with_z(10.0);
-        let layer_offset_factor = Vec3 {
-            x: tile_border_length_scaled,
-            y: tile_border_length_scaled,
-            ..default()
-        };
-
-        *local = Some(PlaceTilesData {
-            tile_texture,
-            tile_size,
-            tile_grid_size,
-            tile_size_full,
-            tile_size_ratio,
-            tile_border_length_scaled,
-            tile_pos_offset,
-            default_depth,
-            column_depth_offset_factor,
-            row_depth_offset_factor,
-            layer_depth_offset_factor,
-            layer_offset_factor,
-        })
-    }
-
-    let PlaceTilesData {
-        tile_texture,
-        tile_size,
-        tile_grid_size,
-        tile_size_full,
-        tile_size_ratio,
-        tile_border_length_scaled,
-        tile_pos_offset,
-        default_depth,
-        column_depth_offset_factor,
-        row_depth_offset_factor,
-        layer_depth_offset_factor,
-        layer_offset_factor,
-    } = local.as_ref().unwrap();
+    let default_depth = Vec3::default().with_z(100.0);
+    let column_depth_offset_factor = Vec3::default().with_z(-0.1);
+    let row_depth_offset_factor =
+        column_depth_offset_factor * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32;
+    let layer_depth_offset_factor = Vec3::default().with_z(10.0);
+    let layer_offset_factor = Vec3 {
+        x: tile_border_length_scaled,
+        y: tile_border_length_scaled,
+        ..default()
+    };
 
     for (pos, variant) in tile_position_variant_pairs.iter() {
         let special = match pos.x / tile_grid_size {
@@ -2055,12 +2003,12 @@ fn spawn_tiles(
                     variant: *variant,
                 },
                 Sprite {
-                    custom_size: Some(*tile_size_full),
+                    custom_size: Some(tile_size_full),
                     color: tile::DEFAULT_COLOR,
                     ..Sprite::from_image(tile_texture.clone())
                 },
                 Transform {
-                    translation: (((pos.as_vec3() / *tile_grid_size as f32)
+                    translation: (((pos.as_vec3() / tile_grid_size as f32)
                         * tile_size.extend(1.0))
                         + tile_pos_offset)
                         + default_depth
@@ -2079,7 +2027,7 @@ fn spawn_tiles(
         if pos.z != 0 {
             entity_commands.with_child((
                 Sprite {
-                    custom_size: Some(*tile_size_full),
+                    custom_size: Some(tile_size_full),
                     color: Color::hsla(0.0, 0.0, 0.0, 0.75),
                     ..Sprite::from_image(tile_texture.clone())
                 },
@@ -2110,6 +2058,7 @@ fn spawn_tiles(
             &offset,
         );
     }
+
     board_updated.write(BoardUpdated);
 }
 
@@ -2120,6 +2069,7 @@ fn progressively_show_tiles(
     tiles: Query<(Entity, &mut Visibility), (With<tile::Marker<0>>, With<marker::Hidden>)>,
     default_winit_settings: ResMut<DefaultWinitSettings>,
     mut winit_settings: ResMut<WinitSettings>,
+    mut board_updated: MessageWriter<BoardUpdated>,
 ) {
     timer.tick(time.delta());
 
@@ -2136,6 +2086,8 @@ fn progressively_show_tiles(
         *visibility = Visibility::Inherited;
         break;
     }
+
+    board_updated.write(BoardUpdated);
 }
 
 fn mouse_activity(
