@@ -1226,24 +1226,67 @@ fn generate_solvable_board(
 
     available_tile_variants.shuffle(&mut rng);
 
-    fn build_dependency_graph<F>(
+    use std::cmp::Ordering;
+
+    fn build_dependency_graph<Q, C>(
         positions: &[tile::Position],
-        qualifies: F,
+        qualifies: Q,
+        compare: C,
     ) -> Vec<Vec<usize>>
     where
-        F: Fn(usize, &tile::Position, usize, &tile::Position) -> bool,
+        Q: Fn(&tile::Position, &tile::Position) -> bool,
+        C: Fn(&tile::Position, &tile::Position) -> Ordering,
     {
-        let mut graph = vec![Vec::new(); positions.len()];
+        let mut graph = vec![
+            Vec::with_capacity(tile::PositionGenerator::<tile::Turtle>::LAYERS);
+            positions.len()
+        ];
 
+        // Build adjacency
         for (i, pos) in positions.iter().enumerate() {
             for (j, other) in positions.iter().enumerate() {
-                if i != j && qualifies(i, pos, j, other) {
+                if i != j && qualifies(pos, other) {
                     graph[i].push(j);
                 }
             }
         }
 
+        // Sort dependents deterministically
+        for positions_ in &mut graph {
+            positions_.sort_unstable_by(|&a, &b| compare(&positions[a], &positions[b]));
+        }
+
         graph
+    }
+
+    // Example usage
+    // let graph = build_dependency_graph(
+    //     &positions,
+    //     |from, to| from.z < to.z && from.y.abs_diff(to.y) < 2 && from.x.abs_diff(to.x) < 2,
+    //     |a, b| a.z.cmp(&b.z),
+    // );
+
+    fn determine_dependents_from_graph(
+        root: usize,
+        graph: &mut [Vec<usize>],
+        out: &mut Vec<usize>,
+    ) {
+        let mut stack = Vec::new();
+        let mut visited = vec![false; graph.len()];
+
+        stack.push(root);
+
+        while let Some(current) = stack.pop() {
+            while let Some(dep) = graph[current].pop() {
+                if visited[dep] {
+                    continue;
+                }
+
+                visited[dep] = true;
+                out.push(dep);
+                stack.push(dep);
+            }
+        }
     }
 
     /// Returns [Option::Some] if the given index is a candidate to place next iteration.
