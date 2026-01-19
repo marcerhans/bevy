@@ -585,8 +585,6 @@ mod tile {
             max_size: &Vec2,
             offset: &Vec3,
         ) {
-            const TVR: u32 = PositionGenerator::<Turtle>::TILE_VARIANT_GROUP_SIZE as u32;
-            let index = variant / TVR;
             let large = max_size * 0.8;
             let medium = large * 0.5;
             let medium2 = large * 0.7;
@@ -623,9 +621,9 @@ mod tile {
                 )
             }
 
-            match index {
+            match variant {
                 0 | 1 | 2 | 3 => {
-                    let image = match index {
+                    let image = match variant {
                         0 => alliance,
                         1 => horde,
                         2 => frostmourne,
@@ -638,7 +636,7 @@ mod tile {
                     ));
                 },
                 4 | 5 | 6 | 7 => {
-                    let (image, size, inverted) = match index {
+                    let (image, size, inverted) = match variant {
                         4 => (alliance, medium, 1.0),
                         5 => (horde, medium, 1.0),
                         6 => (frostmourne, medium2, 1.0),
@@ -669,7 +667,7 @@ mod tile {
                     ));
                 },
                 8 | 9 | 10 | 11 => {
-                    let (image, size, inverted) = match index {
+                    let (image, size, inverted) = match variant {
                         8 => (alliance, small, 1.0),
                         9 => (horde, small, 1.0),
                         10 => (frostmourne, medium, 1.0),
@@ -700,7 +698,7 @@ mod tile {
                     ));
                 },
                 12 | 13 | 14 | 15 => {
-                    let (image, size) = match index {
+                    let (image, size) = match variant {
                         12 => (alliance, small),
                         13 => (horde, small),
                         14 => (frostmourne, medium),
@@ -746,7 +744,7 @@ mod tile {
                     ));
                 },
                 16 | 17 | 18 | 19 => {
-                    let (image, color, size) = match index {
+                    let (image, color, size) = match variant {
                         16 => (alliance, Color::BLACK, small),
                         17 => (horde, Color::BLACK, small),
                         18 => (frostmourne, Color::BLACK, small),
@@ -793,7 +791,7 @@ mod tile {
                     ));
                 },
                 20 | 21 | 22 | 23 => {
-                    let (image, color, size) = match index {
+                    let (image, color, size) = match variant {
                         20 => (alliance, Color::BLACK, small),
                         21 => (horde, Color::BLACK, small),
                         22 => (frostmourne, Color::BLACK, small),
@@ -855,7 +853,7 @@ mod tile {
                     ));
                 },
                 24 | 25 | 26 | 27 => {
-                    let (image, color, size) = match index {
+                    let (image, color, size) = match variant {
                         24 => (alliance, Color::BLACK, small),
                         25 => (horde, Color::BLACK, small),
                         26 => (frostmourne, Color::BLACK, small),
@@ -918,7 +916,7 @@ mod tile {
                     ));
                 },
                 28 | 29 | 30 | 31 => {
-                    let (image, color, size) = match index {
+                    let (image, color, size) = match variant {
                         28 => (alliance, Color::BLACK, small),
                         29 => (horde, Color::BLACK, small),
                         30 => (frostmourne, Color::BLACK, small),
@@ -989,7 +987,7 @@ mod tile {
                     ));
                 },
                 32 | 33 | 34 | 35 => {
-                    let (image, color, size) = match index {
+                    let (image, color, size) = match variant {
                         32 => (alliance, Color::BLACK, small),
                         33 => (horde, Color::BLACK, small),
                         34 => (frostmourne, Color::BLACK, small),
@@ -1230,13 +1228,13 @@ fn generate_solvable_board(
     let mut rng = StdRng::seed_from_u64(seed);
 
     // Generate [tile::Variant] pairs
-    let tile_pairs: u32 = available_positions.len() as u32 / 2;
-    let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
-        .map(|variant| {
-            let variant = variant * 2;
-            (tile::Variant(variant), tile::Variant(variant))
-        })
-        .collect();
+    let tile_variants: u32 = available_positions.len() as u32 / tile::PositionGenerator::<tile::Turtle>::TILE_VARIANT_GROUP_SIZE as u32;
+    let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = Vec::new();
+
+    for tile_variant in 0..tile_variants {
+        available_tile_variants.push((tile::Variant(tile_variant), tile::Variant(tile_variant)));
+        available_tile_variants.push((tile::Variant(tile_variant), tile::Variant(tile_variant)));
+    }
 
     for variant_pair in available_tile_variants {
         let pos = available_positions.pop().unwrap();
@@ -1948,6 +1946,7 @@ fn resize(
     }
 }
 
+// TODO: Bad
 fn place_tiles(
     mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
@@ -2076,7 +2075,7 @@ fn place_tiles(
     tile::Variant::insert_sprite_as_child(
         &asset_server,
         &mut entity_commands,
-        variant.0,
+        variant.0 / tile::PositionGenerator::<tile::Turtle>::TILE_VARIANT_GROUP_SIZE as u32,
         &tile_size,
         &offset,
     );
