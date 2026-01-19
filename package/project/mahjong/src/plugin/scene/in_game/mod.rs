@@ -1901,7 +1901,7 @@ fn resize(
         (
             With<button::Marker>,
             Without<marker::Background>,
-            Without<button::Marker>,
+            Without<info::Marker>,
         ),
     >,
     infos: Query<
