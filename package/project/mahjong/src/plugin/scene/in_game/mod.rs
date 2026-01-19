@@ -38,7 +38,7 @@ impl bevy::prelude::Plugin for Plugin {
             .add_systems(OnEnter(InGame::Root), startup)
             .add_systems(
                 OnEnter(InGame::Running),
-                (spawn_background, spawn_tiles, spawn_buttons, spawn_info),
+                (spawn_background, generate_positions, spawn_buttons, spawn_info),
             )
             .add_systems(
                 Update,
@@ -1067,27 +1067,6 @@ mod tile {
                 },
                 _ => warn!("Unsupported variant!"),
             };
-
-            // entity_commands.with_children(|parent| {
-            //     parent.spawn(common).with_children(|common| {
-            //         for (position, image_type) in positions {
-            //             let image = match image_type {
-            //                 ImageType::Regular => images.0.clone(),
-            //                 ImageType::Button => images.1.clone(),
-            //             };
-            //             common.spawn((
-            //                 Transform {
-            //                     translation: position,
-            //                     ..default()
-            //                 },
-            //                 Sprite {
-            //                     custom_size: Some(size.clone()),
-            //                     ..Sprite::from_image(image.clone())
-            //                 },
-            //             ));
-            //         }
-            //     });
-            // });
         }
     }
 }
@@ -1145,7 +1124,6 @@ mod button {
                 Redo => "[R]edo",
                 Help => "[H]elp",
                 NewGame => "NewGame",
-                Moves => "Moves:\n",
             }
         }
     }
@@ -1186,16 +1164,10 @@ fn spawn_background(
     );
 }
 
-fn spawn_tiles(
-    projection: Query<&Projection, With<Camera>>,
-    asset_server: Res<AssetServer>,
+fn generate_positions(
     mut tile_position_variant_pairs: ResMut<TilePositionVariantPairs>,
     platform: ResMut<Platform>,
 ) {
-    let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
-        panic!();
-    };
-
     let tile_grid_size = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
     let position_generator =
         tile::PositionGenerator::<tile::Turtle>::new(UVec2::splat(tile_grid_size));
