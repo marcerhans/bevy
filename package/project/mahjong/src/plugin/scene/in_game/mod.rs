@@ -1228,7 +1228,8 @@ fn generate_solvable_board(
     let mut rng = StdRng::seed_from_u64(seed);
 
     // Generate [tile::Variant] pairs
-    let tile_variants: u32 = available_positions.len() as u32 / tile::PositionGenerator::<tile::Turtle>::TILE_VARIANT_GROUP_SIZE as u32;
+    let tile_variants: u32 = available_positions.len() as u32
+        / tile::PositionGenerator::<tile::Turtle>::TILE_VARIANT_GROUP_SIZE as u32;
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = Vec::new();
 
     for tile_variant in 0..tile_variants {
@@ -2075,7 +2076,7 @@ fn place_tiles(
     tile::Variant::insert_sprite_as_child(
         &asset_server,
         &mut entity_commands,
-        variant.0 / tile::PositionGenerator::<tile::Turtle>::TILE_VARIANT_GROUP_SIZE as u32,
+        variant.0,
         &tile_size,
         &offset,
     );
