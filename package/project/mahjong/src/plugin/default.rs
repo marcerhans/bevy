@@ -17,7 +17,7 @@ impl bevy::prelude::Plugin for Plugin {
         &self,
         app: &mut App,
     ) {
-        app.insert_resource(WinitSettings {
+        let default_winit_settings = DefaultWinitSettings(WinitSettings {
             focused_mode: UpdateMode::Reactive {
                 wait: Duration::from_millis((1000.0 / 30.0) as u64),
                 react_to_device_events: true,
@@ -31,11 +31,13 @@ impl bevy::prelude::Plugin for Plugin {
                 react_to_window_events: true,
             },
         });
+        app.insert_resource(default_winit_settings.clone())
+            .insert_resource(default_winit_settings);
 
         app.add_plugins((
             bevy::DefaultPlugins
                 .set(LogPlugin {
-                    filter: "error,bevy=info,mahjong=info".into(),
+                    filter: "error,bevy=info,mahjong=debug".into(),
                     level: bevy::log::Level::DEBUG,
                     ..default()
                 })
@@ -86,3 +88,6 @@ impl bevy::prelude::Plugin for Plugin {
         }
     }
 }
+
+#[derive(Resource, Clone)]
+pub struct DefaultWinitSettings(pub WinitSettings);
