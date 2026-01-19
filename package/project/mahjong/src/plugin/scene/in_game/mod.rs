@@ -1244,13 +1244,13 @@ fn generate_solvable_board(
         // Tracks whether a node has already been claimed as a dependent
         let mut claimed = vec![false; positions.len()];
 
-        for (i, pos) in positions.iter().enumerate() {
+        for (index, pos) in positions.iter().enumerate() {
             // Collect candidates first
             let mut candidates = Vec::new();
 
-            for (j, other) in positions.iter().enumerate() {
-                if i != j && !claimed[j] && qualifies(pos, other) {
-                    candidates.push(j);
+            for (other_index, other_pos) in positions.iter().enumerate() {
+                if index != other_index && !claimed[other_index] && qualifies(pos, other_pos) {
+                    candidates.push(other_index);
                 }
             }
 
@@ -1260,7 +1260,7 @@ fn generate_solvable_board(
             // Claim them
             for j in candidates {
                 claimed[j] = true;
-                graph[i].push(j);
+                graph[index].push(j);
             }
         }
 
@@ -1274,11 +1274,11 @@ fn generate_solvable_board(
         |a, b| a.z.cmp(&b.z),
     );
 
-    let graph_row = build_dependency_graph(
-        &available_positions,
-        |from, to| from.z < to.z && from.y.abs_diff(to.y) < 2 && from.x.abs_diff(to.x) < 2,
-        |a, b| a.z.cmp(&b.z),
-    );
+    // let graph_row = build_dependency_graph(
+    //     &available_positions,
+    //     |from, to| from.z < to.z && from.y.abs_diff(to.y) < 2 && from.x.abs_diff(to.x) < 2,
+    //     |a, b| a.z.cmp(&b.z),
+    // );
 
     // fn determine_dependents_from_graph(
     //     root: usize,
