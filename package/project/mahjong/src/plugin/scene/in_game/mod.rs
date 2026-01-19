@@ -1224,15 +1224,6 @@ fn generate_solvable_board(
         available_tile_variants.push((tile::Variant(tile_variant), tile::Variant(tile_variant)));
     }
 
-    for variant_pair in available_tile_variants {
-        let pos = available_positions.pop().unwrap();
-        result.push((pos, variant_pair.0));
-        let pos = available_positions.pop().unwrap();
-        result.push((pos, variant_pair.1));
-    }
-
-    return (result, seed);
-
     available_tile_variants.shuffle(&mut rng);
 
     fn valid_position_check<'a>(
@@ -1319,9 +1310,19 @@ fn generate_solvable_board(
         todo!()
     }
 
+    fn determine_dependents(
+        index: usize,
+        available_positions: &Vec<tile::Position>,
+    ) {
+        todo!()
+    }
+
     for (v0, v1) in available_tile_variants {
         debug!("\n\nNew pair placement!");
+
         let v = [v0, v1];
+
+        // Find valid positions
         let valid_positions = available_positions
             .iter()
             .enumerate()
@@ -1329,90 +1330,95 @@ fn generate_solvable_board(
                 valid_position_check(index, &available_positions, &occupied_positions)
             });
 
-        // let valid_positions = valid_positions
-        //     .filter(|index| dependency_check(*index, &available_positions, &occupied_positions));
-
-        let mut largest_available_rows: HashMap<(u32, u32), u32> = HashMap::new();
-
-        valid_positions.clone().for_each(|pos| {
-            let pos = available_positions[pos];
-            let pos = (pos.y, pos.z);
-
-            if let Some(pos) = largest_available_rows.get_mut(&pos) {
-                *pos += 1;
-            } else {
-                largest_available_rows.insert(pos, 1);
-            }
+        // Determine how many dependants each valid position has
+        let dependents = valid_positions.map(|index| {
+            determine_dependents(index, &available_positions);
         });
 
-        let mut largest_row_layer: Option<(u32, UVec2)> = None;
+        // // let valid_positions = valid_positions
+        // //     .filter(|index| dependency_check(*index, &available_positions, &occupied_positions));
 
-        for row_layer in largest_available_rows {
-            if let Some(largest_row_layer) = largest_row_layer.as_mut() {
-                if largest_row_layer.0 < row_layer.1 {
-                    *largest_row_layer = (row_layer.1, UVec2::new(row_layer.0.0, row_layer.0.1));
-                }
-            } else {
-                largest_row_layer = Some((row_layer.1, UVec2::new(row_layer.0.0, row_layer.0.1)));
-            }
-        }
+        // let mut largest_available_rows: HashMap<(u32, u32), u32> = HashMap::new();
 
-        let largest_row_layer = largest_row_layer.unwrap().1;
+        // valid_positions.clone().for_each(|pos| {
+        //     let pos = available_positions[pos];
+        //     let pos = (pos.y, pos.z);
 
-        let valid_position_index_1 = valid_positions
-            .clone()
-            .position(|index| {
-                let pos = available_positions[index];
-                pos.y == largest_row_layer.x && pos.z == largest_row_layer.y
-            })
-            .unwrap();
-        let valid_position_index_2 = valid_positions
-            .clone()
-            .position(|index| {
-                let pos = available_positions[index];
-                pos.y == largest_row_layer.x && pos.z == largest_row_layer.y
-            })
-            .unwrap();
+        //     if let Some(pos) = largest_available_rows.get_mut(&pos) {
+        //         *pos += 1;
+        //     } else {
+        //         largest_available_rows.insert(pos, 1);
+        //     }
+        // });
 
-        let mut valid_position_pair = valid_positions
-            .clone()
-            .choose_multiple(&mut rng, 2)
-            .iter()
-            .copied()
-            .collect::<Vec<usize>>();
+        // let mut largest_row_layer: Option<(u32, UVec2)> = None;
 
-        debug!("{occupied_positions:?}");
-
-        // // IF the row is currently empty AND we try to place TWO tiles on the SAME ROW there may be dragons.
-        // // If these to be placed tiles are NOT next to each other, then iiiiit will break the rules :) So DON'T! :D
-        // // In this case, solve it by finding a position that IS next to the other.
-        // let pos_a = &available_positions[valid_position_pair[0]];
-        // let pos_b = &available_positions[valid_position_pair[1]];
-        // let on_same_layer = pos_a.z == pos_b.z;
-        // let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
-        // let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
-        // if on_same_layer && on_same_row && !next_to_each_other {
-        //     for pos_b_index in valid_positions {
-        //         let pos_b = available_positions[pos_b_index];
-        //         let on_same_layer = pos_a.z == pos_b.z;
-        //         let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
-        //         let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
-        //         if on_same_layer && on_same_row && next_to_each_other {
-        //             valid_position_pair[1] = pos_b_index;
-        //             break;
+        // for row_layer in largest_available_rows {
+        //     if let Some(largest_row_layer) = largest_row_layer.as_mut() {
+        //         if largest_row_layer.0 < row_layer.1 {
+        //             *largest_row_layer = (row_layer.1, UVec2::new(row_layer.0.0, row_layer.0.1));
         //         }
+        //     } else {
+        //         largest_row_layer = Some((row_layer.1, UVec2::new(row_layer.0.0, row_layer.0.1)));
         //     }
         // }
 
-        if valid_position_pair[1] == available_positions.len() - 1 {
-            // Since we are using swap remove, we have to adjust the second of the two indexes in this particular case.
-            valid_position_pair[1] = valid_position_pair[0];
-        }
+        // let largest_row_layer = largest_row_layer.unwrap().1;
 
-        for i in 0..2 {
-            result.push((available_positions[valid_position_pair[i]], v[i]));
-            occupied_positions.push(available_positions.swap_remove(valid_position_pair[i]));
-        }
+        // let valid_position_index_1 = valid_positions
+        //     .clone()
+        //     .position(|index| {
+        //         let pos = available_positions[index];
+        //         pos.y == largest_row_layer.x && pos.z == largest_row_layer.y
+        //     })
+        //     .unwrap();
+        // let valid_position_index_2 = valid_positions
+        //     .clone()
+        //     .position(|index| {
+        //         let pos = available_positions[index];
+        //         pos.y == largest_row_layer.x && pos.z == largest_row_layer.y
+        //     })
+        //     .unwrap();
+
+        // let mut valid_position_pair = valid_positions
+        //     .clone()
+        //     .choose_multiple(&mut rng, 2)
+        //     .iter()
+        //     .copied()
+        //     .collect::<Vec<usize>>();
+
+        // debug!("{occupied_positions:?}");
+
+        // // // IF the row is currently empty AND we try to place TWO tiles on the SAME ROW there may be dragons.
+        // // // If these to be placed tiles are NOT next to each other, then iiiiit will break the rules :) So DON'T! :D
+        // // // In this case, solve it by finding a position that IS next to the other.
+        // // let pos_a = &available_positions[valid_position_pair[0]];
+        // // let pos_b = &available_positions[valid_position_pair[1]];
+        // // let on_same_layer = pos_a.z == pos_b.z;
+        // // let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
+        // // let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
+        // // if on_same_layer && on_same_row && !next_to_each_other {
+        // //     for pos_b_index in valid_positions {
+        // //         let pos_b = available_positions[pos_b_index];
+        // //         let on_same_layer = pos_a.z == pos_b.z;
+        // //         let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
+        // //         let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
+        // //         if on_same_layer && on_same_row && next_to_each_other {
+        // //             valid_position_pair[1] = pos_b_index;
+        // //             break;
+        // //         }
+        // //     }
+        // // }
+
+        // if valid_position_pair[1] == available_positions.len() - 1 {
+        //     // Since we are using swap remove, we have to adjust the second of the two indexes in this particular case.
+        //     valid_position_pair[1] = valid_position_pair[0];
+        // }
+
+        // for i in 0..2 {
+        //     result.push((available_positions[valid_position_pair[i]], v[i]));
+        //     occupied_positions.push(available_positions.swap_remove(valid_position_pair[i]));
+        // }
     }
 
     if available_positions.len() > 0 {
