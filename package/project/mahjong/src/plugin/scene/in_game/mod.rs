@@ -12,6 +12,7 @@ use rand::{
     seq::{IteratorRandom, SliceRandom},
 };
 use std::{
+    cmp::Ordering,
     collections::{HashMap, VecDeque},
     time::Duration,
 };
@@ -1226,8 +1227,6 @@ fn generate_solvable_board(
 
     available_tile_variants.shuffle(&mut rng);
 
-    use std::cmp::Ordering;
-
     fn build_dependency_graph<Q, C>(
         positions: &[tile::Position],
         qualifies: Q,
@@ -1242,52 +1241,67 @@ fn generate_solvable_board(
             positions.len()
         ];
 
-        // Build adjacency
+        // Tracks whether a node has already been claimed as a dependent
+        let mut claimed = vec![false; positions.len()];
+
         for (i, pos) in positions.iter().enumerate() {
+            // Collect candidates first
+            let mut candidates = Vec::new();
+
             for (j, other) in positions.iter().enumerate() {
-                if i != j && qualifies(pos, other) {
-                    graph[i].push(j);
+                if i != j && !claimed[j] && qualifies(pos, other) {
+                    candidates.push(j);
                 }
             }
-        }
 
-        // Sort dependents deterministically
-        for positions_ in &mut graph {
-            positions_.sort_unstable_by(|&a, &b| compare(&positions[a], &positions[b]));
+            // Sort candidates deterministically
+            candidates.sort_unstable_by(|&a, &b| compare(&positions[a], &positions[b]));
+
+            // Claim them
+            for j in candidates {
+                claimed[j] = true;
+                graph[i].push(j);
+            }
         }
 
         graph
     }
 
     // Example usage
-    // let graph = build_dependency_graph(
-    //     &positions,
-    //     |from, to| from.z < to.z && from.y.abs_diff(to.y) < 2 && from.x.abs_diff(to.x) < 2,
-    //     |a, b| a.z.cmp(&b.z),
-    // );
+    let graph_layer = build_dependency_graph(
+        &available_positions,
+        |from, to| from.z < to.z && from.y.abs_diff(to.y) < 2 && from.x.abs_diff(to.x) < 2,
+        |a, b| a.z.cmp(&b.z),
+    );
 
-    fn determine_dependents_from_graph(
-        root: usize,
-        graph: &mut [Vec<usize>],
-        out: &mut Vec<usize>,
-    ) {
-        let mut stack = Vec::new();
-        let mut visited = vec![false; graph.len()];
+    let graph_row = build_dependency_graph(
+        &available_positions,
+        |from, to| from.z < to.z && from.y.abs_diff(to.y) < 2 && from.x.abs_diff(to.x) < 2,
+        |a, b| a.z.cmp(&b.z),
+    );
 
-        stack.push(root);
+    // fn determine_dependents_from_graph(
+    //     root: usize,
+    //     graph: &mut [Vec<usize>],
+    //     out: &mut Vec<usize>,
+    // ) {
+    //     let mut stack = Vec::new();
+    //     let mut visited = vec![false; graph.len()];
 
-        while let Some(current) = stack.pop() {
-            while let Some(dep) = graph[current].pop() {
-                if visited[dep] {
-                    continue;
-                }
+    //     stack.push(root);
 
-                visited[dep] = true;
-                out.push(dep);
-                stack.push(dep);
-            }
-        }
-    }
+    //     while let Some(current) = stack.pop() {
+    //         while let Some(dep) = graph[current].pop() {
+    //             if visited[dep] {
+    //                 continue;
+    //             }
+
+    //             visited[dep] = true;
+    //             out.push(dep);
+    //             stack.push(dep);
+    //         }
+    //     }
+    // }
 
     /// Returns [Option::Some] if the given index is a candidate to place next iteration.
     fn valid_position_check<'a>(
