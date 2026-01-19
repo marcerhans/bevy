@@ -19,7 +19,7 @@ impl bevy::prelude::Plugin for Plugin {
     ) {
         let default_winit_settings = DefaultWinitSettings(WinitSettings {
             focused_mode: UpdateMode::Reactive {
-                wait: Duration::from_millis((1000.0 / 30.0) as u64),
+                wait: Duration::from_millis((1000.0 / 1.0) as u64),
                 react_to_device_events: true,
                 react_to_user_events: true,
                 react_to_window_events: true,
