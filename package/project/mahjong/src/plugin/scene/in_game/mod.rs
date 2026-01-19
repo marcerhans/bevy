@@ -6,7 +6,7 @@ use bevy::{
 };
 use platform::{Platform, PlatformPlugin, PlatformTrait};
 use rand::{
-    Rng, SeedableRng,
+    SeedableRng,
     rngs::StdRng,
     seq::{IteratorRandom, SliceRandom},
 };
@@ -311,7 +311,7 @@ fn spawn<'a>(
 #[derive(SubStates, Default, Debug, Hash, Eq, PartialEq, Clone)]
 #[source(MainMenu = MainMenu::Play)]
 #[states(scoped_entities)]
-pub enum InGame {
+enum InGame {
     #[default]
     Root,
     Running,
@@ -320,34 +320,34 @@ pub enum InGame {
 }
 
 #[derive(Resource, Deref, DerefMut, Default)]
-pub struct Seed(Option<u64>);
+struct Seed(Option<u64>);
 
 #[derive(Resource, Deref, DerefMut, Default)]
-pub struct Timer(bevy::time::Timer);
+struct Timer(bevy::time::Timer);
 
 #[derive(Resource, Deref, DerefMut, Default)]
-pub struct TilePositionVariantPairs(Vec<(tile::Position, tile::Variant)>);
+struct TilePositionVariantPairs(Vec<(tile::Position, tile::Variant)>);
 
 #[derive(Resource, Deref, DerefMut, Default)]
-pub struct SelectedTile(Option<Entity>);
+struct SelectedTile(Option<Entity>);
 
 #[derive(Resource, Default, Deref, DerefMut, PartialEq, Eq)]
-pub struct HelpEnabled(bool);
+struct HelpEnabled(bool);
 
 #[derive(Message)]
-pub struct HelpMsg;
+struct HelpMsg;
 
 #[derive(Message)]
-pub struct BoardUpdated;
+struct BoardUpdated;
 
 #[derive(Clone)]
-pub enum HistoryItem {
+enum HistoryItem {
     ValidPair(Entity, Entity),
     Shuffle(Vec<(Entity, tile::Variant)>),
 }
 
 #[derive(Resource, Default)]
-pub struct History {
+ struct History {
     undo: VecDeque<HistoryItem>,
     redo: VecDeque<HistoryItem>,
 }
@@ -574,19 +574,8 @@ mod tile {
         }
     }
 
-    #[derive(Component, Deref, DerefMut, Clone, Copy, Eq, Debug)]
+    #[derive(Component, Deref, DerefMut, Clone, Copy, Eq, PartialEq, Debug)]
     pub struct Variant(pub u32);
-
-    /// TODO: This is a bit hacky...
-    impl PartialEq for Variant {
-        fn eq(
-            &self,
-            other: &Self,
-        ) -> bool {
-            self.0 / PositionGenerator::<Turtle>::TILE_VARIANT_GROUP_SIZE as u32
-                == other.0 / PositionGenerator::<Turtle>::TILE_VARIANT_GROUP_SIZE as u32
-        }
-    }
 
     impl Variant {
         pub fn insert_sprite_as_child(
@@ -1139,11 +1128,11 @@ mod button {
     }
 }
 
-pub fn startup(mut next_state: ResMut<NextState<InGame>>) {
+fn startup(mut next_state: ResMut<NextState<InGame>>) {
     next_state.set(InGame::Running);
 }
 
-pub fn spawn_background(
+fn spawn_background(
     mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
@@ -1174,7 +1163,7 @@ pub fn spawn_background(
     );
 }
 
-pub fn spawn_tiles(
+fn spawn_tiles(
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
     mut tile_position_variant_pairs: ResMut<TilePositionVariantPairs>,
@@ -1184,30 +1173,9 @@ pub fn spawn_tiles(
         panic!();
     };
 
-    let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::TILE);
-    let tile_size = Vec2::new(
-        (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.8,
-        projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
-    );
     let tile_grid_size = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
     let position_generator =
         tile::PositionGenerator::<tile::Turtle>::new(UVec2::splat(tile_grid_size));
-    let tile_size_full = Vec2::new(
-        (tile_size.x / tile::asset::texture::TILE_NO_BORDER_WIDTH as f32)
-            * tile::asset::texture::TILE_WIDTH as f32,
-        (tile_size.y / tile::asset::texture::TILE_NO_BORDER_HEIGHT as f32)
-            * tile::asset::texture::TILE_HEIGHT as f32,
-    );
-    let tile_size_ratio = tile_size.y / tile::asset::texture::TILE_NO_BORDER_HEIGHT as f32;
-    let tile_border_length_scaled =
-        tile::asset::texture::TILE_BORDER_LENGTH as f32 * tile_size_ratio;
-    let tile_pos_offset = Vec3::new(
-        -(tile_size.x * tile::PositionGenerator::<tile::Turtle>::COLUMNS as f32 / 2.0)
-            + tile_size.x * 1.0
-            - tile_border_length_scaled / 2.0,
-        -projection.area.height() / 2.0 + tile_size_full.y * 0.5 - tile_border_length_scaled,
-        0.0,
-    );
 
     let positions: Vec<tile::Position> = position_generator.collect();
     // for _ in 0..10000 {
@@ -1221,7 +1189,7 @@ pub fn spawn_tiles(
 }
 
 /// Returns a [Vec] with (position, variant) tuples along with the rng seed ([u64]) to create them.
-pub fn generate_solvable_board(
+fn generate_solvable_board(
     mut available_positions: Vec<tile::Position>,
     seed: Option<u64>,
 ) -> (Vec<(tile::Position, tile::Variant)>, u64) {
@@ -1241,9 +1209,19 @@ pub fn generate_solvable_board(
     let mut available_tile_variants: Vec<(tile::Variant, tile::Variant)> = (0..tile_pairs)
         .map(|variant| {
             let variant = variant * 2;
-            (tile::Variant(variant), tile::Variant(variant + 1))
+            (tile::Variant(variant), tile::Variant(variant))
         })
         .collect();
+
+    for variant_pair in available_tile_variants {
+        let pos = available_positions.pop().unwrap();
+        result.push((pos, variant_pair.0));
+        let pos = available_positions.pop().unwrap();
+        result.push((pos, variant_pair.1));
+    }
+
+    return (result, seed);
+
     available_tile_variants.shuffle(&mut rng);
 
     fn valid_position_check<'a>(
@@ -1343,6 +1321,48 @@ pub fn generate_solvable_board(
         // let valid_positions = valid_positions
         //     .filter(|index| dependency_check(*index, &available_positions, &occupied_positions));
 
+        let mut largest_available_rows: HashMap<(u32, u32), u32> = HashMap::new();
+
+        valid_positions.clone().for_each(|pos| {
+            let pos = available_positions[pos];
+            let pos = (pos.y, pos.z);
+
+            if let Some(pos) = largest_available_rows.get_mut(&pos) {
+                *pos += 1;
+            } else {
+                largest_available_rows.insert(pos, 1);
+            }
+        });
+
+        let mut largest_row_layer: Option<(u32, UVec2)> = None;
+
+        for row_layer in largest_available_rows {
+            if let Some(largest_row_layer) = largest_row_layer.as_mut() {
+                if largest_row_layer.0 < row_layer.1 {
+                    *largest_row_layer = (row_layer.1, UVec2::new(row_layer.0.0, row_layer.0.1));
+                }
+            } else {
+                largest_row_layer = Some((row_layer.1, UVec2::new(row_layer.0.0, row_layer.0.1)));
+            }
+        }
+
+        let largest_row_layer = largest_row_layer.unwrap().1;
+
+        let valid_position_index_1 = valid_positions
+            .clone()
+            .position(|index| {
+                let pos = available_positions[index];
+                pos.y == largest_row_layer.x && pos.z == largest_row_layer.y
+            })
+            .unwrap();
+        let valid_position_index_2 = valid_positions
+            .clone()
+            .position(|index| {
+                let pos = available_positions[index];
+                pos.y == largest_row_layer.x && pos.z == largest_row_layer.y
+            })
+            .unwrap();
+
         let mut valid_position_pair = valid_positions
             .clone()
             .choose_multiple(&mut rng, 2)
@@ -1352,26 +1372,26 @@ pub fn generate_solvable_board(
 
         debug!("{occupied_positions:?}");
 
-        // IF the row is currently empty AND we try to place TWO tiles on the SAME ROW there may be dragons.
-        // If these to be placed tiles are NOT next to each other, then iiiiit will break the rules :) So DON'T! :D
-        // In this case, solve it by finding a position that IS next to the other.
-        let pos_a = &available_positions[valid_position_pair[0]];
-        let pos_b = &available_positions[valid_position_pair[1]];
-        let on_same_layer = pos_a.z == pos_b.z;
-        let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
-        let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
-        if on_same_layer && on_same_row && !next_to_each_other {
-            for pos_b_index in valid_positions {
-                let pos_b = available_positions[pos_b_index];
-                let on_same_layer = pos_a.z == pos_b.z;
-                let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
-                let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
-                if on_same_layer && on_same_row && next_to_each_other {
-                    valid_position_pair[1] = pos_b_index;
-                    break;
-                }
-            }
-        }
+        // // IF the row is currently empty AND we try to place TWO tiles on the SAME ROW there may be dragons.
+        // // If these to be placed tiles are NOT next to each other, then iiiiit will break the rules :) So DON'T! :D
+        // // In this case, solve it by finding a position that IS next to the other.
+        // let pos_a = &available_positions[valid_position_pair[0]];
+        // let pos_b = &available_positions[valid_position_pair[1]];
+        // let on_same_layer = pos_a.z == pos_b.z;
+        // let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
+        // let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
+        // if on_same_layer && on_same_row && !next_to_each_other {
+        //     for pos_b_index in valid_positions {
+        //         let pos_b = available_positions[pos_b_index];
+        //         let on_same_layer = pos_a.z == pos_b.z;
+        //         let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
+        //         let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
+        //         if on_same_layer && on_same_row && next_to_each_other {
+        //             valid_position_pair[1] = pos_b_index;
+        //             break;
+        //         }
+        //     }
+        // }
 
         if valid_position_pair[1] == available_positions.len() - 1 {
             // Since we are using swap remove, we have to adjust the second of the two indexes in this particular case.
@@ -1391,7 +1411,7 @@ pub fn generate_solvable_board(
     return (result, seed);
 }
 
-pub fn tile_pressed(
+fn tile_pressed(
     on_press: On<Pointer<Press>>,
     mut commands: Commands,
     mut tiles: Query<
@@ -1492,7 +1512,7 @@ pub fn tile_pressed(
     }
 }
 
-pub fn valid_removal(
+fn valid_removal(
     pressed_entity: Entity,
     selected_entity: Entity,
     pressed_variant: &tile::Variant,
@@ -1607,7 +1627,7 @@ pub fn valid_removal(
         && free_above(selected_entity, selected_position, tiles)
 }
 
-pub fn spawn_buttons_and_info(
+fn spawn_buttons_and_info(
     mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
@@ -1802,7 +1822,9 @@ fn resize(
     }
 }
 
-pub fn place_tiles(
+
+
+fn place_tiles(
     mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
@@ -1833,8 +1855,6 @@ pub fn place_tiles(
         projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
     );
     let tile_grid_size = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
-    let position_generator =
-        tile::PositionGenerator::<tile::Turtle>::new(UVec2::splat(tile_grid_size));
     let tile_size_full = Vec2::new(
         (tile_size.x / tile::asset::texture::TILE_NO_BORDER_WIDTH as f32)
             * tile::asset::texture::TILE_WIDTH as f32,
@@ -2309,7 +2329,7 @@ fn update_move_count(
     }
 
     if moves < 1 {
-        next_state.set(InGame::Defeat);
+        // next_state.set(InGame::Defeat);
     }
 }
 
@@ -2333,7 +2353,7 @@ fn poll_new_seed(
     }
 }
 
-pub fn spawn_finished(
+fn spawn_finished(
     mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
@@ -2357,7 +2377,7 @@ pub fn spawn_finished(
     );
 }
 
-pub fn spawn_defeat(
+fn spawn_defeat(
     mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
