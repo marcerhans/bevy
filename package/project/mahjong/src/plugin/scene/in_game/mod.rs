@@ -38,7 +38,7 @@ impl bevy::prelude::Plugin for Plugin {
             .add_systems(OnEnter(InGame::Root), startup)
             .add_systems(
                 OnEnter(InGame::Running),
-                (spawn_background, spawn_tiles, spawn_buttons_and_info),
+                (spawn_background, spawn_tiles, spawn_buttons, spawn_info),
             )
             .add_systems(
                 Update,
@@ -347,7 +347,7 @@ enum HistoryItem {
 }
 
 #[derive(Resource, Default)]
- struct History {
+struct History {
     undo: VecDeque<HistoryItem>,
     redo: VecDeque<HistoryItem>,
 }
@@ -1094,6 +1094,32 @@ mod tile {
     }
 }
 
+mod info {
+    use bevy::prelude::*;
+
+    pub mod asset {
+        pub const INFO: &'static str = "misc/rev2/StoneSlab.png";
+    }
+
+    #[derive(Component)]
+    pub struct ResizeData(pub Vec2, pub bool);
+
+    #[derive(Component, Clone, PartialEq)]
+    pub enum Marker {
+        Moves,
+    }
+
+    impl Marker {
+        pub fn as_string(&self) -> &'static str {
+            use Marker::*;
+
+            match self {
+                Moves => "Moves:\n",
+            }
+        }
+    }
+}
+
 mod button {
     use bevy::prelude::*;
 
@@ -1101,17 +1127,16 @@ mod button {
         pub const BUTTON: &'static str = "misc/rev2/button-atlas_1998x429.png";
     }
 
+    #[derive(Component)]
+    pub struct ResizeData(pub Vec2, pub bool);
+
     #[derive(Component, Clone, PartialEq)]
     pub enum Marker {
         Undo,
         Redo,
         Help,
         NewGame,
-        Moves,
     }
-
-    #[derive(Component)]
-    pub struct Whatever(pub Vec2, pub bool);
 
     impl Marker {
         pub fn as_string(&self) -> &'static str {
@@ -1627,7 +1652,7 @@ fn valid_removal(
         && free_above(selected_entity, selected_position, tiles)
 }
 
-fn spawn_buttons_and_info(
+fn spawn_buttons(
     mut commands: Commands,
     projection: Query<&Projection, With<Camera>>,
     asset_server: Res<AssetServer>,
@@ -1690,14 +1715,6 @@ fn spawn_buttons_and_info(
                 ..default()
             },
         },
-        Button {
-            marker: button::Marker::Moves,
-            flip_x: false,
-            offset: Vec3 {
-                y: button_size.y * 2.0,
-                ..default()
-            },
-        },
     ];
 
     for button in buttons {
@@ -1705,14 +1722,9 @@ fn spawn_buttons_and_info(
             &mut commands,
             (
                 button.marker.clone(),
-                button::Whatever(button.offset.truncate(), button.flip_x),
+                button::ResizeData(button.offset.truncate(), button.flip_x),
                 Sprite {
                     custom_size: Some(button_size),
-                    color: if matches!(button.marker, button::Marker::Moves) {
-                        Color::srgb(0.5, 0.5, 0.5)
-                    } else {
-                        Color::default()
-                    },
                     ..Sprite::from_atlas_image(
                         texture_handle.clone(),
                         TextureAtlas {
@@ -1760,12 +1772,10 @@ fn spawn_buttons_and_info(
             ),
         );
 
-        if !matches!(button.marker, button::Marker::Moves) {
-            ec.observe(mouse_over)
-                .observe(mouse_out)
-                .observe(mouse_press)
-                .observe(mouse_release);
-        }
+        ec.observe(mouse_over)
+            .observe(mouse_out)
+            .observe(mouse_press)
+            .observe(mouse_release);
 
         match button.marker {
             button::Marker::Undo => {
@@ -1780,19 +1790,127 @@ fn spawn_buttons_and_info(
             button::Marker::NewGame => {
                 ec.observe(new_game_mouse);
             },
-            _ => (),
         };
+    }
+}
+
+fn spawn_info(
+    mut commands: Commands,
+    projection: Query<&Projection, With<Camera>>,
+    asset_server: Res<AssetServer>,
+) {
+    let Some(Projection::Orthographic(projection)) = projection.iter().next() else {
+        panic!();
+    };
+
+    let texture_handle: Handle<Image> = asset_server.load(info::asset::INFO);
+
+    let info_size = Vec2::new(
+        (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) / 0.7,
+        projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
+    );
+    let font = (
+        TextFont {
+            font_size: info_size.y / 5.0,
+            ..default()
+        },
+        Text2dShadow {
+            offset: Vec2 { x: 3.0, y: -3.0 },
+            color: Color::srgba(0.0, 0.0, 0.0, 0.95),
+        },
+        TextColor(Color::srgb_u8(239, 191, 4)),
+    );
+
+    struct Info {
+        marker: info::Marker,
+        flip_x: bool,
+        offset: Vec3,
+    }
+
+    let infos = [Info {
+        marker: info::Marker::Moves,
+        flip_x: false,
+        offset: Vec3 {
+            y: info_size.y * 2.0,
+            ..default()
+        },
+    }];
+
+    for info in infos {
+        spawn(
+            &mut commands,
+            (
+                info.marker.clone(),
+                info::ResizeData(info.offset.truncate(), info.flip_x),
+                Sprite {
+                    custom_size: Some(info_size),
+                    color: Color::hsl(0.0, 0.0, 0.7),
+                    ..Sprite::from_image(texture_handle.clone())
+                },
+                Transform {
+                    translation: Vec3 {
+                        x: (-projection.area.width() / 2.0) * if info.flip_x { -1.0 } else { 1.0 },
+                        y: -projection.area.height() / 2.0,
+                        ..default()
+                    } + info.offset,
+                    ..default()
+                },
+                if info.flip_x {
+                    Anchor::BOTTOM_RIGHT
+                } else {
+                    Anchor::BOTTOM_LEFT
+                },
+                children![(
+                    info.marker.clone(),
+                    Text2d(info.marker.as_string().to_owned()),
+                    font.clone(),
+                    Transform {
+                        translation: info_size.extend(0.0) / 2.0
+                            * if info.flip_x {
+                                Vec3 {
+                                    x: -1.0,
+                                    y: 1.0,
+                                    z: 1.0,
+                                }
+                            } else {
+                                Vec3 {
+                                    x: 1.0,
+                                    y: 1.0,
+                                    z: 1.0,
+                                }
+                            },
+                        ..default()
+                    },
+                )],
+            ),
+        );
     }
 }
 
 fn resize(
     mut transform: Query<
         (&mut Transform, &mut Sprite),
-        (With<marker::Background>, Without<button::Marker>),
+        (
+            With<marker::Background>,
+            Without<button::Marker>,
+            Without<info::Marker>,
+        ),
     >,
     buttons: Query<
-        (&mut Transform, &button::Whatever),
-        (With<button::Marker>, Without<marker::Background>),
+        (&mut Transform, &button::ResizeData),
+        (
+            With<button::Marker>,
+            Without<marker::Background>,
+            Without<button::Marker>,
+        ),
+    >,
+    infos: Query<
+        (&mut Transform, &info::ResizeData),
+        (
+            With<info::Marker>,
+            Without<marker::Background>,
+            Without<button::Marker>,
+        ),
     >,
     projection: Query<&Projection, With<Camera>>,
 ) {
@@ -1813,16 +1931,22 @@ fn resize(
         });
     }
 
-    for (mut button_transform, button_whatever) in buttons {
+    for (mut button_transform, button_resize_data) in buttons {
         button_transform.translation = Vec3 {
-            x: (-projection.area.width() / 2.0) * if button_whatever.1 { -1.0 } else { 1.0 },
+            x: (-projection.area.width() / 2.0) * if button_resize_data.1 { -1.0 } else { 1.0 },
             y: -projection.area.height() / 2.0,
             ..default()
-        } + button_whatever.0.extend(0.0);
+        } + button_resize_data.0.extend(0.0);
+    }
+
+    for (mut info_transform, info_resize_data) in infos {
+        info_transform.translation = Vec3 {
+            x: (-projection.area.width() / 2.0) * if info_resize_data.1 { -1.0 } else { 1.0 },
+            y: -projection.area.height() / 2.0,
+            ..default()
+        } + info_resize_data.0.extend(0.0);
     }
 }
-
-
 
 fn place_tiles(
     mut commands: Commands,
@@ -2262,7 +2386,7 @@ fn help(
 }
 
 fn update_move_count(
-    button_texts: Query<(&mut Text2d, &button::Marker)>,
+    info_texts: Query<(&mut Text2d, &info::Marker)>,
     positions: Query<
         (&tile::Position, &tile::Variant),
         (With<tile::Marker<0>>, Without<marker::Hidden>),
@@ -2322,9 +2446,9 @@ fn update_move_count(
         .iter()
         .fold(0, |acc, (_variant, count)| acc + (*count / 2));
 
-    for (mut button_text, button_marker) in button_texts {
-        if matches!(button_marker, button::Marker::Moves) {
-            button_text.0 = format!("Moves:\n{moves}").to_string();
+    for (mut info_text, info_marker) in info_texts {
+        if matches!(info_marker, info::Marker::Moves) {
+            info_text.0 = format!("Moves:\n{moves}").to_string();
         }
     }
 
