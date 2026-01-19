@@ -1226,6 +1226,27 @@ fn generate_solvable_board(
 
     available_tile_variants.shuffle(&mut rng);
 
+    fn build_dependency_graph<F>(
+        positions: &[tile::Position],
+        qualifies: F,
+    ) -> Vec<Vec<usize>>
+    where
+        F: Fn(usize, &tile::Position, usize, &tile::Position) -> bool,
+    {
+        let mut graph = vec![Vec::new(); positions.len()];
+
+        for (i, pos) in positions.iter().enumerate() {
+            for (j, other) in positions.iter().enumerate() {
+                if i != j && qualifies(i, pos, j, other) {
+                    graph[i].push(j);
+                }
+            }
+        }
+
+        graph
+    }
+
+    /// Returns [Option::Some] if the given index is a candidate to place next iteration.
     fn valid_position_check<'a>(
         index: usize,
         available_positions: &Vec<tile::Position>,
@@ -1233,7 +1254,7 @@ fn generate_solvable_board(
     ) -> Option<usize> {
         let pos = &available_positions[index];
 
-        let mut overlapped_tiles_available = false;
+        let mut overlapped_other_available_tile = false;
         for other in available_positions.iter().enumerate() {
             if other.0 == index {
                 continue;
@@ -1249,12 +1270,12 @@ fn generate_solvable_board(
             }
 
             if is_above_other_tile && is_overlapping_other_tile {
-                overlapped_tiles_available = true;
+                overlapped_other_available_tile = true;
                 break;
             }
         }
 
-        if overlapped_tiles_available {
+        if overlapped_other_available_tile {
             debug!("INVALID: Obstructs other available tile position(s).");
             debug!("{pos:?}");
             return None;
@@ -1300,21 +1321,39 @@ fn generate_solvable_board(
         None
     }
 
-    fn dependency_check<'a>(
-        index: usize,
-        available_positions: &Vec<tile::Position>,
-        occupied_positions: &Vec<tile::Position>,
-    ) -> bool {
-        // Prioritize...
-        // Height
-        todo!()
-    }
-
+    /// Returns a [Vec] with indexes which are dependent on the given index (tile).
     fn determine_dependents(
         index: usize,
         available_positions: &Vec<tile::Position>,
-    ) {
-        todo!()
+    ) -> Option<Vec<usize>> {
+        let mut result = Vec::new();
+        let mut stack = Vec::new();
+        let mut visited = vec![false; available_positions.len()];
+
+        stack.push(index);
+        visited[index] = true;
+
+        while let Some(current) = stack.pop() {
+            let pos = available_positions[current];
+
+            for (other_index, other_pos) in available_positions.iter().enumerate() {
+                if visited[other_index] {
+                    continue;
+                }
+
+                let is_overlapping =
+                    pos.y.abs_diff(other_pos.y) < 2 && pos.x.abs_diff(other_pos.x) < 2;
+                let is_below = pos.z < other_pos.z;
+
+                if is_overlapping && is_below {
+                    visited[other_index] = true;
+                    result.push(other_index);
+                    stack.push(other_index);
+                }
+            }
+        }
+
+        Some(result)
     }
 
     for (v0, v1) in available_tile_variants {
