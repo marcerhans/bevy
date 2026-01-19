@@ -2070,7 +2070,12 @@ fn progressively_show_tiles(
     default_winit_settings: ResMut<DefaultWinitSettings>,
     mut winit_settings: ResMut<WinitSettings>,
     mut board_updated: MessageWriter<BoardUpdated>,
+    mut done: Local<bool>,
 ) {
+    if *done {
+        return;
+    }
+
     timer.tick(time.delta());
 
     if !timer.is_finished() {
@@ -2079,6 +2084,7 @@ fn progressively_show_tiles(
 
     if tiles.iter().len() == 1 {
         *winit_settings = default_winit_settings.0.clone();
+        *done = true;
     }
 
     for (entity, mut visibility) in tiles {
