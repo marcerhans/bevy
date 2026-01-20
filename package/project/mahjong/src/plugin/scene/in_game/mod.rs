@@ -1234,6 +1234,9 @@ fn generate_solvable_board(
 
     return (result, seed);
 
+    /// Returns positions (indexes to them) that have dependencies.
+    /// As some positions (indexes) may share dependencies, the first
+    /// index to be iterated gets the dependencies.
     fn build_dependency_graph<Q, C>(
         positions: &[tile::Position],
         qualifies: Q,
@@ -1252,8 +1255,15 @@ fn generate_solvable_board(
         let mut claimed = vec![false; positions.len()];
 
         for (index, pos) in positions.iter().enumerate() {
-            // Collect candidates first
+            // Collect candidates
             let mut candidates = Vec::new();
+
+            if claimed[index] {
+                // Dependencies are direction/transistive.
+                // Meaning, if this is claimed, it has already been processed.
+                // Skip in order to save a few iterations.
+                continue;
+            }
 
             for (other_index, other_pos) in positions.iter().enumerate() {
                 if index != other_index && !claimed[other_index] && qualifies(pos, other_pos) {
