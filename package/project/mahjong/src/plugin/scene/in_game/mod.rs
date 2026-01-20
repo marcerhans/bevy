@@ -1227,16 +1227,17 @@ fn generate_solvable_board(
 
     available_tile_variants.shuffle(&mut rng);
 
-    for tile_variant in available_tile_variants {
-        result.push((available_positions.pop().unwrap(), tile_variant.0));
-        result.push((available_positions.pop().unwrap(), tile_variant.1));
-    }
+    // for tile_variant in available_tile_variants {
+    //     result.push((available_positions.pop().unwrap(), tile_variant.0));
+    //     result.push((available_positions.pop().unwrap(), tile_variant.1));
+    // }
 
-    return (result, seed);
+    // return (result, seed);
 
     /// Returns positions (indexes to them) that have dependencies.
     /// As some positions (indexes) may share dependencies, the first
     /// index to be iterated gets the dependencies.
+    /// The root element in each branch in includes "self".
     fn build_dependency_graph<Q, C>(
         positions: &[tile::Position],
         qualifies: Q,
@@ -1255,6 +1256,9 @@ fn generate_solvable_board(
         let mut claimed = vec![false; positions.len()];
 
         for (index, pos) in positions.iter().enumerate() {
+            // Start by adding "self" (index) as a dependency.
+            graph[index].push(index);
+
             // Collect candidates
             let mut candidates = Vec::new();
 
