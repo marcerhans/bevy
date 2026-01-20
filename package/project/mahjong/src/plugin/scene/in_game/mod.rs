@@ -1284,13 +1284,12 @@ fn generate_solvable_board(
         graph
     }
 
-    // Example usage
     let graph_layer = build_dependency_graph(
         &available_positions,
         |pos, other_pos| {
-            pos.z < other_pos.z
-                && pos.y.abs_diff(other_pos.y) < 2
-                && pos.x.abs_diff(other_pos.x) < 2
+            let is_overlapping = pos.y.abs_diff(other_pos.y) < 2 && pos.x.abs_diff(other_pos.x) < 2;
+            let is_under = pos.z < other_pos.z;
+            is_overlapping && is_under
         },
         |pos, other_pos| pos.z.cmp(&other_pos.z),
     );
