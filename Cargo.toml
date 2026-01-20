@@ -44,26 +44,19 @@ codegen-units = 1
 # Do a second optimization pass over the entire program, including dependencies.
 # Slows compile times, marginal improvements.
 lto = "thin"
-
-# Release profile for WASM targets
-# THIS IS USED FOR TRUNK - Trunk uses whatever the release flag is (which also happens to be wasm target).
-[target.wasm32-unknown-unknown.profile.release]
-codegen-units = 1
-lto = "thin"
+# TRUNK NOTE: Trunk does not understand how to use anything other than release profile... so I'm placing these here.
+# Not the best for native releases, but I'm most likely going to have WASM programs for the most part anyway.
 opt-level = "z"
 panic = "abort"
 strip = "debuginfo"
 
-# Optimize for size in the wasm-release profile to reduce load times and bandwidth usage on web.
-# THIS IS NOT USED FOR TRUNK, ONLY WASM-SERVER-RUNNER in config.toml.
-[profile.wasm-release]
-# Default to release profile values.
-inherits = "release"
-# Optimize with size in mind (also try "z", sometimes it is better).
-# Slightly slows compile times, great improvements to file size and runtime performance.
-opt-level = "s"
-# Strip all debugging information from the binary to slightly reduce file size.
-strip = "debuginfo"
+# See "Trunk" note above the [profile.release]
+# Sadly, (apparently) TRUNK does not understand how to use custom profiles
+# [profile.wasm-release]
+# inherits = "release"
+# opt-level = "z"
+# panic = "abort"
+# strip = "debuginfo"
 
 # This workspace root package exists purely to run examples
 [package]
