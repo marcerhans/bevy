@@ -1,10 +1,13 @@
 [alias]
-debug = "RUSTFLAGS=\"-Awarnings\" run --features debug --target x86_64-unknown-linux-gnu"
+debug = "run --features debug --target x86_64-unknown-linux-gnu"
 debug-test = "test --features debug"
 debug-build = "build --features debug"
 release = "run --release"
 wasm-debug = "run --target wasm32-unknown-unknown"
 wasm-release = "run --target wasm32-unknown-unknown --profile wasm-release"
+
+[env]
+RUSTFLAGS = "-Awarnings"
 
 [build]
 target = "wasm32-unknown-unknown" # The default target. Nice to have set for IDE's.
