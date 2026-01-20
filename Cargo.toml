@@ -18,7 +18,7 @@ repository = "https://github.com/marcerhans/bevy"
 version = "0.1.0"
 
 [workspace.dependencies]
-bevy = { version = "0.17.1", features = ["wayland"] }
+bevy = { version = "0.18.0", default-features = false }
 bevy-inspector-egui = { version = "0.35.0" }
 avian2d = { version = "0.4.0" }
 avian3d = { version = "0.4.0" }

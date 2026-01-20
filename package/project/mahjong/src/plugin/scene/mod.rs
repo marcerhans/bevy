@@ -2,8 +2,6 @@ mod greeter;
 mod in_game;
 mod main_menu;
 
-use std::time::Duration;
-
 use bevy::{
     diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
     prelude::*,

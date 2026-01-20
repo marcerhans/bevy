@@ -1227,6 +1227,13 @@ fn generate_solvable_board(
 
     available_tile_variants.shuffle(&mut rng);
 
+    for tile_variant in available_tile_variants {
+        result.push((available_positions.pop().unwrap(), tile_variant.0));
+        result.push((available_positions.pop().unwrap(), tile_variant.1));
+    }
+
+    return (result, seed);
+
     fn build_dependency_graph<Q, C>(
         positions: &[tile::Position],
         qualifies: Q,
@@ -1270,9 +1277,46 @@ fn generate_solvable_board(
     // Example usage
     let graph_layer = build_dependency_graph(
         &available_positions,
-        |from, to| from.z < to.z && from.y.abs_diff(to.y) < 2 && from.x.abs_diff(to.x) < 2,
-        |a, b| a.z.cmp(&b.z),
+        |pos, other_pos| {
+            pos.z < other_pos.z
+                && pos.y.abs_diff(other_pos.y) < 2
+                && pos.x.abs_diff(other_pos.x) < 2
+        },
+        |pos, other_pos| pos.z.cmp(&other_pos.z),
     );
+
+    let graph_row_left = build_dependency_graph(
+        &available_positions,
+        |pos, other_pos| {
+            let same_layer = pos.z == other_pos.z;
+            let same_row = pos.y.abs_diff(other_pos.y) < 2;
+            let to_the_left = pos.x == other_pos.x + 2;
+            same_row && to_the_left
+        },
+        |pos, other_pos| pos.z.cmp(&other_pos.z),
+    );
+
+    let graph_row_right = build_dependency_graph(
+        &available_positions,
+        |pos, other_pos| {
+            let same_layer = pos.z == other_pos.z;
+            let same_row = pos.y.abs_diff(other_pos.y) < 2;
+            let to_the_right = pos.x + 2 == other_pos.x;
+            same_row && to_the_right
+        },
+        |pos, other_pos| pos.z.cmp(&other_pos.z),
+    );
+
+    debug!("{:?}", graph_layer);
+    debug!("{:?}", graph_row_left);
+    debug!("{:?}", graph_row_right);
+    panic!();
+
+    // let graph_row_right = build_dependency_graph(
+    //     &available_positions,
+    //     |pos, other_pos| from.z < to.z && from.y.abs_diff(to.y) < 2 && from.x.abs_diff(to.x) < 2,
+    //     |pos, other_pos| a.z.cmp(&b.z),
+    // );
 
     // let graph_row = build_dependency_graph(
     //     &available_positions,
