@@ -12,10 +12,10 @@ impl bevy::prelude::Plugin for Plugin {
         &self,
         app: &mut App,
     ) {
-        app.add_sub_state::<MainMenu>();
-            // .add_systems(OnEnter(MainMenu::Root), on_enter)
-            // .add_systems(Update, update.run_if(in_state(MainMenu::Root)))
-            // .add_plugins((in_game::Plugin, about::Plugin));
+        app.add_sub_state::<MainMenu>().add_plugins(in_game::Plugin);
+        // .add_systems(OnEnter(MainMenu::Root), on_enter)
+        // .add_systems(Update, update.run_if(in_state(MainMenu::Root)))
+        // .add_plugins((in_game::Plugin, about::Plugin));
     }
 }
 

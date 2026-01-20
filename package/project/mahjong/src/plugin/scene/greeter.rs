@@ -69,7 +69,7 @@ fn on_update(
     mut transform: Query<&mut Sprite, With<BackgroundSprite>>,
     projection: Query<&Projection, With<Camera>>,
 ) {
-    timer.inner.tick(time.delta());
+    // timer.inner.tick(time.delta());
 
     // if timer.inner.just_finished() {
         next_state.set(Startup::MainMenu);
