@@ -1271,7 +1271,7 @@ fn generate_solvable_board(
                 }
             }
 
-            // Sort candidates deterministically
+            // Sort candidates to keep dependency direction.
             candidates.sort_unstable_by(|&a, &b| compare(&positions[a], &positions[b]));
 
             // Claim them
