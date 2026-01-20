@@ -7,7 +7,7 @@ members = [
 [workspace.package]
 authors = ["Marcus Hanson"]
 categories = ["game"]
-description = "Nevy"
+description = "Bevy"
 edition = "2024"
 homepage = "https://github.com/marcerhans/bevy"
 keywords = ["nevy"]
