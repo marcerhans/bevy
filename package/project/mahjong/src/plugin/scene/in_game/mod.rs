@@ -1386,31 +1386,18 @@ fn generate_solvable_board(
                 valid_position_check(index, &available_positions, &occupied_positions)
             });
 
-        // Based on dependency graph pick two positions (indexes) with the highest dependency count
-        let mut highest_dependency_count_index: Option<(usize, usize)> = None;
-        let mut second_highest_dependency_count_index: Option<(usize, usize)> = None;
+        // Based on dependency graph generate a sorted list where the first elements have high dependency counts.
+        let mut highest_dependency_count_indexes: Vec<(usize, usize)> = Vec::new();
         for (index, dependencies) in layer_dependency_graph.iter().enumerate() {
-            let len = dependencies.len();
-
-            if highest_dependency_count_index.is_none() {
-                highest_dependency_count_index = Some((index, len));
-            } else if let Some(hdci) = highest_dependency_count_index {
-                if len > hdci.1 {
-                    if let Some(shdci) = second_highest_dependency_count_index {
-                        second_highest_dependency_count_index =
-                            highest_dependency_count_index.clone();
-                    }
-
-                    highest_dependency_count_index = Some((index, len));
-                } else {
-                    if let Some(shdci) = second_highest_dependency_count_index {
-                        if len > shdci.1 {
-                            second_highest_dependency_count_index = Some((index, len));
-                        }
-                    }
-                }
-            }
+            let new_len = dependencies.len();
+            let idx = highest_dependency_count_indexes
+                .binary_search_by(|(_this_index, this_len)| this_len.cmp(&new_len))
+                .unwrap_or_else(|i| i);
+            highest_dependency_count_indexes.insert(idx, (index, new_len));
         }
+
+        // Combine dependency list and valid positions to pick two positions that are valid and have high dependency counts.
+        todo!();
 
         let mut valid_position_pair = valid_positions
             .clone()
