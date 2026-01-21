@@ -1210,6 +1210,7 @@ fn generate_solvable_board(
 
     let mut result: Vec<(tile::Position, tile::Variant)> = Vec::new();
     let mut occupied_positions: Vec<tile::Position> = Vec::with_capacity(available_positions.len());
+    let original_positions = available_positions.clone();
 
     // Set rng seed
     let seed = seed.unwrap_or(rand::random());
@@ -1226,67 +1227,6 @@ fn generate_solvable_board(
     }
 
     available_tile_variants.shuffle(&mut rng);
-
-    // for tile_variant in available_tile_variants {
-    //     result.push((available_positions.pop().unwrap(), tile_variant.0));
-    //     result.push((available_positions.pop().unwrap(), tile_variant.1));
-    // }
-
-    // return (result, seed);
-
-    /// Returns positions (indexes to them) that have dependencies.
-    /// As some positions (indexes) may share dependencies, the first
-    /// index to be iterated gets the dependencies.
-    /// The root element in each branch in includes "self".
-    fn build_dependency_graph<Q, C>(
-        positions: &[tile::Position],
-        qualifies: Q,
-        compare: C,
-    ) -> Vec<Vec<usize>>
-    where
-        Q: Fn(&tile::Position, &tile::Position) -> bool,
-        C: Fn(&tile::Position, &tile::Position) -> Ordering,
-    {
-        let mut graph = vec![
-            Vec::with_capacity(tile::PositionGenerator::<tile::Turtle>::LAYERS);
-            positions.len()
-        ];
-
-        // Tracks whether a node has already been claimed as a dependent
-        let mut claimed = vec![false; positions.len()];
-
-        for (index, pos) in positions.iter().enumerate() {
-            // Collect candidates
-            let mut candidates = Vec::new();
-
-            if claimed[index] {
-                // Dependencies are direction/transistive.
-                // Meaning, if this is claimed, it has already been processed.
-                // Skip in order to save a few iterations.
-                continue;
-            }
-
-            for (other_index, other_pos) in positions.iter().enumerate() {
-                if index != other_index && !claimed[other_index] && qualifies(pos, other_pos) {
-                    candidates.push(other_index);
-                }
-            }
-
-            // Sort candidates to keep dependency direction.
-            candidates.sort_unstable_by(|&a, &b| compare(&positions[b], &positions[a]));
-
-            // Claim them
-            for j in candidates {
-                claimed[j] = true;
-                graph[index].push(j);
-            }
-
-            // Make the last element be the "root".
-            graph[index].push(index);
-        }
-
-        graph
-    }
 
     /// Returns [Option::Some] if the given index is a candidate to place next iteration.
     fn valid_position_check<'a>(
@@ -1324,6 +1264,7 @@ fn generate_solvable_board(
         }
 
         let mut row_already_occupied = false;
+
         for other in occupied_positions.iter().enumerate() {
             let is_on_same_layer = pos.z == other.1.z;
             let is_on_same_row = pos.y.abs_diff(other.1.y) < 2;
@@ -1341,6 +1282,7 @@ fn generate_solvable_board(
         }
 
         let mut is_next_to_occupied_tile = false;
+
         for other in occupied_positions.iter().enumerate() {
             let is_on_same_layer = pos.z == other.1.z;
             let is_on_same_row = pos.y.abs_diff(other.1.y) < 2;
@@ -1363,16 +1305,6 @@ fn generate_solvable_board(
         None
     }
 
-    let mut layer_dependency_graph = build_dependency_graph(
-        &available_positions,
-        |pos, other_pos| {
-            let is_overlapping = pos.y.abs_diff(other_pos.y) < 2 && pos.x.abs_diff(other_pos.x) < 2;
-            let is_under = pos.z < other_pos.z;
-            is_overlapping && is_under
-        },
-        |pos, other_pos| pos.z.cmp(&other_pos.z),
-    );
-
     for (v0, v1) in available_tile_variants {
         debug!("\n\nNew pair placement!");
 
@@ -1386,82 +1318,49 @@ fn generate_solvable_board(
                 valid_position_check(index, &available_positions, &occupied_positions)
             });
 
-        // Based on dependency graph generate a sorted list where the first elements have high dependency counts.
-        let mut ranked_dependency_counts: Vec<(usize, usize)> = Vec::new();
-        for dependencies in &layer_dependency_graph {
-            let Some(index) = dependencies.last() else {
-                continue;
-            };
-            let new_len = dependencies.len();
-            let idx = ranked_dependency_counts
-                .binary_search_by(|(_this_index, this_len)| this_len.cmp(&new_len))
-                .unwrap_or_else(|i| i);
-            ranked_dependency_counts.insert(idx, (*index, new_len));
+        let mut valid: Vec<usize> = valid_positions.collect();
+        valid.shuffle(&mut rng);
+
+        let mut chosen_pair = None;
+
+        // Find a pair that remains valid after first placement
+        'outer: for &i in &valid {
+            for &j in &valid {
+                if i == j {
+                    continue;
+                }
+
+                // Simulate placing i
+                let mut available_tmp = available_positions.clone();
+                let mut occupied_tmp = occupied_positions.clone();
+
+                let pos_i = available_tmp.swap_remove(i);
+                occupied_tmp.push(pos_i);
+
+                // Recompute j index if needed
+                let j2 = if j > i { j - 1 } else { j };
+
+                if valid_position_check(j2, &available_tmp, &occupied_tmp).is_some() {
+                    chosen_pair = Some((i, j));
+                    break 'outer;
+                }
+            }
         }
 
-        // Combine dependency list and valid positions to pick two positions that are valid and have high dependency counts.
-        // (Remove all non-valid positions from dependency list)
-        ranked_dependency_counts.retain(|(index, len)| {
-            valid_positions
-                .clone()
-                .find(|valid_index| valid_index == index)
-                .is_some()
-        });
+        if chosen_pair.is_none() {
+            return generate_solvable_board(original_positions, Some(seed + 1));
+        }
 
-        let mut valid_position_pair: Vec<usize> = ranked_dependency_counts
-            .iter()
-            .take(2)
-            .map(|(index, _len)| *index)
-            .collect();
+        let mut chosen_pair = vec![chosen_pair.unwrap().0, chosen_pair.unwrap().1];
 
-        // let mut valid_position_pair = valid_positions
-        //     .clone()
-        //     .choose_multiple(&mut rng, 2)
-        //     .iter()
-        //     .copied()
-        //     .collect::<Vec<usize>>();
-
-        // debug!("{occupied_positions:?}");
-
-        // // // IF the row is currently empty AND we try to place TWO tiles on the SAME ROW there may be dragons.
-        // // // If these to be placed tiles are NOT next to each other, then iiiiit will break the rules :) So DON'T! :D
-        // // // In this case, solve it by finding a position that IS next to the other.
-        // // let pos_a = &available_positions[valid_position_pair[0]];
-        // // let pos_b = &available_positions[valid_position_pair[1]];
-        // // let on_same_layer = pos_a.z == pos_b.z;
-        // // let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
-        // // let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
-        // // if on_same_layer && on_same_row && !next_to_each_other {
-        // //     for pos_b_index in valid_positions {
-        // //         let pos_b = available_positions[pos_b_index];
-        // //         let on_same_layer = pos_a.z == pos_b.z;
-        // //         let on_same_row = pos_a.y.abs_diff(pos_b.y) < 2;
-        // //         let next_to_each_other = pos_a.x.abs_diff(pos_b.x) == 2;
-        // //         if on_same_layer && on_same_row && next_to_each_other {
-        // //             valid_position_pair[1] = pos_b_index;
-        // //             break;
-        // //         }
-        // //     }
-        // // }
-
-        if valid_position_pair[1] == available_positions.len() - 1 {
+        if chosen_pair[1] == available_positions.len() - 1 {
             // Since we are using swap remove, we have to adjust the second of the two indexes in this particular case.
-            valid_position_pair[1] = valid_position_pair[0];
+            chosen_pair[1] = chosen_pair[0];
         }
 
         for i in 0..2 {
-            result.push((available_positions[valid_position_pair[i]], v[i]));
-            occupied_positions.push(available_positions.swap_remove(valid_position_pair[i]));
-
-            for dependencies in &mut layer_dependency_graph {
-                let Some(index) = dependencies.last() else {
-                    continue;
-                };
-
-                if *index == valid_position_pair[i] {
-                    dependencies.pop();
-                }
-            }
+            result.push((available_positions[chosen_pair[i]], v[i]));
+            occupied_positions.push(available_positions.swap_remove(chosen_pair[i]));
         }
     }
 
