@@ -1256,9 +1256,6 @@ fn generate_solvable_board(
         let mut claimed = vec![false; positions.len()];
 
         for (index, pos) in positions.iter().enumerate() {
-            // Start by adding "self" (index) as a dependency.
-            graph[index].push(index);
-
             // Collect candidates
             let mut candidates = Vec::new();
 
@@ -1276,13 +1273,16 @@ fn generate_solvable_board(
             }
 
             // Sort candidates to keep dependency direction.
-            candidates.sort_unstable_by(|&a, &b| compare(&positions[a], &positions[b]));
+            candidates.sort_unstable_by(|&a, &b| compare(&positions[b], &positions[a]));
 
             // Claim them
             for j in candidates {
                 claimed[j] = true;
                 graph[index].push(j);
             }
+
+            // Make the last element be the "root".
+            graph[index].push(index);
         }
 
         graph
@@ -1387,24 +1387,39 @@ fn generate_solvable_board(
             });
 
         // Based on dependency graph generate a sorted list where the first elements have high dependency counts.
-        let mut highest_dependency_count_indexes: Vec<(usize, usize)> = Vec::new();
-        for (index, dependencies) in layer_dependency_graph.iter().enumerate() {
+        let mut ranked_dependency_counts: Vec<(usize, usize)> = Vec::new();
+        for dependencies in layer_dependency_graph {
+            let Some(index) = dependencies.first() else {
+                continue;
+            };
             let new_len = dependencies.len();
-            let idx = highest_dependency_count_indexes
+            let idx = ranked_dependency_counts
                 .binary_search_by(|(_this_index, this_len)| this_len.cmp(&new_len))
                 .unwrap_or_else(|i| i);
-            highest_dependency_count_indexes.insert(idx, (index, new_len));
+            ranked_dependency_counts.insert(idx, (*index, new_len));
         }
 
         // Combine dependency list and valid positions to pick two positions that are valid and have high dependency counts.
-        todo!();
+        // (Remove all non-valid positions from dependency list)
+        ranked_dependency_counts.retain(|(index, len)| {
+            valid_positions
+                .clone()
+                .find(|valid_index| valid_index == index)
+                .is_some()
+        });
 
-        let mut valid_position_pair = valid_positions
-            .clone()
-            .choose_multiple(&mut rng, 2)
+        let mut valid_position_pair: Vec<usize> = ranked_dependency_counts
             .iter()
-            .copied()
-            .collect::<Vec<usize>>();
+            .take(2)
+            .map(|(index, _len)| *index)
+            .collect();
+
+        // let mut valid_position_pair = valid_positions
+        //     .clone()
+        //     .choose_multiple(&mut rng, 2)
+        //     .iter()
+        //     .copied()
+        //     .collect::<Vec<usize>>();
 
         // debug!("{occupied_positions:?}");
 
@@ -1429,15 +1444,25 @@ fn generate_solvable_board(
         // //     }
         // // }
 
-        // if valid_position_pair[1] == available_positions.len() - 1 {
-        //     // Since we are using swap remove, we have to adjust the second of the two indexes in this particular case.
-        //     valid_position_pair[1] = valid_position_pair[0];
-        // }
+        if valid_position_pair[1] == available_positions.len() - 1 {
+            // Since we are using swap remove, we have to adjust the second of the two indexes in this particular case.
+            valid_position_pair[1] = valid_position_pair[0];
+        }
 
-        // for i in 0..2 {
-        //     result.push((available_positions[valid_position_pair[i]], v[i]));
-        //     occupied_positions.push(available_positions.swap_remove(valid_position_pair[i]));
-        // }
+        for i in 0..2 {
+            result.push((available_positions[valid_position_pair[i]], v[i]));
+            occupied_positions.push(available_positions.swap_remove(valid_position_pair[i]));
+
+            for dependencies in &mut layer_dependency_graph {
+                let Some(index) = dependencies.first() else {
+                    continue;
+                };
+
+                if *index == valid_position_pair[i] {
+                    dependencies.remove(0);
+                }
+            }
+        }
     }
 
     if available_positions.len() > 0 {
