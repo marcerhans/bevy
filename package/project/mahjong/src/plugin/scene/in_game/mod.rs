@@ -1288,78 +1288,6 @@ fn generate_solvable_board(
         graph
     }
 
-    let graph_layer = build_dependency_graph(
-        &available_positions,
-        |pos, other_pos| {
-            let is_overlapping = pos.y.abs_diff(other_pos.y) < 2 && pos.x.abs_diff(other_pos.x) < 2;
-            let is_under = pos.z < other_pos.z;
-            is_overlapping && is_under
-        },
-        |pos, other_pos| pos.z.cmp(&other_pos.z),
-    );
-
-    let graph_row_left = build_dependency_graph(
-        &available_positions,
-        |pos, other_pos| {
-            let same_layer = pos.z == other_pos.z;
-            let same_row = pos.y.abs_diff(other_pos.y) < 2;
-            let to_the_left = pos.x == other_pos.x + 2;
-            same_row && to_the_left
-        },
-        |pos, other_pos| pos.z.cmp(&other_pos.z),
-    );
-
-    let graph_row_right = build_dependency_graph(
-        &available_positions,
-        |pos, other_pos| {
-            let same_layer = pos.z == other_pos.z;
-            let same_row = pos.y.abs_diff(other_pos.y) < 2;
-            let to_the_right = pos.x + 2 == other_pos.x;
-            same_row && to_the_right
-        },
-        |pos, other_pos| pos.z.cmp(&other_pos.z),
-    );
-
-    debug!("{:?}", graph_layer);
-    debug!("{:?}", graph_row_left);
-    debug!("{:?}", graph_row_right);
-    panic!();
-
-    // let graph_row_right = build_dependency_graph(
-    //     &available_positions,
-    //     |pos, other_pos| from.z < to.z && from.y.abs_diff(to.y) < 2 && from.x.abs_diff(to.x) < 2,
-    //     |pos, other_pos| a.z.cmp(&b.z),
-    // );
-
-    // let graph_row = build_dependency_graph(
-    //     &available_positions,
-    //     |from, to| from.z < to.z && from.y.abs_diff(to.y) < 2 && from.x.abs_diff(to.x) < 2,
-    //     |a, b| a.z.cmp(&b.z),
-    // );
-
-    // fn determine_dependents_from_graph(
-    //     root: usize,
-    //     graph: &mut [Vec<usize>],
-    //     out: &mut Vec<usize>,
-    // ) {
-    //     let mut stack = Vec::new();
-    //     let mut visited = vec![false; graph.len()];
-
-    //     stack.push(root);
-
-    //     while let Some(current) = stack.pop() {
-    //         while let Some(dep) = graph[current].pop() {
-    //             if visited[dep] {
-    //                 continue;
-    //             }
-
-    //             visited[dep] = true;
-    //             out.push(dep);
-    //             stack.push(dep);
-    //         }
-    //     }
-    // }
-
     /// Returns [Option::Some] if the given index is a candidate to place next iteration.
     fn valid_position_check<'a>(
         index: usize,
@@ -1435,40 +1363,15 @@ fn generate_solvable_board(
         None
     }
 
-    /// Returns a [Vec] with indexes which are dependent on the given index (tile).
-    fn determine_dependents(
-        index: usize,
-        available_positions: &Vec<tile::Position>,
-    ) -> Option<Vec<usize>> {
-        let mut result = Vec::new();
-        let mut stack = Vec::new();
-        let mut visited = vec![false; available_positions.len()];
-
-        stack.push(index);
-        visited[index] = true;
-
-        while let Some(current) = stack.pop() {
-            let pos = available_positions[current];
-
-            for (other_index, other_pos) in available_positions.iter().enumerate() {
-                if visited[other_index] {
-                    continue;
-                }
-
-                let is_overlapping =
-                    pos.y.abs_diff(other_pos.y) < 2 && pos.x.abs_diff(other_pos.x) < 2;
-                let is_below = pos.z < other_pos.z;
-
-                if is_overlapping && is_below {
-                    visited[other_index] = true;
-                    result.push(other_index);
-                    stack.push(other_index);
-                }
-            }
-        }
-
-        Some(result)
-    }
+    let mut layer_dependency_graph = build_dependency_graph(
+        &available_positions,
+        |pos, other_pos| {
+            let is_overlapping = pos.y.abs_diff(other_pos.y) < 2 && pos.x.abs_diff(other_pos.x) < 2;
+            let is_under = pos.z < other_pos.z;
+            is_overlapping && is_under
+        },
+        |pos, other_pos| pos.z.cmp(&other_pos.z),
+    );
 
     for (v0, v1) in available_tile_variants {
         debug!("\n\nNew pair placement!");
@@ -1483,62 +1386,38 @@ fn generate_solvable_board(
                 valid_position_check(index, &available_positions, &occupied_positions)
             });
 
-        // Determine how many dependants each valid position has
-        let dependents = valid_positions.map(|index| {
-            determine_dependents(index, &available_positions);
-        });
+        // Based on dependency graph pick two positions (indexes) with the highest dependency count
+        let mut highest_dependency_count_index: Option<(usize, usize)> = None;
+        let mut second_highest_dependency_count_index: Option<(usize, usize)> = None;
+        for (index, dependencies) in layer_dependency_graph.iter().enumerate() {
+            let len = dependencies.len();
 
-        // // let valid_positions = valid_positions
-        // //     .filter(|index| dependency_check(*index, &available_positions, &occupied_positions));
+            if highest_dependency_count_index.is_none() {
+                highest_dependency_count_index = Some((index, len));
+            } else if let Some(hdci) = highest_dependency_count_index {
+                if len > hdci.1 {
+                    if let Some(shdci) = second_highest_dependency_count_index {
+                        second_highest_dependency_count_index =
+                            highest_dependency_count_index.clone();
+                    }
 
-        // let mut largest_available_rows: HashMap<(u32, u32), u32> = HashMap::new();
+                    highest_dependency_count_index = Some((index, len));
+                } else {
+                    if let Some(shdci) = second_highest_dependency_count_index {
+                        if len > shdci.1 {
+                            second_highest_dependency_count_index = Some((index, len));
+                        }
+                    }
+                }
+            }
+        }
 
-        // valid_positions.clone().for_each(|pos| {
-        //     let pos = available_positions[pos];
-        //     let pos = (pos.y, pos.z);
-
-        //     if let Some(pos) = largest_available_rows.get_mut(&pos) {
-        //         *pos += 1;
-        //     } else {
-        //         largest_available_rows.insert(pos, 1);
-        //     }
-        // });
-
-        // let mut largest_row_layer: Option<(u32, UVec2)> = None;
-
-        // for row_layer in largest_available_rows {
-        //     if let Some(largest_row_layer) = largest_row_layer.as_mut() {
-        //         if largest_row_layer.0 < row_layer.1 {
-        //             *largest_row_layer = (row_layer.1, UVec2::new(row_layer.0.0, row_layer.0.1));
-        //         }
-        //     } else {
-        //         largest_row_layer = Some((row_layer.1, UVec2::new(row_layer.0.0, row_layer.0.1)));
-        //     }
-        // }
-
-        // let largest_row_layer = largest_row_layer.unwrap().1;
-
-        // let valid_position_index_1 = valid_positions
-        //     .clone()
-        //     .position(|index| {
-        //         let pos = available_positions[index];
-        //         pos.y == largest_row_layer.x && pos.z == largest_row_layer.y
-        //     })
-        //     .unwrap();
-        // let valid_position_index_2 = valid_positions
-        //     .clone()
-        //     .position(|index| {
-        //         let pos = available_positions[index];
-        //         pos.y == largest_row_layer.x && pos.z == largest_row_layer.y
-        //     })
-        //     .unwrap();
-
-        // let mut valid_position_pair = valid_positions
-        //     .clone()
-        //     .choose_multiple(&mut rng, 2)
-        //     .iter()
-        //     .copied()
-        //     .collect::<Vec<usize>>();
+        let mut valid_position_pair = valid_positions
+            .clone()
+            .choose_multiple(&mut rng, 2)
+            .iter()
+            .copied()
+            .collect::<Vec<usize>>();
 
         // debug!("{occupied_positions:?}");
 
