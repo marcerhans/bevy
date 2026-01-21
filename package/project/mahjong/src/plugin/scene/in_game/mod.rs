@@ -57,7 +57,9 @@ impl bevy::prelude::Plugin for Plugin {
             )
             .add_systems(
                 Update,
-                progressively_show_tiles.run_if(in_state(InGame::Running)),
+                (progressively_show_tiles, update_move_count)
+                    .chain()
+                    .run_if(in_state(InGame::Running)),
             )
             .add_systems(
                 Update,
@@ -67,7 +69,6 @@ impl bevy::prelude::Plugin for Plugin {
                     help_keyboard,
                     help_toggle,
                     help,
-                    update_move_count,
                 )
                     .run_if(in_state(InGame::Running)),
             )
@@ -1189,9 +1190,6 @@ fn bind_tiles_to_positions(
         tile::PositionGenerator::<tile::Turtle>::new(UVec2::splat(tile_grid_size));
 
     let positions: Vec<tile::Position> = position_generator.collect();
-    // for _ in 0..10000 {
-    //     generate_solvable_board(positions.clone(), None);
-    // }
     let seed = platform.rng_seed_get();
     let (mut positions, seed) = generate_solvable_board(positions, seed);
     positions.reverse();
@@ -2352,10 +2350,10 @@ fn update_move_count(
         (&tile::Position, &tile::Variant),
         (With<tile::Marker<0>>, Without<marker::Hidden>),
     >,
-    board_updated: MessageReader<BoardUpdated>,
+    mut board_updated: MessageReader<BoardUpdated>,
     mut next_state: ResMut<NextState<InGame>>,
 ) {
-    if board_updated.is_empty() {
+    if board_updated.read().count() == 0 {
         return;
     }
 
@@ -2414,7 +2412,7 @@ fn update_move_count(
     }
 
     if moves < 1 {
-        // next_state.set(InGame::Defeat);
+        next_state.set(InGame::Defeat);
     }
 }
 
