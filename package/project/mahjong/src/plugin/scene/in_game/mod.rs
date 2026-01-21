@@ -1388,8 +1388,8 @@ fn generate_solvable_board(
 
         // Based on dependency graph generate a sorted list where the first elements have high dependency counts.
         let mut ranked_dependency_counts: Vec<(usize, usize)> = Vec::new();
-        for dependencies in layer_dependency_graph {
-            let Some(index) = dependencies.first() else {
+        for dependencies in &layer_dependency_graph {
+            let Some(index) = dependencies.last() else {
                 continue;
             };
             let new_len = dependencies.len();
@@ -1454,12 +1454,12 @@ fn generate_solvable_board(
             occupied_positions.push(available_positions.swap_remove(valid_position_pair[i]));
 
             for dependencies in &mut layer_dependency_graph {
-                let Some(index) = dependencies.first() else {
+                let Some(index) = dependencies.last() else {
                     continue;
                 };
 
                 if *index == valid_position_pair[i] {
-                    dependencies.remove(0);
+                    dependencies.pop();
                 }
             }
         }
