@@ -1144,7 +1144,24 @@ mod button {
     }
 }
 
-fn startup(mut next_state: ResMut<NextState<InGame>>) {
+fn startup(
+    mut next_state: ResMut<NextState<InGame>>,
+    mut timer: ResMut<Timer>,
+    mut seed: ResMut<Seed>,
+    mut tile_pos_variant_pairs: ResMut<TilePositionVariantPairs>,
+    mut selected_tile: ResMut<SelectedTile>,
+    mut history: ResMut<History>,
+    mut help_enabled: ResMut<HelpEnabled>,
+) {
+    *timer = Timer(bevy::time::Timer::new(
+        Duration::from_millis(10),
+        TimerMode::Repeating,
+    ));
+    *seed = Seed::default();
+    *tile_pos_variant_pairs = TilePositionVariantPairs::default();
+    *selected_tile = SelectedTile::default();
+    *history = History::default();
+    *help_enabled = HelpEnabled::default();
     next_state.set(InGame::Init);
 }
 
