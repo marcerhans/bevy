@@ -437,9 +437,9 @@ mod tile {
     }
 
     pub const DEFAULT_COLOR: Color = Color::Hsla(Hsla {
-        hue: 0.0,
-        saturation: 0.0,
-        lightness: 1.1,
+        hue: 60.0,
+        saturation: 0.2,
+        lightness: 1.3,
         alpha: 1.0,
     });
 
