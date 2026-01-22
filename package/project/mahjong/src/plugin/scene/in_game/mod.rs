@@ -2029,7 +2029,7 @@ fn progressively_show_tiles(
         commands.entity(entity).remove::<marker::Hidden>();
         *visibility = Visibility::Inherited;
 
-        if index % 8 == 0 {
+        if index != 0 && index % 8 == 0 {
             break;
         }
     }
