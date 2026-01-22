@@ -2014,29 +2014,24 @@ fn spawn_tiles(
 
 fn progressively_show_tiles(
     mut commands: Commands,
-    time: Res<Time>,
-    mut timer: ResMut<Timer>,
-    tiles: Query<(Entity, &mut Visibility), (With<tile::Marker<0>>, With<marker::Hidden>)>,
+    mut tiles: Query<(Entity, &mut Visibility), (With<tile::Marker<0>>, With<marker::Hidden>)>,
     default_winit_settings: ResMut<DefaultWinitSettings>,
     mut winit_settings: ResMut<WinitSettings>,
     mut board_updated: MessageWriter<BoardUpdated>,
     mut next_state: ResMut<NextState<InGame>>,
 ) {
-    timer.tick(time.delta());
-
-    if !timer.is_finished() {
-        return;
-    }
-
     if tiles.iter().len() == 1 {
         *winit_settings = default_winit_settings.0.clone();
         next_state.set(InGame::Running);
     }
 
-    for (entity, mut visibility) in tiles {
+    for (index, (entity, mut visibility)) in tiles.iter_mut().enumerate() {
         commands.entity(entity).remove::<marker::Hidden>();
         *visibility = Visibility::Inherited;
-        break;
+
+        if index % 8 == 0 {
+            break;
+        }
     }
 
     board_updated.write(BoardUpdated);
