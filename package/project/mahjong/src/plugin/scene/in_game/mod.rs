@@ -2426,10 +2426,9 @@ fn new_game_mouse(
     mut next_state: ResMut<NextState<InGame>>,
     platform: ResMut<Platform>,
 ) {
-    info!("New Game!");
-    platform.rng_seed_set(rand::random::<u64>());
-
     if matches!(state.get(), InGame::Running) {
+        info!("New Game!");
+        platform.rng_seed_set(rand::random::<u64>());
         next_state.set(InGame::Root);
     }
 }
