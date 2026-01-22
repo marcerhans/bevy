@@ -60,7 +60,7 @@ impl bevy::prelude::Plugin for Plugin {
                 Update,
                 (
                     progressively_show_tiles.run_if(in_state(InGame::Init)),
-                    update_move_count.run_if(in_state(InGame::Init).or(in_state(InGame::Running))),
+                    update_move_count.run_if(in_state(InGame::Running)),
                 ),
             )
             .add_systems(
@@ -1599,7 +1599,8 @@ fn spawn_buttons(
     };
 
     let texture_handle: Handle<Image> = asset_server.load(button::asset::BUTTON);
-    let texture_atlas = TextureAtlasLayout::from_grid(UVec2::new(666 / 3, 429 / 3), 3, 1, None, None);
+    let texture_atlas =
+        TextureAtlasLayout::from_grid(UVec2::new(666 / 3, 429 / 3), 3, 1, None, None);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
     let button_size = Vec2::new(
@@ -2017,10 +2018,9 @@ fn progressively_show_tiles(
     mut tiles: Query<(Entity, &mut Visibility), (With<tile::Marker<0>>, With<marker::Hidden>)>,
     default_winit_settings: ResMut<DefaultWinitSettings>,
     mut winit_settings: ResMut<WinitSettings>,
-    mut board_updated: MessageWriter<BoardUpdated>,
     mut next_state: ResMut<NextState<InGame>>,
 ) {
-    if tiles.iter().len() == 1 {
+    if tiles.iter().len() == 0 {
         *winit_settings = default_winit_settings.0.clone();
         next_state.set(InGame::Running);
     }
@@ -2033,8 +2033,6 @@ fn progressively_show_tiles(
             break;
         }
     }
-
-    board_updated.write(BoardUpdated);
 }
 
 fn mouse_activity(
