@@ -39,7 +39,7 @@ impl bevy::prelude::Plugin for Plugin {
             .insert_resource(HelpEnabled::default())
             .add_systems(OnEnter(InGame::Root), startup)
             .add_systems(
-                OnEnter(InGame::Running),
+                OnEnter(InGame::Init),
                 (
                     update_winit_settings,
                     spawn_background,
@@ -52,14 +52,16 @@ impl bevy::prelude::Plugin for Plugin {
                 Update,
                 resize.run_if(
                     in_state(InGame::Running)
+                        .or(in_state(InGame::Init))
                         .or(in_state(InGame::Victory).or(in_state(InGame::Defeat))),
                 ),
             )
             .add_systems(
                 Update,
-                (progressively_show_tiles, update_move_count)
-                    .chain()
-                    .run_if(in_state(InGame::Running)),
+                (
+                    progressively_show_tiles.run_if(in_state(InGame::Init)),
+                    update_move_count.run_if(in_state(InGame::Init).or(in_state(InGame::Running))),
+                ),
             )
             .add_systems(
                 Update,
@@ -326,6 +328,7 @@ fn spawn<'a>(
 enum InGame {
     #[default]
     Root,
+    Init,
     Running,
     Victory,
     Defeat,
@@ -1142,7 +1145,7 @@ mod button {
 }
 
 fn startup(mut next_state: ResMut<NextState<InGame>>) {
-    next_state.set(InGame::Running);
+    next_state.set(InGame::Init);
 }
 
 fn update_winit_settings(mut winit_settings: ResMut<WinitSettings>) {
@@ -2017,12 +2020,8 @@ fn progressively_show_tiles(
     default_winit_settings: ResMut<DefaultWinitSettings>,
     mut winit_settings: ResMut<WinitSettings>,
     mut board_updated: MessageWriter<BoardUpdated>,
-    mut done: Local<bool>,
+    mut next_state: ResMut<NextState<InGame>>,
 ) {
-    if *done {
-        return;
-    }
-
     timer.tick(time.delta());
 
     if !timer.is_finished() {
@@ -2031,7 +2030,7 @@ fn progressively_show_tiles(
 
     if tiles.iter().len() == 1 {
         *winit_settings = default_winit_settings.0.clone();
-        *done = true;
+        next_state.set(InGame::Running);
     }
 
     for (entity, mut visibility) in tiles {
@@ -2423,12 +2422,16 @@ fn update_move_count(
 
 fn new_game_mouse(
     _on_press: On<Pointer<Press>>,
+    state: Res<State<InGame>>,
     mut next_state: ResMut<NextState<InGame>>,
     platform: ResMut<Platform>,
 ) {
     info!("New Game!");
     platform.rng_seed_set(rand::random::<u64>());
-    next_state.set(InGame::Root);
+
+    if matches!(state.get(), InGame::Running) {
+        next_state.set(InGame::Root);
+    }
 }
 
 fn poll_new_seed(
