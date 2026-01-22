@@ -1915,7 +1915,7 @@ fn spawn_tiles(
 
     let tile_texture: Handle<Image> = asset_server.load(tile::asset::texture::TILE);
     let tile_size = Vec2::new(
-        (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.9,
+        (projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32) * 0.85,
         projection.area.height() / tile::PositionGenerator::<tile::Turtle>::ROWS as f32,
     );
     let tile_grid_size = tile::PositionGenerator::<tile::Turtle>::TILE_GRID_SIZE as u32;
