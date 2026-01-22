@@ -2019,9 +2019,11 @@ fn progressively_show_tiles(
     default_winit_settings: ResMut<DefaultWinitSettings>,
     mut winit_settings: ResMut<WinitSettings>,
     mut next_state: ResMut<NextState<InGame>>,
+    mut board_updated: MessageWriter<BoardUpdated>,
 ) {
     if tiles.iter().len() == 0 {
         *winit_settings = default_winit_settings.0.clone();
+        board_updated.write(BoardUpdated);
         next_state.set(InGame::Running);
     }
 
