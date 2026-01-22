@@ -422,11 +422,11 @@ mod tile {
 
     pub mod asset {
         pub mod texture {
-            pub const TILE: &'static str = "misc/rev2/Tile2.png";
-            pub const ALLIANCE: &'static str = "misc/rev2/Alliance.png";
-            pub const HORDE: &'static str = "misc/rev2/Horde.png";
-            pub const FROSTMOURNE: &'static str = "misc/rev2/Frostmourne.png";
-            pub const ASHBRINGER: &'static str = "misc/rev2/Ashbringer.png";
+            pub const TILE: &'static str = "misc/rev2/lowres/Tile2.png";
+            pub const ALLIANCE: &'static str = "misc/rev2/lowres/Alliance.png";
+            pub const HORDE: &'static str = "misc/rev2/lowres/Horde.png";
+            pub const FROSTMOURNE: &'static str = "misc/rev2/lowres/Frostmourne.png";
+            pub const ASHBRINGER: &'static str = "misc/rev2/lowres/Ashbringer.png";
 
             pub const TILE_WIDTH: u32 = 962;
             pub const TILE_HEIGHT: u32 = 1238;
@@ -1090,7 +1090,7 @@ mod info {
     use bevy::prelude::*;
 
     pub mod asset {
-        pub const INFO: &'static str = "misc/rev2/StoneSlab.png";
+        pub const INFO: &'static str = "misc/rev2/lowres/StoneSlab.png";
     }
 
     #[derive(Component)]
@@ -1116,7 +1116,7 @@ mod button {
     use bevy::prelude::*;
 
     pub mod asset {
-        pub const BUTTON: &'static str = "misc/rev2/button-atlas_1998x429.png";
+        pub const BUTTON: &'static str = "misc/rev2/lowres/button-atlas_1998x429.png";
     }
 
     #[derive(Component)]
@@ -1599,7 +1599,7 @@ fn spawn_buttons(
     };
 
     let texture_handle: Handle<Image> = asset_server.load(button::asset::BUTTON);
-    let texture_atlas = TextureAtlasLayout::from_grid(UVec2::new(666, 429), 3, 1, None, None);
+    let texture_atlas = TextureAtlasLayout::from_grid(UVec2::new(666 / 3, 429 / 3), 3, 1, None, None);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
     let button_size = Vec2::new(
