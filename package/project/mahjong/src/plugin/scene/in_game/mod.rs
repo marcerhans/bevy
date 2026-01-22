@@ -2382,6 +2382,11 @@ fn update_move_count(
                 }
             }
 
+            let same_layer = p0.z == p1.z;
+            if !same_layer {
+                continue;
+            }
+
             let is_same_row = p0.y.abs_diff(p1.y) < 2;
             let is_next_to = is_same_row && p0.x.abs_diff(p1.x) == 2;
 
@@ -2394,10 +2399,10 @@ fn update_move_count(
             }
         }
 
-        if let Some(count) = free_variants.get_mut(&(v0.0 / 4)) {
+        if let Some(count) = free_variants.get_mut(&(v0.0)) {
             *count += 1;
         } else {
-            free_variants.insert(v0.0 / 4, 1);
+            free_variants.insert(v0.0, 1);
         }
     }
 
