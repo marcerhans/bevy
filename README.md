@@ -10,3 +10,6 @@ sudo dnf install gcc-c++ libX11-devel alsa-lib-devel systemd-devel wayland-devel
 For wayland support, add the "wayland" feature. Then, to specify explicitly which one to use, use one of the following:
 export WINIT_UNIX_BACKEND=x11
 export WINIT_UNIX_BACKEND=wayland
+
+## Remote dylib
+LD_LIBRARY_PATH="deps:$(rustc --print=sysroot)/lib/rustlib/x86_64-unknown-linux-gnu/lib"

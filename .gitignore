@@ -1,2 +1,7 @@
 **/target
 **/dist
+*~
+
+# Krita stuff
+__pycache__
+*autosave.kra

@@ -1,8 +1,16 @@
 [alias]
-debug = "run --features debug"
-release = "run --release"
-wasm-debug = "run --target wasm32-unknown-unknown"
-wasm-release = "run --target wasm32-unknown-unknown --profile wasm-release"
+debug = "run --features debug --target x86_64-unknown-linux-gnu"
+release = "run --release --target x86_64-unknown-linux-gnu"
+# debug-test = "test --features debug"
+# debug-build = "build --features debug"
+# wasm-debug = "run --features debug --target wasm32-unknown-unknown"
+# wasm-release = "run --target wasm32-unknown-unknown --profile wasm-release"
+
+[build]
+target = "wasm32-unknown-unknown" # The default target. Nice to have set for IDE's.
+
+[target.'cfg(debug_assertions)']
+rustflags = ["-Awarnings"]
 
 [target.wasm32-unknown-unknown]
 runner = "wasm-server-runner"

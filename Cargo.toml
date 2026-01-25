@@ -7,10 +7,10 @@ members = [
 [workspace.package]
 authors = ["Marcus Hanson"]
 categories = ["game"]
-description = "Nevy"
+description = "\"Mono\" repo for Bevy projects."
 edition = "2024"
 homepage = "https://github.com/marcerhans/bevy"
-keywords = ["nevy"]
+keywords = ["bevy"]
 license-file = "LICENCE.md"
 publish = false
 readme = "README.md"
@@ -18,9 +18,18 @@ repository = "https://github.com/marcerhans/bevy"
 version = "0.1.0"
 
 [workspace.dependencies]
-bevy = { version = "0.16.0", features = ["wayland"] }
-avian2d = { version = "0.3.1" }
-avian3d = { version = "0.3.1" }
+bevy = { version = "0.18.0", default-features = false, features = ["wayland"] }
+bevy-inspector-egui = { version = "0.35.0" }
+avian2d = { version = "0.5.0" }
+avian3d = { version = "0.5.0" }
+rand = { version = "0.9.2" }
+bevy_tweening = { version = "0.14.0" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+#getrandom = { version = "0.3.4" } # On Native targets rand crate figures this out on it's own
+
+# Lower the max log limit (performance)
+log = { version = "*", features = ["max_level_debug", "release_max_level_warn"] }
 
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
@@ -48,3 +57,26 @@ inherits = "release"
 opt-level = "s"
 # Strip all debugging information from the binary to slightly reduce file size.
 strip = "debuginfo"
+
+# This workspace root package exists purely to run examples
+[package]
+name = "examples"
+authors.workspace = true
+categories.workspace = true
+description.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license-file.workspace = true
+publish.workspace = true
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+bevy-inspector-egui = { workspace = true }
+avian2d = { workspace = true }
+
+[features]
+debug = ["bevy/dynamic_linking"] # Use for debug/dev builds. Faster compile times.
