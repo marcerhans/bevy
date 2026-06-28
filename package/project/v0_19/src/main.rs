@@ -1,5 +1,3 @@
-use v0_19::run;
-
 fn main() {
-    run();
+    v0_19::run();
 }
